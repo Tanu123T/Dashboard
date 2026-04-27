@@ -1,0 +1,102 @@
+<div class="page">
+  <div class="layout">
+    <section class="left-panel">
+      <img class="brand-logo" src="/assets/vishwaguru%20logo.png" alt="VishwaGuru Infotech logo">
+
+      <h1 class="hero-title">
+        Welcome Back,
+        <span>CEO</span>
+      </h1>
+
+      <div class="quote-card">
+        <p>Great leadership turns clarity into action and vision into measurable success.</p>
+        <strong>- Executive Office</strong>
+      </div>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon feature-icon--insights" aria-hidden="true"></span>
+          <div>
+            <h3>Executive Snapshot</h3>
+            <p>View your key numbers, alerts, and today's priority updates.</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon feature-icon--secure" aria-hidden="true"></span>
+          <div>
+            <h3>Confidential & Secure</h3>
+            <p>Protected access designed for CEO-level visibility and control.</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon feature-icon--decision" aria-hidden="true"></span>
+          <div>
+            <h3>Decision Briefs</h3>
+            <p>Focus on what needs action now and lead with clarity.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="right-panel">
+      <div class="card-top-line"></div>
+      <div class="login-card">
+        <div class="shield">&#128274;</div>
+
+        <h2>Private Executive Sign In</h2>
+        <p class="card-subtitle">Authorized access for the CEO dashboard</p>
+
+        <form class="login-form" (ngSubmit)="onSubmit()">
+          <div class="field">
+            <label>Executive Email</label>
+            <div class="input-wrap">
+              <span class="icon">&#9993;</span>
+              <input
+                type="email"
+                [(ngModel)]="email"
+                name="email"
+                placeholder="ceo@vishwaguru.com"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label>Password</label>
+              <a class="forgot-link" href="javascript:void(0)">Need Access Help?</a>
+            </div>
+            <div class="input-wrap">
+              <span class="icon">&#128274;</span>
+              <input
+                type="password"
+                [(ngModel)]="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+              >
+              <span class="icon eye">&#128065;</span>
+            </div>
+          </div>
+
+          <div class="row-meta">
+            <label class="remember">
+              <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe">
+              <span>Keep this device trusted</span>
+            </label>
+
+            <span class="secure-label">&#128737; Private Session</span>
+          </div>
+
+          <button type="submit" class="login-btn">
+            <span>&#128274;</span>
+            <span>Enter CEO Dashboard</span>
+            <span class="btn-arrow">&#8594;</span>
+          </button>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,12 +1,25 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { of, delay } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  constructor() { }
+  login(email: string, password: string) {
 
-  // Authentication methods will be implemented here
+    if (email === 'admin@gmail.com' && password === '1234') {
+      return of({
+        success: true,
+        token: 'dummy-token',
+        message: 'Login successful'
+      }).pipe(delay(500));
+    }
+
+    return of({
+      success: false,
+      token: '',
+      message: 'Invalid credentials'
+    }).pipe(delay(500));
+  }
 }

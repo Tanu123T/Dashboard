@@ -1,13 +1,33 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  constructor(private http: HttpClient) { }
+  private baseUrl = environment.apiUrl;
 
-  // API base methods will be implemented here
+  constructor(private http: HttpClient) {}
+
+  // GET
+  get(url: string) {
+    return this.http.get(`${this.baseUrl}${url}`);
+  }
+
+  // POST
+  post(url: string, body: any) {
+    return this.http.post(`${this.baseUrl}${url}`, body);
+  }
+
+  // PUT
+  put(url: string, body: any) {
+    return this.http.put(`${this.baseUrl}${url}`, body);
+  }
+
+  // DELETE
+  delete(url: string) {
+    return this.http.delete(`${this.baseUrl}${url}`);
+  }
 }

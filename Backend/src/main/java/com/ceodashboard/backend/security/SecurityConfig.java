@@ -1,51 +1,69 @@
 package com.ceodashboard.backend.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.io.IOException;
+import java.time.Instant;
 
 @Configuration
 public class SecurityConfig {
-
-    @Autowired
-    private JwtFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
 
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) ->
+                    writeJsonError(
+                        response,
+                        HttpStatus.UNAUTHORIZED,
+                        "Authentication required",
+                        request.getRequestURI()
+                    )
+                )
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    writeJsonError(
+                        response,
+                        HttpStatus.FORBIDDEN,
+                        "Access denied",
+                        request.getRequestURI()
+                    )
+                )
+            )
+
             .authorizeHttpRequests(auth -> auth
 
-                // 🔥 FORCE PUBLIC ACCESS (IMPORTANT FIX)
+                // Public routes
+                .requestMatchers("/", "/health").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/error", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // role routes
-                .requestMatchers("/ceo/**").hasRole("CEO")
-                .requestMatchers("/hr/**").hasAnyRole("HR", "CEO")
-                .requestMatchers("/manager/**").hasAnyRole("MANAGER", "HR", "CEO")
+                // protected routes
+                .requestMatchers("/sync/**").authenticated()
+                .requestMatchers("/projects/**").authenticated()
 
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
 
-            // 🔥 IMPORTANT: JWT filter must NOT block /auth/**
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
@@ -55,8 +73,32 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    private void writeJsonError(
+        HttpServletResponse response,
+        HttpStatus status,
+        String message,
+        String path
+    ) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        response.getWriter().write(
+            "{"
+                + "\"timestamp\":\"" + escapeJson(Instant.now().toString()) + "\"," 
+                + "\"status\":" + status.value() + ","
+                + "\"error\":\"" + escapeJson(status.getReasonPhrase()) + "\"," 
+                + "\"message\":\"" + escapeJson(message) + "\"," 
+                + "\"path\":\"" + escapeJson(path) + "\""
+                + "}"
+        );
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        return value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"");
     }
 }

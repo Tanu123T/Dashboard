@@ -279,7 +279,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             project.setStartDate(startDate);
             project.setDueDate(dueDate);
             project.setDescription(description);
-            project.setTechStackCsv("React, Node.js, PostgreSQL");
+            project.setTechStackCsv(""); // Tech stack not available in standard OpenProject - can be added via custom fields later
             project.setTeamCsv(String.join(",", teamMembers));
             project.setTotalPlannedSprints(sprintSnapshot.totalPlannedSprints());
             project.setCompletedSprints(sprintSnapshot.completedSprints());

@@ -1,45 +1,60 @@
-package com.ceodashboard.backend.dto;
+package com.ceodashboard.backend.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.List;
 
+@Entity
+@Table(name = "sprints")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SprintDTO {
+public class Sprint {
+
+    @Id
     private Long id;
+
+    private Long projectId;
+
     private String name;
+
+    @Column(length = 2000)
     private String goal;
+
     private String status;
+
     private LocalDate startDate;
+
     private LocalDate endDate;
+
     private String scrumMaster;
-    private String projectName;
+
     private Integer progress;
-    private Integer daysRemaining;
-    
-    // Task stats
+
     private Integer totalTasks;
+
     private Integer completedTasks;
+
     private Integer inProgressTasks;
+
     private Integer todoTasks;
+
     private Integer testingTasks;
-    
-    // Time tracking
+
     private Integer storyPoints;
+
     private Integer bugsFixed;
+
     private Double estimatedHours;
+
     private Double actualHours;
-    private Double timeUsedPercentage;
-    
-    // Related data
-    private List<SprintTaskDTO> tasks;
-    private List<MemberWorkDTO> memberWork;
-    private List<BurndownDataDTO> burndownChart;
+
+    @Column(length = 4000)
+    private String burndownDataJson;
 }

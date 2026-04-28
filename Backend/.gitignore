@@ -1,0 +1,57 @@
+# Build output
+target/
+out/
+bin/
+build/
+dist/
+
+# Compiled artifacts
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.seed
+*.stackdump
+hs_err_pid*
+replay_pid*
+
+# IDE and editor metadata
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+src/main/resources/application.properties
+application-local.properties
+application-local.yml
+application-local.yaml
+application-dev.properties
+application-dev.yml
+application-dev.yaml
+application-prod.properties
+application-prod.yml
+application-prod.yaml
+
+# Test and coverage output
+surefire-reports/
+failsafe-reports/
+coverage/
+jacoco.exec
+*.gcda
+*.gcno

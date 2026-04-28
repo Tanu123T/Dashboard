@@ -108,16 +108,16 @@ public class ProjectServiceImpl implements ProjectService {
         return values;
     }
 
-    private List<SprintDTO> buildSprintTimeline(String sprintNamesCsv, String sprintStatesCsv) {
+    private List<com.ceodashboard.backend.dto.SprintDTO> buildSprintTimeline(String sprintNamesCsv, String sprintStatesCsv) {
         List<String> names = splitCsv(sprintNamesCsv);
         List<String> states = splitCsv(sprintStatesCsv);
 
-        List<SprintDTO> timeline = new ArrayList<>();
+        List<com.ceodashboard.backend.dto.SprintDTO> timeline = new ArrayList<>();
         int size = Math.min(names.size(), states.size());
         for (int i = 0; i < size; i++) {
-            timeline.add(SprintDTO.builder()
+            timeline.add(com.ceodashboard.backend.dto.SprintDTO.builder()
                     .name(names.get(i))
-                    .state(states.get(i))
+                    .status(states.get(i))
                     .build());
         }
 

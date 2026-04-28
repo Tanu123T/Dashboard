@@ -45,6 +45,7 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+			<version>42.7.10</version>
 		</dependency>
 		<!-- ⚡ Lombok -->
 		<dependency>

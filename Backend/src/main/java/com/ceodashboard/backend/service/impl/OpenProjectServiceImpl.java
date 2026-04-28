@@ -1,7 +1,13 @@
 package com.ceodashboard.backend.service.impl;
 
 import com.ceodashboard.backend.entity.Project;
+import com.ceodashboard.backend.entity.Sprint;
+import com.ceodashboard.backend.entity.SprintTask;
+import com.ceodashboard.backend.entity.TeamMember;
 import com.ceodashboard.backend.repository.ProjectRepository;
+import com.ceodashboard.backend.repository.SprintRepository;
+import com.ceodashboard.backend.repository.SprintTaskRepository;
+import com.ceodashboard.backend.repository.TeamMemberRepository;
 import com.ceodashboard.backend.service.OpenProjectService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +36,15 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private SprintRepository sprintRepository;
+
+    @Autowired
+    private SprintTaskRepository sprintTaskRepository;
+
+    @Autowired
+    private TeamMemberRepository teamMemberRepository;
 
     @Value("${openproject.base-url:https://ceodashboarddemo.openproject.com/api/v3}")
     private String baseUrl;
@@ -158,9 +173,23 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
     @Override
     public void syncProjects() {
-        List<Map<String, Object>> projects = extractElements(fetchResource("/projects"));
+        Map<String, Object> projectsResponse = fetchResource("/projects");
+        log.info("Projects API response keys: {}", projectsResponse.keySet());
+        
+        // Check for total count
+        Object totalObj = projectsResponse.get("total");
+        log.info("Total projects in OpenProject: {}", totalObj);
+        
+        // Check for page size
+        Object pageSizeObj = projectsResponse.get("pageSize");
+        log.info("Page size: {}", pageSizeObj);
+        
+        List<Map<String, Object>> projects = extractElements(projectsResponse);
+        log.info("Fetched {} projects from first page", projects.size());
 
         // STEP 2: LOOP PROJECTS
+        int successCount = 0;
+        int errorCount = 0;
         for (Map<String, Object> proj : projects) {
 
             Long projectId = ((Number) proj.get("id")).longValue();
@@ -288,7 +317,11 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             project.setSprintStatesCsv(String.join(",", sprintSnapshot.states()));
 
             projectRepository.save(project);
+            successCount++;
+            log.info("Successfully synced project {} ({})", projectId, projectName);
         }
+        
+        log.info("Sync complete. Success: {}, Errors: {}", successCount, errorCount);
     }
 
     private String extractDescription(Map<String, Object> projectDetail) {
@@ -390,6 +423,387 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             return "ACTIVE";
         }
         return "PLANNED";
+    }
+
+    /**
+     * Sync sprints (versions) from OpenProject for a specific project.
+     * Fetches versions, work packages (tasks), and builds team member data.
+     */
+    public void syncSprints(Long projectId) {
+        try {
+            log.info("Starting sprint sync for project {}", projectId);
+            
+            // Fetch versions (sprints) for the project
+            List<Map<String, Object>> versions = extractElements(fetchResource("/projects/" + projectId + "/versions"));
+            log.info("Found {} versions (sprints) for project {}", versions.size(), projectId);
+            
+            if (versions.isEmpty()) {
+                log.warn("Project {} has no versions defined in OpenProject", projectId);
+                return;
+            }
+            
+            // Also fetch all project tasks as fallback
+            List<Map<String, Object>> allProjectTasks = fetchAllProjectTasks(projectId);
+            log.info("Fetched {} total tasks for project {}", allProjectTasks.size(), projectId);
+            
+            int sprintCount = 0;
+            for (Map<String, Object> version : versions) {
+                Long sprintId = ((Number) version.get("id")).longValue();
+                String sprintName = (String) version.get("name");
+                String status = normalizeSprintState(extractLinkTitle(version, "status"));
+                LocalDate startDate = parseLocalDate((String) version.get("startDate"));
+                LocalDate endDate = parseLocalDate((String) version.get("endDate"));
+                String description = extractDescription(version);
+
+                // Fetch tasks for this version
+                List<Map<String, Object>> tasks = fetchTasksForVersion(sprintId, projectId);
+
+                // Calculate sprint stats from tasks
+                SprintStats stats = calculateSprintStats(tasks);
+
+                // Save or update sprint
+                Sprint sprint = new Sprint();
+                sprint.setId(sprintId);
+                sprint.setProjectId(projectId);
+                sprint.setName(sprintName);
+                sprint.setGoal(description);
+                sprint.setStatus(status);
+                sprint.setStartDate(startDate);
+                sprint.setEndDate(endDate);
+                sprint.setScrumMaster(stats.scrumMaster);
+                sprint.setProgress(calculateProgress(tasks));
+                sprint.setTotalTasks(stats.total);
+                sprint.setCompletedTasks(stats.completed);
+                sprint.setInProgressTasks(stats.inProgress);
+                sprint.setTodoTasks(stats.todo);
+                sprint.setTestingTasks(stats.testing);
+                sprint.setStoryPoints(stats.storyPoints);
+                sprint.setBugsFixed(stats.bugsFixed);
+                sprint.setEstimatedHours(stats.estimatedHours);
+                sprint.setActualHours(stats.actualHours);
+                
+                sprintRepository.save(sprint);
+
+                // Sync tasks for this sprint
+                syncSprintTasks(sprintId, tasks);
+
+                // Sync team members
+                syncTeamMembers(sprintId, tasks);
+                sprintCount++;
+            }
+            
+            log.info("Synced {} sprints for project {}", sprintCount, projectId);
+        } catch (Exception ex) {
+            log.error("Error syncing sprints for project {}: {}", projectId, ex.getMessage(), ex);
+        }
+    }
+
+    private List<Map<String, Object>> fetchTasksForVersion(Long versionId, Long projectId) {
+        // Fetch all project tasks and filter by version in Java
+        List<Map<String, Object>> allTasks = fetchAllProjectTasks(projectId);
+        
+        // Filter tasks that belong to this version (extract ID from href)
+        List<Map<String, Object>> versionTasks = new ArrayList<>();
+        for (Map<String, Object> task : allTasks) {
+            Long taskVersionId = extractLinkId(task, "version");
+            if (taskVersionId != null && taskVersionId.equals(versionId)) {
+                versionTasks.add(task);
+            }
+        }
+        
+        log.info("Found {} tasks for version {} out of {} total tasks", 
+                versionTasks.size(), versionId, allTasks.size());
+        return versionTasks;
+    }
+
+    private Long extractLinkId(Map<String, Object> body, String linkName) {
+        Object linksObj = body.get("_links");
+        if (!(linksObj instanceof Map<?, ?> linksMap)) {
+            return null;
+        }
+
+        Object linkObj = linksMap.get(linkName);
+        if (!(linkObj instanceof Map<?, ?> linkMap)) {
+            return null;
+        }
+
+        Object hrefObj = linkMap.get("href");
+        if (!(hrefObj instanceof String href)) {
+            return null;
+        }
+
+        // Extract ID from href like "/api/v3/versions/7"
+        try {
+            String[] parts = href.split("/");
+            String lastPart = parts[parts.length - 1];
+            // Remove any query params
+            if (lastPart.contains("?")) {
+                lastPart = lastPart.substring(0, lastPart.indexOf("?"));
+            }
+            return Long.parseLong(lastPart);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private List<Map<String, Object>> fetchAllProjectTasks(Long projectId) {
+        try {
+            // Use project work packages link if available
+            Map<String, Object> projectDetail = fetchResource("/projects/" + projectId);
+            
+            Object linksObj = projectDetail.get("_links");
+            if (linksObj instanceof Map<?, ?> linksMap) {
+                Object workPackagesObj = linksMap.get("workPackages");
+                if (workPackagesObj instanceof Map<?, ?> workPackagesMap) {
+                    Object hrefObj = workPackagesMap.get("href");
+                    if (hrefObj instanceof String hrefValue) {
+                        log.info("Fetching tasks from workPackages link for project {}", projectId);
+                        return extractElements(fetchResourceFromHref(hrefValue));
+                    }
+                }
+            }
+            
+            // Fallback: fetch all work packages without filters
+            log.info("Fetching all work packages for project {}", projectId);
+            return extractElements(fetchResource("/work_packages"));
+        } catch (Exception ex) {
+            log.warn("Failed to fetch tasks for project {}: {}", projectId, ex.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    private void syncSprintTasks(Long sprintId, List<Map<String, Object>> tasks) {
+        for (Map<String, Object> task : tasks) {
+            try {
+                Long taskId = ((Number) task.get("id")).longValue();
+                String title = (String) task.get("subject");
+                String status = extractLinkTitle(task, "status");
+                String type = extractLinkTitle(task, "type");
+                Number storyPoints = (Number) task.get("storyPoints"); // Custom field
+                Number percentageDone = (Number) task.get("percentageDone");
+                Double estimatedHours = parseHours(task.get("estimatedTime"));
+                Double actualHours = parseHours(task.get("spentTime"));
+
+                // Get assignee
+                String assignee = "Unassigned";
+                Map<String, Object> links = (Map<String, Object>) task.get("_links");
+                if (links != null && links.get("assignee") != null) {
+                    assignee = (String) ((Map<?, ?>) links.get("assignee")).get("title");
+                }
+
+                SprintTask sprintTask = new SprintTask();
+                sprintTask.setId(taskId);
+                sprintTask.setSprintId(sprintId);
+                sprintTask.setTitle(title);
+                sprintTask.setStatus(status != null ? status : "New");
+                sprintTask.setType(type != null ? type : "Task");
+                sprintTask.setStoryPoints(storyPoints != null ? storyPoints.intValue() : 0);
+                sprintTask.setAssignee(assignee);
+                sprintTask.setEstimatedHours(estimatedHours);
+                sprintTask.setActualHours(actualHours);
+                sprintTask.setProgressPercentage(percentageDone != null ? percentageDone.intValue() : 0);
+
+                sprintTaskRepository.save(sprintTask);
+            } catch (Exception ex) {
+                log.warn("Error syncing task: {}", ex.getMessage());
+            }
+        }
+    }
+
+    private void syncTeamMembers(Long sprintId, List<Map<String, Object>> tasks) {
+        log.info("Syncing team members for sprint {} with {} tasks", sprintId, tasks.size());
+        
+        // Group tasks by assignee
+        Map<String, List<Map<String, Object>>> tasksByAssignee = new HashMap<>();
+        
+        for (Map<String, Object> task : tasks) {
+            String assignee = "Unassigned";
+            Map<String, Object> links = (Map<String, Object>) task.get("_links");
+            if (links != null && links.get("assignee") != null) {
+                Object assigneeObj = links.get("assignee");
+                if (assigneeObj instanceof Map<?, ?> assigneeMap) {
+                    Object titleObj = assigneeMap.get("title");
+                    if (titleObj instanceof String) {
+                        assignee = (String) titleObj;
+                    }
+                }
+            }
+            tasksByAssignee.computeIfAbsent(assignee, k -> new ArrayList<>()).add(task);
+        }
+        
+        log.info("Found {} unique assignees for sprint {}", tasksByAssignee.size(), sprintId);
+
+        // Create team member records
+        int memberIndex = 0;
+        for (Map.Entry<String, List<Map<String, Object>>> entry : tasksByAssignee.entrySet()) {
+            String name = entry.getKey();
+            List<Map<String, Object>> memberTasks = entry.getValue();
+
+            int total = memberTasks.size();
+            int completed = 0;
+            int inProgress = 0;
+            int todo = 0;
+            double estimatedHours = 0;
+            double actualHours = 0;
+
+            for (Map<String, Object> task : memberTasks) {
+                String status = extractLinkTitle(task, "status");
+                if (isCompletedStatus(status)) {
+                    completed++;
+                } else if (isInProgressStatus(status)) {
+                    inProgress++;
+                } else {
+                    todo++;
+                }
+
+                Double est = parseHours(task.get("estimatedTime"));
+                Double act = parseHours(task.get("spentTime"));
+                if (est != null) estimatedHours += est;
+                if (act != null) actualHours += act;
+            }
+
+            TeamMember member = new TeamMember();
+            member.setId(sprintId * 1000 + memberIndex++); // Generate unique ID
+            member.setSprintId(sprintId);
+            member.setName(name);
+            member.setRole("Team Member"); // Can be enhanced with role lookup
+            member.setAssignedTasks(total);
+            member.setCompletedTasks(completed);
+            member.setInProgressTasks(inProgress);
+            member.setTodoTasks(todo);
+            member.setEstimatedHours(estimatedHours);
+            member.setActualHours(actualHours);
+
+            teamMemberRepository.save(member);
+            log.info("Saved team member: {} with {} tasks", name, total);
+        }
+        
+        log.info("Total team members saved for sprint {}: {}", sprintId, memberIndex);
+    }
+
+    private SprintStats calculateSprintStats(List<Map<String, Object>> tasks) {
+        SprintStats stats = new SprintStats();
+        Set<String> scrumMasters = new HashSet<>();
+
+        for (Map<String, Object> task : tasks) {
+            stats.total++;
+            
+            String status = extractLinkTitle(task, "status");
+            String type = extractLinkTitle(task, "type");
+            
+            if (isCompletedStatus(status)) {
+                stats.completed++;
+            } else if (isInProgressStatus(status)) {
+                stats.inProgress++;
+            } else if (isTestingStatus(status)) {
+                stats.testing++;
+            } else {
+                stats.todo++;
+            }
+
+            if ("Bug".equalsIgnoreCase(type) && isCompletedStatus(status)) {
+                stats.bugsFixed++;
+            }
+
+            // Try to get story points (custom field)
+            Number sp = (Number) task.get("storyPoints");
+            if (sp != null) {
+                stats.storyPoints += sp.intValue();
+            }
+
+            // Accumulate hours
+            Double est = parseHours(task.get("estimatedTime"));
+            Double act = parseHours(task.get("spentTime"));
+            if (est != null) stats.estimatedHours += est;
+            if (act != null) stats.actualHours += act;
+
+            // Get assignee for potential scrum master (first assignee or most tasks)
+            Map<String, Object> links = (Map<String, Object>) task.get("_links");
+            if (links != null && links.get("assignee") != null) {
+                String assignee = (String) ((Map<?, ?>) links.get("assignee")).get("title");
+                if (assignee != null && !assignee.isBlank()) {
+                    scrumMasters.add(assignee);
+                }
+            }
+        }
+
+        // Set scrum master (first assignee found, or "TBD")
+        stats.scrumMaster = scrumMasters.isEmpty() ? "TBD" : scrumMasters.iterator().next();
+        
+        return stats;
+    }
+
+    private int calculateProgress(List<Map<String, Object>> tasks) {
+        if (tasks.isEmpty()) return 0;
+        
+        int totalProgress = 0;
+        for (Map<String, Object> task : tasks) {
+            Number percentageDone = (Number) task.get("percentageDone");
+            totalProgress += (percentageDone != null ? percentageDone.intValue() : 0);
+        }
+        return totalProgress / tasks.size();
+    }
+
+    private Double parseHours(Object timeValue) {
+        if (timeValue == null) return null;
+        
+        try {
+            if (timeValue instanceof String) {
+                // Parse ISO 8601 duration format (e.g., "PT8H" for 8 hours)
+                String timeStr = (String) timeValue;
+                if (timeStr.startsWith("PT")) {
+                    double hours = 0;
+                    if (timeStr.contains("H")) {
+                        String hourPart = timeStr.substring(2, timeStr.indexOf("H"));
+                        hours = Double.parseDouble(hourPart);
+                    }
+                    if (timeStr.contains("M")) {
+                        int minIndex = timeStr.indexOf("H");
+                        if (minIndex < 0) minIndex = 1;
+                        String minPart = timeStr.substring(minIndex + 1, timeStr.indexOf("M"));
+                        hours += Double.parseDouble(minPart) / 60.0;
+                    }
+                    return hours;
+                }
+                return Double.parseDouble((String) timeValue);
+            }
+            if (timeValue instanceof Number) {
+                return ((Number) timeValue).doubleValue();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private boolean isCompletedStatus(String status) {
+        if (status == null) return false;
+        String s = status.toLowerCase();
+        return s.contains("closed") || s.contains("completed") || s.contains("done");
+    }
+
+    private boolean isInProgressStatus(String status) {
+        if (status == null) return false;
+        String s = status.toLowerCase();
+        return s.contains("in progress") || s.contains("working") || s.contains("ongoing");
+    }
+
+    private boolean isTestingStatus(String status) {
+        if (status == null) return false;
+        String s = status.toLowerCase();
+        return s.contains("testing") || s.contains("test") || s.contains("qa");
+    }
+
+    private static class SprintStats {
+        int total = 0;
+        int completed = 0;
+        int inProgress = 0;
+        int todo = 0;
+        int testing = 0;
+        int storyPoints = 0;
+        int bugsFixed = 0;
+        double estimatedHours = 0;
+        double actualHours = 0;
+        String scrumMaster = "TBD";
     }
 
     private record SprintSnapshot(

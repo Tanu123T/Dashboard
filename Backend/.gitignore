@@ -1,37 +1,57 @@
-HELP.md
+# Build output
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+out/
+bin/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+dist/
 
-### VS Code ###
+# Compiled artifacts
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.seed
+*.stackdump
+hs_err_pid*
+replay_pid*
+
+# IDE and editor metadata
+.idea/
 .vscode/
+.settings/
+.classpath
+.project
+*.iml
 
-### Local Spring config ###
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Local environment and secrets
+.env
+.env.*
 src/main/resources/application.properties
-src/main/resources/application.yml
+application-local.properties
+application-local.yml
+application-local.yaml
+application-dev.properties
+application-dev.yml
+application-dev.yaml
+application-prod.properties
+application-prod.yml
+application-prod.yaml
+
+# Test and coverage output
+surefire-reports/
+failsafe-reports/
+coverage/
+jacoco.exec
+*.gcda
+*.gcno

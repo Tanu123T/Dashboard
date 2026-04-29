@@ -24,10 +24,10 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
 
         http
-            .cors(Customizer.withDefaults())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(AbstractHttpConfigurer::disable)
 
             .sessionManagement(session ->
@@ -62,7 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/error", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // protected routes
+                // Protected routes
                 .requestMatchers("/sync/**").authenticated()
 
                 .anyRequest().permitAll()

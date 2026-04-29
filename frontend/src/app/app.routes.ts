@@ -14,12 +14,17 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
-        path: 'sprints',
+        path: 'projects',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+          import('./features/projects/projects.component').then(m => m.ProjectsComponent)
       },
       {
-        path: 'projects',
+        path: 'projects/:id',
+        loadComponent: () =>
+          import('./features/projects/projects.component').then(m => m.ProjectsComponent)
+      },
+      {
+        path: 'sprints',
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },

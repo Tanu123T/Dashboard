@@ -26,15 +26,15 @@ export class SidebarComponent implements OnInit {
   ];
 
   executionSubMenus: MenuItem[] = [
-    { label: 'Projects', route: '/projects' },
-    { label: 'Sprints', route: '/sprints' }
+    { label: 'Projects', route: '/dashboard/projects' },
+    { label: 'Sprints', route: '/dashboard/sprints' }
   ];
 
   peopleHealthSubMenus: MenuItem[] = [
-    { label: 'Workforce Health', route: '/workforce-health' },
-    { label: 'Employee Hub', route: '/employee-hub' },
-    { label: 'Work Calendar', route: '/work-calendar' },
-    { label: 'Org Hierarchy', route: '/org-hierarchy' }
+    { label: 'Workforce Health', route: '/dashboard/workforce-health' },
+    { label: 'Employee Hub', route: '/dashboard/employee-hub' },
+    { label: 'Work Calendar', route: '/dashboard/work-calendar' },
+    { label: 'Org Hierarchy', route: '/dashboard/org-hierarchy' }
   ];
 
   constructor(private router: Router) {}
@@ -51,16 +51,18 @@ export class SidebarComponent implements OnInit {
   updateActiveTab() {
     const url = this.router.url;
     if (url.includes('/dashboard')) {
-      this.activeTab = 'overview';
-    } else if (url.includes('/projects') || url.includes('/sprints')) {
-      this.activeTab = 'execution';
-    } else if (
-      url.includes('/workforce-health') ||
-      url.includes('/employee-hub') ||
-      url.includes('/work-calendar') ||
-      url.includes('/org-hierarchy')
-    ) {
-      this.activeTab = 'people';
+      if (url.includes('/projects') || url.includes('/sprints')) {
+        this.activeTab = 'execution';
+      } else if (
+        url.includes('/workforce-health') ||
+        url.includes('/employee-hub') ||
+        url.includes('/work-calendar') ||
+        url.includes('/org-hierarchy')
+      ) {
+        this.activeTab = 'people';
+      } else {
+        this.activeTab = 'overview';
+      }
     }
   }
 

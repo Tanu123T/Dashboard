@@ -1,0 +1,224 @@
+<div [ngClass]="{'projects-page': true, 'project-detail-page': selectedProject}">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading projects...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-btn" (click)="ngOnInit()">Retry</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error">
+    <!-- Header -->
+    <section class="projects-header">
+    <div>
+      <h1>Project Health</h1>
+      <p *ngIf="!selectedProject">Portfolio status, execution pace, and delivery health</p>
+      <p *ngIf="selectedProject">{{ selectedProject.name }} - execution, sprint, and budget overview</p>
+    </div>
+    <div class="last-updated">Last updated: {{ pageLastUpdated }}</div>
+  </section>
+
+  <!-- Back Button (Detail View) -->
+  <button *ngIf="selectedProject" class="project-back" (click)="backToProjects()">
+    ← Back to Projects
+  </button>
+
+  <!-- Detail View -->
+  <div *ngIf="selectedProject" class="project-detail-view">
+    <!-- Hero Section -->
+    <section class="project-detail-hero">
+      <div class="project-detail-hero-content">
+        <div>
+          <h1>{{ selectedProject.name }}</h1>
+          <p>{{ selectedProject.client }}</p>
+        </div>
+        <span class="project-status-pill" [ngClass]="selectedProject.status">
+          ● {{ selectedProject.statusLabel }}
+        </span>
+      </div>
+
+      <!-- Meta Cards -->
+      <div class="project-detail-meta-cards">
+        <div class="meta-card">
+          <p>📅 START DATE</p>
+          <h3>{{ selectedProject.startDate }}</h3>
+        </div>
+        <div class="meta-card">
+          <p>📅 DEADLINE</p>
+          <h3>{{ selectedProject.dueDate }}</h3>
+        </div>
+        <div class="meta-card">
+          <p>👤 LEAD</p>
+          <h3>{{ selectedProject.lead }}</h3>
+        </div>
+        <button class="meta-card meta-card-action">
+          <p>⚡ TOTAL PLANNED SPRINTS</p>
+          <h3>{{ selectedProject.totalPlannedSprints }}</h3>
+        </button>
+      </div>
+    </section>
+
+    <!-- About & Tech Stack Section -->
+    <section class="project-detail-grid top">
+      <article class="project-detail-panel">
+        <h3>ABOUT</h3>
+        <p class="project-about-text">{{ selectedProject.description }}</p>
+
+        <h3 class="detail-subtitle">TECH STACK</h3>
+        <div class="chip-row muted">
+          <span *ngFor="let tech of selectedProject.techStack">{{ tech }}</span>
+        </div>
+
+        <h3 class="detail-subtitle">TEAM</h3>
+        <div class="chip-row green">
+          <span *ngFor="let member of selectedProject.team">{{ member }}</span>
+        </div>
+      </article>
+
+      <!-- Progress Ring -->
+      <article class="project-detail-panel project-completion-panel">
+        <div class="progress-ring-wrap">
+          <svg viewBox="0 0 180 180" class="progress-ring" aria-label="Project completion">
+            <defs>
+              <linearGradient id="gradientStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#38bdf8" />
+                <stop offset="50%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#18b7a6" />
+              </linearGradient>
+            </defs>
+            <circle cx="90" cy="90" [attr.r]="progressRingRadius" class="progress-ring-track" />
+            <circle
+              cx="90"
+              cy="90"
+              [attr.r]="progressRingRadius"
+              class="progress-ring-fill"
+              [style.stroke-dasharray]="progressCircumference"
+              [style.stroke-dashoffset]="progressDashOffset"
+            />
+          </svg>
+          <div class="progress-ring-copy">
+            <strong>{{ selectedProject.progress }}%</strong>
+            <span>Complete</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Sprint Timeline Section -->
+    <section class="project-detail-grid bottom">
+      <div class="project-detail-side">
+        <section class="project-detail-panel sprint-insight-panel">
+          <div class="sprint-insight-header">
+            <div class="sprint-insight-title-block">
+              <h3>SPRINT TIMELINE</h3>
+              <p><strong>{{ completedSprints }}</strong> of <strong>{{ selectedProject.totalPlannedSprints }}</strong> sprints completed</p>
+              <span *ngIf="activeSprintNumber">1 active (S{{ activeSprintNumber }})</span>
+              <span *ngIf="!activeSprintNumber">No active sprint</span>
+            </div>
+
+            <div class="sprint-insight-actions">
+              <button class="view-sprint-btn">
+                <span>View Sprint</span>
+                →
+              </button>
+            </div>
+          </div>
+
+          <div class="sprint-insight-content">
+            <div class="sprint-roadmap-track" aria-label="Sprint roadmap progress">
+              <div *ngFor="let dot of sprintRoadmapDots" class="sprint-roadmap-item">
+                <span class="sprint-roadmap-dot" [ngClass]="dot.status">S{{ dot.id }}</span>
+                <span class="sprint-roadmap-status" [ngClass]="dot.status">{{ getSprintStatusLabel(dot.status) }}</span>
+              </div>
+            </div>
+
+            <div class="sprint-roadmap-legend" aria-hidden="true">
+              <span><i class="legend-dot completed"></i> Completed</span>
+              <span><i class="legend-dot active"></i> Active</span>
+              <span><i class="legend-dot planned"></i> Planned</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <!-- List View -->
+  <div *ngIf="!selectedProject" class="project-list-view">
+    <!-- Stats Cards -->
+    <div class="projects-stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Projects</div>
+        <div class="stat-value" style="color: #3b82f6;">{{ stats.total }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Complete</div>
+        <div class="stat-value" style="color: #10b981;">{{ stats.complete }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value" style="color: #f59e0b;">{{ stats.inProgress }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Delayed</div>
+        <div class="stat-value" style="color: #ef4444;">{{ stats.delayed }}</div>
+      </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="projects-grid">
+      <button *ngFor="let project of projects" 
+              class="project-card" 
+              (click)="openProjectDetail(project.id)">
+        <div class="project-row-top">
+          <div class="project-head-left">
+            <span class="project-icon">{{ project.icon }}</span>
+            <div class="project-head-copy">
+              <div class="project-title-row">
+                <h3 class="project-name">{{ project.name }}</h3>
+                <span class="project-status-pill" [ngClass]="project.status">
+                  ● {{ project.statusLabel }}
+                </span>
+              </div>
+              <p>{{ project.client }}</p>
+            </div>
+          </div>
+          <span class="project-arrow">→</span>
+        </div>
+
+        <div class="project-progress-block">
+          <div class="project-progress-head">
+            <span>Progress</span>
+            <strong>{{ project.progress }}%</strong>
+          </div>
+          <div class="project-progress-track">
+            <span
+              class="project-progress-fill"
+              [ngClass]="project.status"
+              [style.width.%]="project.progress"
+            ></span>
+          </div>
+        </div>
+
+        <div class="project-meta-row">
+          <div class="meta-chip">
+            <p>Lead</p>
+            <strong>{{ project.lead }}</strong>
+          </div>
+          <div class="meta-chip">
+            <p>Due Date</p>
+            <strong>{{ project.dueDate }}</strong>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+    <!-- End Main Content -->
+  </div>
+</div>
+

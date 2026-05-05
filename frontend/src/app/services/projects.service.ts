@@ -28,6 +28,7 @@ export interface Project {
   activeSprints: number;
   sprintTimeline?: Sprint[];
   icon?: string;
+  iconClass?: string;
 }
 
 export interface Sprint {
@@ -113,7 +114,8 @@ export class ProjectsService {
       completedSprints: apiProject.completedSprints || 0,
       activeSprints: apiProject.activeSprints || 0,
       sprintTimeline: apiProject.sprintTimeline || [],
-      icon: this.getProjectIcon(status)
+      icon: this.getProjectIcon(status),
+      iconClass: this.getProjectIconClass(status)
     };
   }
 
@@ -128,7 +130,14 @@ export class ProjectsService {
   }
 
   private getProjectIcon(status: string): string {
-    return status === 'delayed' ? '🎁' : '📋';
+    return status === 'delayed' ? '🎁' : '�';
+  }
+
+  private getProjectIconClass(status: string): string {
+    // Return Font Awesome icon class name based on status
+    if (status === 'delayed') return 'fas fa-briefcase';
+    if (status === 'in-progress') return 'fas fa-clipboard-check';
+    return 'fas fa-folder-open';
   }
 
   private updateStats(summary: any) {

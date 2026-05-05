@@ -26,7 +26,17 @@ export const routes: Routes = [
       {
         path: 'sprints',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+          import('./features/sprints/pages/sprints-list.component').then(m => m.SprintsListComponent)
+      },
+      {
+        path: 'sprints/:id',
+        loadComponent: () =>
+          import('./features/sprints/pages/sprint-detail.component').then(m => m.SprintDetailComponent)
+      },
+      {
+        path: 'sprints/:id',
+        loadComponent: () =>
+          import('./features/sprints/pages/sprint-detail.component').then(m => m.SprintDetailComponent)
       },
       {
         path: 'workforce-health',

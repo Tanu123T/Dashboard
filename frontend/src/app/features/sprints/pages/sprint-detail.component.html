@@ -1,162 +1,98 @@
 <div class="sprint-detail-page">
+  <!-- Back Navigation -->
+  <div class="back-navigation">
+    <button (click)="goBack()" class="back-button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      All Data Analytics Engine Sprints
+    </button>
+  </div>
+
   <!-- Loading State -->
-  <div *ngIf="loading" class="loading-container"><div class="spinner"></div></div>
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading sprint details...</p>
+  </div>
 
   <!-- Error State -->
   <div *ngIf="error && !loading" class="error-container">
     <p>{{ error }}</p>
-    <button (click)="backToSprints()">Back to Sprints</button>
+    <button (click)="goBack()" class="back-button">Back to Sprints</button>
   </div>
 
-  <!-- Main Content -->
-  <div *ngIf="!loading && !error && sprint">
-    <!-- Back Button -->
-    <button class="back-button" (click)="backToSprints()">
-      <i class="fas fa-arrow-left"></i> Back to Sprints
-    </button>
-
+  <!-- Sprint Detail Content -->
+  <div *ngIf="!loading && !error && sprintDetail" class="sprint-detail-content">
     <!-- Header Section -->
-    <header class="sprint-detail-header">
-      <div class="header-left">
-        <h1>{{ sprint.name }}</h1>
-        <p class="sprint-description">Complete overhaul of TechNova's enterprise CRM system including contact management, email automation, analytics dashboard, and multi-tenant support.</p>
+    <div class="detail-header">
+      <div class="header-title">
+        <h1>{{ sprintDetail.name || 'Sprint Detail' }}</h1>
+        <p>{{ sprintDetail.description || '' }}</p>
       </div>
-      <div class="header-right">
-        <span class="status-pill" [ngClass]="getProgressBarColor(sprint.progress)">● {{ sprint.status | titlecase }}</span>
-      </div>
-    </header>
-
-    <!-- Meta Information Cards -->
-    <div class="sprint-meta">
-      <div class="meta-card">
-        <p class="meta-label">📅 DURATION</p>
-        <p class="meta-value">{{ sprint.startDate }} - {{ sprint.endDate }}</p>
-      </div>
-      <div class="meta-card">
-        <p class="meta-label">📊 DAYS REMAINING</p>
-        <p class="meta-value">0 d...</p>
-      </div>
-      <div class="meta-card">
-        <p class="meta-label">👤 SPRINT MASTER</p>
-        <p class="meta-value">{{ sprint.lead }}</p>
-      </div>
-      <div class="meta-card">
-        <p class="meta-label">🎯 SCOPE MEMBERS</p>
-        <p class="meta-value">{{ workDistribution.length }}</p>
-      </div>
-      <div class="meta-card">
-        <p class="meta-label">📦 PROJECT</p>
-        <p class="meta-value">{{ sprint.projectName }}</p>
+      <div class="header-status">
+        <span class="status-badge" [ngClass]="'status-' + (sprintDetail.status ? sprintDetail.status.toLowerCase() : 'planned')">
+          ● {{ sprintDetail.status ? (sprintDetail.status | titlecase) : 'Planned' }}
+        </span>
       </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="sprint-content">
-      <!-- Left Panel -->
-      <div class="left-panel">
-        <!-- Burndown Chart -->
-        <section class="chart-card">
-          <h3 class="section-title">Burndown Chart</h3>
-          <p class="section-subtitle">Work completed over sprint points</p>
-          <div class="chart-placeholder">
-            <svg viewBox="0 0 400 250" class="burndown-svg">
-              <!-- Grid lines -->
-              <line x1="40" y1="200" x2="380" y2="200" stroke="#e2e8f0" stroke-width="1"/>
-              <line x1="40" y1="150" x2="380" y2="150" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="40" y1="100" x2="380" y2="100" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="40" y1="50" x2="380" y2="50" stroke="#f1f5f9" stroke-width="1"/>
-              <!-- Planned line (dashed) -->
-              <polyline points="40,200 90,175 140,150 190,125 240,100 290,75 340,50 380,30" 
-                        fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5"/>
-              <!-- Actual line -->
-              <polyline points="40,200 90,165 140,135 190,110 240,80 290,55 340,35 380,20" 
-                        fill="none" stroke="#10b981" stroke-width="3"/>
-            </svg>
-          </div>
-          <div class="chart-legend">
-            <span class="legend-item"><span class="legend-color" style="background: #10b981;"></span>Actual</span>
-            <span class="legend-item"><span class="legend-color" style="border: 2px dashed #cbd5e1;"></span>Ideal</span>
-          </div>
-        </section>
+    <!-- Info Cards -->
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="info-label">DURATION</div>
+        <div class="info-value">{{ sprintDetail.startDate ? sprintDetail.startDate : '-' }} - {{ sprintDetail.endDate ? sprintDetail.endDate : '-' }}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">DAYS REMAINING</div>
+        <div class="info-value">{{ sprintDetail.daysRemaining ? sprintDetail.daysRemaining : '0' }} d...</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">SPRINT MASTER</div>
+        <div class="info-value">{{ sprintDetail.sprintMaster ? sprintDetail.sprintMaster : '-' }}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">SCOPE MEMBERS</div>
+        <div class="info-value">{{ sprintDetail.scopeMembers ? sprintDetail.scopeMembers : '0' }}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">PROJECT</div>
+        <div class="info-value">{{ sprintDetail.projectName ? sprintDetail.projectName : '-' }}</div>
+      </div>
+    </div>
 
-        <!-- Work Distribution -->
-        <section class="chart-card">
-          <h3 class="section-title">Work Distribution</h3>
-          <p class="section-subtitle">Team workload across the sprint</p>
-          <div class="work-distribution">
-            <div *ngFor="let member of workDistribution" class="work-item">
-              <div class="member-name">{{ member.name }}</div>
-              <div class="work-bars">
-                <div class="bar-container">
-                  <div class="bar completed" [style.width.%]="(member.completed / member.assigned) * 100" 
-                       [style.background-color]="getWorkColor(member.completed, member.assigned)"></div>
-                </div>
-                <div class="bar-counts">
-                  <span class="count-label">{{ member.completed }}/{{ member.assigned }}</span>
-                  <span class="count-status">Done</span>
-                  <span class="count-status">In Progress</span>
-                  <span class="count-status">To Do</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <div class="chart-container">
+        <h3>Burndown Chart</h3>
+        <p class="chart-subtitle">Ideal vs Actual sprint burndown</p>
+        <div class="chart-placeholder">
+          <p>Chart visualization would appear here</p>
+        </div>
       </div>
 
-      <!-- Right Panel -->
-      <div class="right-panel">
-        <!-- Progress Ring -->
-        <div class="progress-card">
-          <svg class="progress-ring" viewBox="0 0 180 180">
-            <circle cx="90" cy="90" r="70" fill="none" stroke="#f1f5f9" stroke-width="12"/>
-            <circle cx="90" cy="90" r="70" fill="none" stroke="#10b981" stroke-width="12" 
-                    style="stroke-dasharray: 440; stroke-dashoffset: 0;" stroke-linecap="round"/>
-          </svg>
-          <div class="progress-text">
-            <p class="progress-value">{{ sprint.progress }}%</p>
-            <p class="progress-label">Complete</p>
-          </div>
+      <div class="chart-container">
+        <h3>Task Progress</h3>
+        <p class="chart-subtitle">Tasks by status</p>
+        <div class="chart-placeholder">
+          <p>Progress data would appear here</p>
         </div>
+      </div>
 
-        <!-- Task Progress -->
-        <section class="chart-card">
-          <h3 class="section-title">Task Progress</h3>
-          <p class="section-subtitle">List of tasks by status</p>
-          <div class="task-list">
-            <div *ngFor="let task of taskProgress" class="task-item">
-              <div class="task-name">{{ task.name }}</div>
-              <div class="task-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" [style.width.%]="task.progress" 
-                       [style.background-color]="getProgressBarColor(task.progress)"></div>
-                </div>
-                <span class="progress-text">{{ task.progress }}%</span>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div class="chart-container">
+        <h3>Work Distribution</h3>
+        <p class="chart-subtitle">Team workload across sprint</p>
+        <div class="chart-placeholder">
+          <p>Work distribution chart would appear here</p>
+        </div>
+      </div>
 
-        <!-- Estimated Time Usage -->
-        <section class="chart-card">
-          <h3 class="section-title">Estimated Time Usage</h3>
-          <p class="section-subtitle">Hours allocated vs. estimated</p>
-          <div class="time-usage">
-            <svg class="donut-chart" viewBox="0 0 200 200">
-              <circle cx="100" cy="100" r="80" fill="none" stroke="#e2e8f0" stroke-width="20"/>
-              <circle cx="100" cy="100" r="80" fill="none" stroke="#3b82f6" stroke-width="20" 
-                      style="stroke-dasharray: 411.04; stroke-dashoffset: 105.736;" stroke-linecap="round"/>
-            </svg>
-            <div class="usage-text">
-              <p class="usage-value">{{ estimatedTimeUsage }}%</p>
-              <div class="usage-labels">
-                <span>Used: 74</span>
-                <span>Remaining: 25</span>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div class="chart-container">
+        <h3>Estimated Time Usage</h3>
+        <p class="chart-subtitle">Hours allocated vs estimated</p>
+        <div class="chart-placeholder">
+          <p>Time usage visualization would appear here</p>
+        </div>
       </div>
     </div>
   </div>
 </div>
-

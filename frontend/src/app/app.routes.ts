@@ -33,11 +33,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/sprints/pages/sprint-detail.component').then(m => m.SprintDetailComponent)
       },
-      {
-        path: 'sprints/:id',
-        loadComponent: () =>
-          import('./features/sprints/pages/sprint-detail.component').then(m => m.SprintDetailComponent)
-      },
+
       {
         path: 'workforce-health',
         loadComponent: () =>

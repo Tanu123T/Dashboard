@@ -1,4 +1,112 @@
-<div class="sprints-container">
-  <h1>Sprints</h1>
-  <!-- Sprints list content -->
+<div class="sprints-page">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading sprint data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <div class="error-message">
+      <h2>⚠️ Error Loading Sprint Data</h2>
+      <p>{{ error }}</p>
+      <button class="retry-button" (click)="ngOnInit()">Retry</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error">
+    <!-- Header Card -->
+    <header class="sprints-header">
+      <div>
+        <p class="header-subtitle">SPRINT DASHBOARD</p>
+        <h1>Data Analytics Engine</h1>
+      </div>
+      <div class="last-updated">Last updated: {{ pageLastUpdated }}</div>
+    </header>
+
+    <!-- STATS CARDS -->
+    <div class="sprint-stats">
+      <div class="stat-card">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-label">TOTAL PLANNED SPRINTS</div>
+        <div class="stat-value">{{ stats.totalPlanned }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✓</div>
+        <div class="stat-label">COMPLETED</div>
+        <div class="stat-value">{{ stats.completed }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-label">ACTIVE</div>
+        <div class="stat-value">{{ stats.active }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-label">AVG. COMPLETION</div>
+        <div class="stat-value">{{ stats.avgCompletion }}%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">TEAM SIZE</div>
+        <div class="stat-value">{{ stats.teamSize }}</div>
+      </div>
+    </div>
+
+    <!-- TEAM SECTION -->
+    <section class="team-section">
+      <h3 class="section-title">TEAM</h3>
+      <div class="team-grid">
+        <div *ngFor="let member of teamMembers" class="team-member">
+          <div class="member-avatar" [style.background-color]="member.color">
+            {{ getInitials(member.name) }}
+          </div>
+          <div class="member-info">
+            <p class="member-name">{{ member.name }}</p>
+            <p class="member-role">{{ member.role }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPRINTS LIST -->
+    <section class="sprints-section">
+      <h2 class="sprints-title">Sprints ({{ sprints.length }})</h2>
+      <div class="sprints-grid">
+        <div *ngFor="let sprint of sprints" class="sprint-card" (click)="openSprintDetail(sprint.id)">
+          <div class="sprint-header">
+            <div>
+              <h4 class="sprint-name">{{ sprint.name }}</h4>
+              <p class="sprint-project">{{ sprint.projectName }}</p>
+            </div>
+            <span class="sprint-status-pill" [ngClass]="getStatusClass(sprint.status)">
+              ● {{ sprint.status | titlecase }}
+            </span>
+          </div>
+
+          <div class="sprint-progress">
+            <div class="progress-label">
+              <span>Progress</span>
+              <span class="progress-percentage">{{ sprint.progress }}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="sprint.progress" [ngClass]="getStatusClass(sprint.status)"></div>
+            </div>
+          </div>
+
+          <div class="sprint-footer">
+            <div class="sprint-dates">
+              <i class="fas fa-calendar"></i>
+              <span>{{ sprint.startDate }} - {{ sprint.endDate }}</span>
+            </div>
+            <div class="sprint-tasks">
+              <span>{{ sprint.completedTasks }}/{{ sprint.totalTasks }}</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 </div>

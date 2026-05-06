@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SprintFeatureService } from '../services/sprint-feature.service';
+import { FormsModule } from '@angular/forms';
+import { SprintFeatureService, Project, ProjectsResponse } from '../services/sprint-feature.service';
 import { Sprint, SprintStats, TeamMember } from '../models/sprint.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -9,13 +10,16 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-sprints-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './sprints-list.component.html',
   styleUrls: ['./sprints-list.component.css']
 })
 export class SprintsListComponent implements OnInit, OnDestroy {
   sprints: Sprint[] = [];
   teamMembers: TeamMember[] = [];
+  projects: Project[] = [];
+  selectedProjectId: number | null = null;
+  selectedProject: Project | null = null;
   stats: SprintStats = {
     totalPlanned: 0,
     completed: 0,
@@ -24,6 +28,7 @@ export class SprintsListComponent implements OnInit, OnDestroy {
     teamSize: 0
   };
   loading = true;
+  loadingProjects = true;
   error: string | null = null;
   pageLastUpdated: string = '';
   private destroy$ = new Subject<void>();
@@ -36,11 +41,58 @@ export class SprintsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.loadProjects();
+  }
+
+  loadProjects() {
+    this.loadingProjects = true;
+    this.error = null;
+    
+    this.sprintService.getAllProjects()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: ProjectsResponse) => {
+          this.projects = response.projects;
+          this.loadingProjects = false;
+          
+          // Auto-select first project if available
+          if (this.projects.length > 0) {
+            this.selectedProjectId = this.projects[0].id;
+            this.selectedProject = this.projects[0];
+            this.loadSprintsByProject();
+          }
+        },
+        error: (err: any) => {
+          console.error('Error loading projects:', err);
+          this.error = `Failed to load projects: ${err.status === 0 ? 'Backend server is not running' : err.message}`;
+          this.loadingProjects = false;
+        }
+      });
+  }
+
+  onProjectChange() {
+    if (this.selectedProjectId) {
+      const projectId = Number(this.selectedProjectId);
+      const found = this.projects.find(p => p.id === projectId);
+      if (found) {
+        this.selectedProject = found;
+      }
+      this.loadSprintsByProject();
+    }
+  }
+
+  loadSprintsByProject() {
+    if (!this.selectedProjectId) {
+      return;
+    }
+
     this.loading = true;
     this.error = null;
     
-    // Fetch sprint dashboard data from API
-    this.sprintService.getAllSprints()
+    const projectId = Number(this.selectedProjectId);
+    
+    // Fetch sprint dashboard data from API for selected project
+    this.sprintService.getSprintsByProject(projectId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {

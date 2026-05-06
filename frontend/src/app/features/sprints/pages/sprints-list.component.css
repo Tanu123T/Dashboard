@@ -80,6 +80,51 @@
 }
 
 /* ========== HEADER SECTION ========== */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.project-selector-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-selector-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.project-dropdown {
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', -apple-system, sans-serif;
+  min-width: 200px;
+}
+
+.project-dropdown:hover {
+  border-color: #cbd5e1;
+}
+
+.project-dropdown:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ========== HEADER SECTION ========== */
 .sprints-header {
   background: white;
   padding: 24px 30px;
@@ -133,8 +178,18 @@
 }
 
 .stat-icon {
-  font-size: 24px;
+  font-size: 28px;
   margin-bottom: 12px;
+  color: #3b82f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  background: #eff6ff;
+  border-radius: 8px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .stat-label {

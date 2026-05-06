@@ -17,8 +17,8 @@ interface MenuItem {
 })
 export class SidebarComponent implements OnInit {
   overviewMenuOpen = true;
-  executionMenuOpen = false;
-  peopleHealthMenuOpen = false;
+  executionMenuOpen = true;
+  peopleHealthMenuOpen = true;
   activeTab: string = 'overview';
 
   overviewSubMenus: MenuItem[] = [
@@ -73,28 +73,31 @@ export class SidebarComponent implements OnInit {
   toggleOverviewMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.overviewMenuOpen = true;
-    this.executionMenuOpen = false;
-    this.peopleHealthMenuOpen = false;
+    this.overviewMenuOpen = !this.overviewMenuOpen;
     this.activeTab = 'overview';
+    if (!this.overviewMenuOpen) return;
+    // Navigate to first sub-tab (Dashboard) when opening
+    this.router.navigate([this.overviewSubMenus[0].route]);
   }
 
   toggleExecutionMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.overviewMenuOpen = false;
-    this.executionMenuOpen = true;
-    this.peopleHealthMenuOpen = false;
+    this.executionMenuOpen = !this.executionMenuOpen;
     this.activeTab = 'execution';
+    if (!this.executionMenuOpen) return;
+    // Navigate to first sub-tab (Projects) when opening
+    this.router.navigate([this.executionSubMenus[0].route]);
   }
 
   togglePeopleHealthMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.overviewMenuOpen = false;
-    this.executionMenuOpen = false;
-    this.peopleHealthMenuOpen = true;
+    this.peopleHealthMenuOpen = !this.peopleHealthMenuOpen;
     this.activeTab = 'people';
+    if (!this.peopleHealthMenuOpen) return;
+    // Navigate to first sub-tab (Workforce Health) when opening
+    this.router.navigate([this.peopleHealthSubMenus[0].route]);
   }
 
   handleLogout() {

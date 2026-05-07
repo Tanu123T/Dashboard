@@ -70,34 +70,43 @@ export class SidebarComponent implements OnInit {
     return this.activeTab === tab;
   }
 
+  activateOverviewTab(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeTab = 'overview';
+    this.router.navigate([this.overviewSubMenus[0].route]);
+  }
+
+  activateExecutionTab(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeTab = 'execution';
+    this.router.navigate([this.executionSubMenus[0].route]);
+  }
+
+  activatePeopleHealthTab(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeTab = 'people';
+    this.router.navigate([this.peopleHealthSubMenus[0].route]);
+  }
+
   toggleOverviewMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     this.overviewMenuOpen = !this.overviewMenuOpen;
-    this.activeTab = 'overview';
-    if (!this.overviewMenuOpen) return;
-    // Navigate to first sub-tab (Dashboard) when opening
-    this.router.navigate([this.overviewSubMenus[0].route]);
   }
 
   toggleExecutionMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     this.executionMenuOpen = !this.executionMenuOpen;
-    this.activeTab = 'execution';
-    if (!this.executionMenuOpen) return;
-    // Navigate to first sub-tab (Projects) when opening
-    this.router.navigate([this.executionSubMenus[0].route]);
   }
 
   togglePeopleHealthMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     this.peopleHealthMenuOpen = !this.peopleHealthMenuOpen;
-    this.activeTab = 'people';
-    if (!this.peopleHealthMenuOpen) return;
-    // Navigate to first sub-tab (Workforce Health) when opening
-    this.router.navigate([this.peopleHealthSubMenus[0].route]);
   }
 
   handleLogout() {

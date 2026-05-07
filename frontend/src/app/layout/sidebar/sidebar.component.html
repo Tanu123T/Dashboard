@@ -2,7 +2,7 @@
   <div class="nav-menu">
     <!-- Overview Group -->
     <div class="nav-group" [class.open]="overviewMenuOpen">
-      <button class="nav-item" [class.active]="isTabActive('overview')" (click)="toggleOverviewMenu($event)">
+      <div class="nav-item" [class.active]="isTabActive('overview')" (click)="activateOverviewTab($event)">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7"></rect>
           <rect x="14" y="3" width="7" height="7"></rect>
@@ -10,13 +10,15 @@
           <rect x="3" y="14" width="7" height="7"></rect>
         </svg>
         <span>Overview</span>
-        <svg *ngIf="overviewMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
-        <svg *ngIf="!overviewMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
+        <button class="chevron-btn" (click)="toggleOverviewMenu($event)">
+          <svg *ngIf="overviewMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          <svg *ngIf="!overviewMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
       <div class="nav-submenu" *ngIf="overviewMenuOpen">
         <a *ngFor="let item of overviewSubMenus" [routerLink]="item.route" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active" class="nav-subitem">
           {{ item.label }}
@@ -26,19 +28,21 @@
 
     <!-- Execution Group -->
     <div class="nav-group" [class.open]="executionMenuOpen">
-      <button class="nav-item" [class.active]="isTabActive('execution')" (click)="toggleExecutionMenu($event)">
+      <div class="nav-item" [class.active]="isTabActive('execution')" (click)="activateExecutionTab($event)">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
           <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
         </svg>
         <span>Execution</span>
-        <svg *ngIf="executionMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
-        <svg *ngIf="!executionMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
+        <button class="chevron-btn" (click)="toggleExecutionMenu($event)">
+          <svg *ngIf="executionMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          <svg *ngIf="!executionMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
       <div class="nav-submenu" *ngIf="executionMenuOpen">
         <a *ngFor="let item of executionSubMenus" [routerLink]="item.route" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active" class="nav-subitem">
           {{ item.label }}
@@ -48,7 +52,7 @@
 
     <!-- People Health Group -->
     <div class="nav-group" [class.open]="peopleHealthMenuOpen">
-      <button class="nav-item" [class.active]="isTabActive('people')" (click)="togglePeopleHealthMenu($event)">
+      <div class="nav-item" [class.active]="isTabActive('people')" (click)="activatePeopleHealthTab($event)">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
@@ -56,13 +60,15 @@
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
         <span>People Health</span>
-        <svg *ngIf="peopleHealthMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="18 15 12 9 6 15"></polyline>
-        </svg>
-        <svg *ngIf="!peopleHealthMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      </button>
+        <button class="chevron-btn" (click)="togglePeopleHealthMenu($event)">
+          <svg *ngIf="peopleHealthMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          <svg *ngIf="!peopleHealthMenuOpen" class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
       <div class="nav-submenu" *ngIf="peopleHealthMenuOpen">
         <a *ngFor="let item of peopleHealthSubMenus" [routerLink]="item.route" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active" class="nav-subitem">
           {{ item.label }}

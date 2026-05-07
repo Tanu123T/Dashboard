@@ -31,13 +31,14 @@
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   text-decoration: none;
   border: none;
   background: transparent;
+  user-select: none;
 }
 
-.nav-expand-btn {
+.chevron-btn {
   margin-left: auto;
   width: 24px;
   height: 24px;
@@ -54,11 +55,11 @@
   flex-shrink: 0;
 }
 
-.nav-expand-btn:hover {
+.chevron-btn:hover {
   background: rgba(25, 42, 61, 0.12);
 }
 
-.nav-item.active .nav-expand-btn:hover {
+.nav-item.active .chevron-btn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
@@ -98,6 +99,15 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.nav-group.open {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group:not(.open) .nav-submenu {
+  display: none;
 }
 
 .nav-submenu {

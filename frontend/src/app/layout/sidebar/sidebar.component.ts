@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { SidebarService } from '../../core/services/sidebar.service';
 
 interface MenuItem {
   label: string;
@@ -20,6 +21,7 @@ export class SidebarComponent implements OnInit {
   executionMenuOpen = true;
   peopleHealthMenuOpen = true;
   activeTab: string = 'overview';
+  sidebarVisible: boolean = true;
 
   overviewSubMenus: MenuItem[] = [
     { label: 'Dashboard', route: '/dashboard' }
@@ -37,7 +39,7 @@ export class SidebarComponent implements OnInit {
     { label: 'Org Hierarchy', route: '/dashboard/org-hierarchy' }
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private sidebarService: SidebarService) {}
 
   ngOnInit() {
     this.updateActiveTab();
@@ -46,6 +48,10 @@ export class SidebarComponent implements OnInit {
       .subscribe(() => {
         this.updateActiveTab();
       });
+    
+    this.sidebarService.sidebarVisible$.subscribe(visible => {
+      this.sidebarVisible = visible;
+    });
   }
 
   updateActiveTab() {

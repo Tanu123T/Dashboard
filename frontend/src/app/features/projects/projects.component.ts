@@ -74,13 +74,24 @@ export class ProjectsComponent implements OnInit, OnDestroy {
   }
 
   private loadProjectDetail(id: number) {
+    console.log('Loading project detail for ID:', id);
+    console.log('Available projects:', this.projects);
+    
     const found = this.projects.find(p => p.id === id);
+    console.log('Found in cache:', found);
+    
     if (found) {
       this.selectedProject = found;
+      console.log('Selected project from cache:', this.selectedProject);
+      console.log('Description:', this.selectedProject.description);
+      console.log('Team:', this.selectedProject.team);
       this.calculateSprintTimeline();
     } else {
       this.projectsService.getProjectById(id).subscribe(p => {
         this.selectedProject = p;
+        console.log('Selected project from API:', this.selectedProject);
+        console.log('Description:', this.selectedProject.description);
+        console.log('Team:', this.selectedProject.team);
         this.calculateSprintTimeline();
       });
     }

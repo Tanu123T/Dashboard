@@ -59,11 +59,9 @@ public class SecurityConfig {
                 .requestMatchers("/", "/health").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/projects/**").permitAll()
+                .requestMatchers("/sync/**").permitAll()
                 .requestMatchers("/error", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                // Protected routes
-                .requestMatchers("/sync/**").authenticated()
 
                 .anyRequest().permitAll()
             )

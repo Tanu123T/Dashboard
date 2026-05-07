@@ -1,9 +1,11 @@
 package com.ceodashboard.backend.service.impl;
 
 import com.ceodashboard.backend.dto.*;
+import com.ceodashboard.backend.entity.Project;
 import com.ceodashboard.backend.entity.Sprint;
 import com.ceodashboard.backend.entity.SprintTask;
 import com.ceodashboard.backend.entity.TeamMember;
+import com.ceodashboard.backend.repository.ProjectRepository;
 import com.ceodashboard.backend.repository.SprintRepository;
 import com.ceodashboard.backend.repository.SprintTaskRepository;
 import com.ceodashboard.backend.repository.TeamMemberRepository;
@@ -22,13 +24,16 @@ import java.util.stream.Collectors;
 @Service
 public class SprintServiceImpl implements SprintService {
 
+        private final ProjectRepository projectRepository;
     private final SprintRepository sprintRepository;
     private final SprintTaskRepository sprintTaskRepository;
     private final TeamMemberRepository teamMemberRepository;
 
-    public SprintServiceImpl(SprintRepository sprintRepository, 
+        public SprintServiceImpl(ProjectRepository projectRepository,
+                                                         SprintRepository sprintRepository,
                              SprintTaskRepository sprintTaskRepository,
                              TeamMemberRepository teamMemberRepository) {
+                this.projectRepository = projectRepository;
         this.sprintRepository = sprintRepository;
         this.sprintTaskRepository = sprintTaskRepository;
         this.teamMemberRepository = teamMemberRepository;
@@ -133,13 +138,32 @@ public class SprintServiceImpl implements SprintService {
                 .id((long) memberName.hashCode())
                 .name(memberName)
                 .role(role)
-                .projectName("Data Analytics Engine") // Can be fetched from project repo
+                .projectName(resolveProjectName(projectId))
                 .totalStories(totalStories)
                 .bugsResolved(bugsResolved)
                 .hoursWorked(hoursWorked)
                 .sprintStats(sprintStats)
                 .build();
     }
+
+        @Override
+        public List<SprintDTO> getAllSprints() {
+                List<Sprint> sprints = sprintRepository.findAll();
+
+                // sort by start date desc (nulls last)
+                sprints.sort((a, b) -> {
+                        if (a.getStartDate() == null && b.getStartDate() == null) return 0;
+                        if (a.getStartDate() == null) return 1;
+                        if (b.getStartDate() == null) return -1;
+                        return b.getStartDate().compareTo(a.getStartDate());
+                });
+
+                return sprints.stream().map(sprint -> {
+                        List<SprintTask> tasks = sprintTaskRepository.findBySprintId(sprint.getId());
+                        List<TeamMember> members = teamMemberRepository.findBySprintId(sprint.getId());
+                        return mapToSprintDTO(sprint, tasks, members);
+                }).collect(Collectors.toList());
+        }
 
     private SprintSummaryDTO buildSprintSummary(Long projectId, List<Sprint> sprints) {
         int total = sprints.size();
@@ -195,7 +219,7 @@ public class SprintServiceImpl implements SprintService {
         return SprintListItemDTO.builder()
                 .id(sprint.getId())
                 .name(sprint.getName())
-                .projectName("Data Analytics Engine") // Can be fetched from project
+                .projectName(resolveProjectName(sprint.getProjectId()))
                 .status(sprint.getStatus())
                 .progress(sprint.getProgress())
                 .startDate(sprint.getStartDate())
@@ -220,13 +244,14 @@ public class SprintServiceImpl implements SprintService {
 
         return SprintDTO.builder()
                 .id(sprint.getId())
+                .projectId(sprint.getProjectId())
                 .name(sprint.getName())
                 .goal(sprint.getGoal())
                 .status(sprint.getStatus())
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
                 .scrumMaster(sprint.getScrumMaster())
-                .projectName("Data Analytics Engine")
+                .projectName(resolveProjectName(sprint.getProjectId()))
                 .progress(sprint.getProgress())
                 .daysRemaining(daysRemaining)
                 .totalTasks(sprint.getTotalTasks())
@@ -244,6 +269,15 @@ public class SprintServiceImpl implements SprintService {
                 .burndownChart(burndownData)
                 .build();
     }
+
+        private String resolveProjectName(Long projectId) {
+                if (projectId == null) {
+                        return "Unknown Project";
+                }
+                return projectRepository.findById(projectId)
+                                .map(Project::getName)
+                                .orElse("Project " + projectId);
+        }
 
     private SprintTaskDTO mapToTaskDTO(SprintTask task) {
         return SprintTaskDTO.builder()

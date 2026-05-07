@@ -24,6 +24,11 @@ public interface SprintService {
     List<SprintDTO> getSprintsByProject(Long projectId);
     
     /**
+     * Get all sprints across all projects.
+     */
+    List<SprintDTO> getAllSprints();
+    
+    /**
      * Get team member performance profile across sprints.
      */
     TeamMemberProfileDTO getTeamMemberProfile(Long projectId, String memberName);

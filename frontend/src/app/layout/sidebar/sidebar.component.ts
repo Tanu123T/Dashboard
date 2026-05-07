@@ -17,8 +17,8 @@ interface MenuItem {
 })
 export class SidebarComponent implements OnInit {
   overviewMenuOpen = true;
-  executionMenuOpen = false;
-  peopleHealthMenuOpen = false;
+  executionMenuOpen = true;
+  peopleHealthMenuOpen = true;
   activeTab: string = 'overview';
 
   overviewSubMenus: MenuItem[] = [
@@ -70,31 +70,43 @@ export class SidebarComponent implements OnInit {
     return this.activeTab === tab;
   }
 
+  activateOverviewTab(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeTab = 'overview';
+    this.router.navigate([this.overviewSubMenus[0].route]);
+  }
+
+  activateExecutionTab(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeTab = 'execution';
+    this.router.navigate([this.executionSubMenus[0].route]);
+  }
+
+  activatePeopleHealthTab(event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeTab = 'people';
+    this.router.navigate([this.peopleHealthSubMenus[0].route]);
+  }
+
   toggleOverviewMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.overviewMenuOpen = true;
-    this.executionMenuOpen = false;
-    this.peopleHealthMenuOpen = false;
-    this.activeTab = 'overview';
+    this.overviewMenuOpen = !this.overviewMenuOpen;
   }
 
   toggleExecutionMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.overviewMenuOpen = false;
-    this.executionMenuOpen = true;
-    this.peopleHealthMenuOpen = false;
-    this.activeTab = 'execution';
+    this.executionMenuOpen = !this.executionMenuOpen;
   }
 
   togglePeopleHealthMenu(event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.overviewMenuOpen = false;
-    this.executionMenuOpen = false;
-    this.peopleHealthMenuOpen = true;
-    this.activeTab = 'people';
+    this.peopleHealthMenuOpen = !this.peopleHealthMenuOpen;
   }
 
   handleLogout() {

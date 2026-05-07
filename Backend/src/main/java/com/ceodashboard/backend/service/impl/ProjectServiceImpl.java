@@ -3,7 +3,6 @@ package com.ceodashboard.backend.service.impl;
 import com.ceodashboard.backend.dto.ProjectDTO;
 import com.ceodashboard.backend.dto.ProjectSummaryDTO;
 import com.ceodashboard.backend.dto.ProjectsPageResponseDTO;
-import com.ceodashboard.backend.dto.SprintDTO;
 import com.ceodashboard.backend.entity.Project;
 import com.ceodashboard.backend.repository.ProjectRepository;
 import com.ceodashboard.backend.service.ProjectService;
@@ -30,9 +29,9 @@ public class ProjectServiceImpl implements ProjectService {
         
         ProjectSummaryDTO summary = ProjectSummaryDTO.builder()
                 .totalProjects(projectRepository.count())
-                .complete(projectRepository.countByStatus("COMPLETE"))
-                .inProgress(projectRepository.countByStatus("IN_PROGRESS"))
-                .delayed(projectRepository.countByStatus("DELAYED"))
+                .complete(projectRepository.countByStatus("Finished"))
+                .inProgress(projectRepository.countByStatus("On track") + projectRepository.countByStatus("Not started"))
+                .delayed(projectRepository.countByStatus("At risk") + projectRepository.countByStatus("Off track"))
                 .build();
 
         List<ProjectDTO> projectItems = new ArrayList<>();
@@ -54,7 +53,7 @@ public class ProjectServiceImpl implements ProjectService {
         return mapToDetailDTO(project);
     }
 
-    // For list view - excludes some fields not needed in list
+    // For list view - includes essential fields for projects page
     private ProjectDTO mapToListDTO(Project p) {
         return ProjectDTO.builder()
                 .id(p.getId())
@@ -64,10 +63,12 @@ public class ProjectServiceImpl implements ProjectService {
                 .progress(p.getProgress())
                 .lead(p.getLead())
                 .dueDate(p.getDueDate())
+                .description(p.getDescription())
+                .team(splitCsv(p.getTeamCsv()))
                 .totalPlannedSprints(p.getTotalPlannedSprints())
                 .completedSprints(p.getCompletedSprints())
                 .activeSprints(p.getActiveSprints())
-                // Null fields not needed in list: description, techStack, team, sprintTimeline
+                // Null fields not needed in list: techStack, sprintTimeline
                 .build();
     }
 

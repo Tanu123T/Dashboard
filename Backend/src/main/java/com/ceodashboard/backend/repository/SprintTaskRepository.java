@@ -10,6 +10,8 @@ import java.util.List;
 public interface SprintTaskRepository extends JpaRepository<SprintTask, Long> {
     List<SprintTask> findBySprintId(Long sprintId);
     
+    void deleteBySprintId(Long sprintId);
+    
     long countBySprintId(Long sprintId);
     
     long countBySprintIdAndStatus(Long sprintId, String status);

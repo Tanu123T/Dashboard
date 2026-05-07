@@ -51,6 +51,15 @@ public class SprintController {
     }
 
     /**
+     * GET /sprints/all
+     * Get all sprints across all projects.
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<SprintDTO>> getAllSprints() {
+        return ResponseEntity.ok(sprintService.getAllSprints());
+    }
+
+    /**
      * GET /sprints/project/{projectId}/member/{memberName}
      * Get team member performance profile across all sprints.
      */

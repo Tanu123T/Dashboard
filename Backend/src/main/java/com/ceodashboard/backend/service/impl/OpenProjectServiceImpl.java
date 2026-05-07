@@ -95,7 +95,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         headers.set("Authorization", authHeaderNormalized);
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<Map> response;
+        ResponseEntity<?> response;
         try {
             response = restTemplate.exchange(
                     baseUrlNormalized + normalizedPath,
@@ -125,37 +125,13 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             );
         }
 
-        Map body = response.getBody();
-        if (body == null) {
+        Object body = response.getBody();
+        if (!(body instanceof Map<?, ?> bodyMap)) {
             return Collections.emptyMap();
         }
-        return (Map<String, Object>) body;
-    }
-
-    private Map<String, Object> fetchResourceFromHref(String href) {
-        if (href == null || href.isBlank()) {
-            return Collections.emptyMap();
-        }
-
-        String normalizedHref = href.trim();
-        if (normalizedHref.startsWith("http://") || normalizedHref.startsWith("https://")) {
-            if (normalizedHref.startsWith(baseUrl)) {
-                String relative = normalizedHref.substring(baseUrl.length());
-                String safeRelative = relative.startsWith("/") ? relative : "/" + relative;
-                return fetchResource(safeRelative);
-            }
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OpenProject link points outside configured base URL");
-        }
-
-        if (normalizedHref.startsWith("/api/v3")) {
-            normalizedHref = normalizedHref.substring("/api/v3".length());
-            if (normalizedHref.isBlank()) {
-                normalizedHref = "/";
-            }
-        }
-
-        String relativePath = normalizedHref.startsWith("/") ? normalizedHref : "/" + normalizedHref;
-        return fetchResource(relativePath);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> typedBody = (Map<String, Object>) bodyMap;
+        return typedBody;
     }
 
     @SuppressWarnings("unchecked")
@@ -171,6 +147,82 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         return (List<Map<String, Object>>) (List<?>) elementList;
     }
 
+    private List<Map<String, Object>> fetchAllCollectionElements(String path) {
+        String collectionPath = normalizeCollectionPath(path);
+        log.debug("Fetching paginated collection from path: {}", collectionPath);
+        List<Map<String, Object>> allElements = new ArrayList<>();
+        int offset = 0;
+        int pageSize = -1;
+        int total = Integer.MAX_VALUE;
+
+        while (allElements.size() < total) {
+            String pagedPath = appendQueryParam(collectionPath, "offset", String.valueOf(offset));
+            log.debug("Requesting page at offset {}: {}", offset, pagedPath);
+            Map<String, Object> response = fetchResource(pagedPath);
+            log.debug("Response keys: {}, total: {}, pageSize: {}", response.keySet(), response.get("total"), response.get("pageSize"));
+            List<Map<String, Object>> pageElements = extractElements(response);
+            log.debug("Extracted {} elements from this page", pageElements.size());
+
+            if (pageElements.isEmpty()) {
+                log.debug("Empty page received, stopping pagination");
+                break;
+            }
+
+            allElements.addAll(pageElements);
+
+            Object totalObj = response.get("total");
+            if (totalObj instanceof Number number) {
+                total = number.intValue();
+            }
+
+            Object pageSizeObj = response.get("pageSize");
+            if (pageSizeObj instanceof Number number) {
+                pageSize = number.intValue();
+            } else if (pageSize < 0) {
+                pageSize = pageElements.size();
+            }
+
+            if (pageSize <= 0) {
+                log.debug("Page size is {}, stopping pagination", pageSize);
+                break;
+            }
+
+            offset += pageSize;
+        }
+
+        log.info("Total collected {} elements from paginated collection: {}", allElements.size(), collectionPath);
+        return allElements;
+    }
+
+    private String normalizeCollectionPath(String path) {
+        if (path == null || path.isBlank()) {
+            return "/";
+        }
+
+        String normalized = path.trim();
+
+        if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+            if (normalized.startsWith(baseUrl)) {
+                normalized = normalized.substring(baseUrl.length());
+            }
+        }
+
+        if (normalized.startsWith("/api/v3")) {
+            normalized = normalized.substring("/api/v3".length());
+        }
+
+        if (normalized.isBlank()) {
+            return "/";
+        }
+
+        return normalized.startsWith("/") ? normalized : "/" + normalized;
+    }
+
+    private String appendQueryParam(String path, String key, String value) {
+        String separator = path.contains("?") ? "&" : "?";
+        return path + separator + key + "=" + UriUtils.encodeQueryParam(value, StandardCharsets.UTF_8);
+    }
+
     @Override
     public void syncProjects() {
         Map<String, Object> projectsResponse = fetchResource("/projects");
@@ -184,8 +236,8 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         Object pageSizeObj = projectsResponse.get("pageSize");
         log.info("Page size: {}", pageSizeObj);
         
-        List<Map<String, Object>> projects = extractElements(projectsResponse);
-        log.info("Fetched {} projects from first page", projects.size());
+        List<Map<String, Object>> projects = fetchAllCollectionElements("/projects");
+        log.info("Fetched {} projects across all pages", projects.size());
 
         // STEP 2: LOOP PROJECTS
         int successCount = 0;
@@ -219,11 +271,12 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                 }
 
                 if (workPackagesHref != null) {
-                    tasks = extractElements(fetchResourceFromHref(workPackagesHref));
+                    tasks = fetchAllCollectionElements(workPackagesHref);
                 } else {
-                    String filterJson = "[{\"project\":{\"operator\":\"=\",\"values\":[\"" + projectId + "\"]}}]";
-                    String taskPath = "/work_packages?filters=" + UriUtils.encodeQueryParam(filterJson, StandardCharsets.UTF_8);
-                    tasks = extractElements(fetchResource(taskPath));
+                    // Use direct project-specific work packages endpoint
+                    String projectWorkPackagesPath = "/projects/" + projectId + "/work_packages";
+                    log.info("Fetching work packages from direct project endpoint: {}", projectWorkPackagesPath);
+                    tasks = fetchAllCollectionElements(projectWorkPackagesPath);
                 }
             } catch (ResponseStatusException ex) {
                 // Continue syncing other projects even if one work package call fails.
@@ -233,62 +286,99 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
             List<Map<String, Object>> versions;
             try {
-                versions = extractElements(fetchResource("/projects/" + projectId + "/versions"));
+                versions = fetchVersionsForProject(projectId);
             } catch (ResponseStatusException ex) {
                 log.warn("Skipping versions for project {} due to upstream error: {}", projectId, ex.getReason());
                 versions = Collections.emptyList();
             }
 
             int totalTasks = tasks.size();
-            int totalProgress = 0;
-            String lead = "N/A";
+            int completedCount = 0;
+            String lead = null;
             LocalDate dueDate = null;
             LinkedHashSet<String> teamMembers = new LinkedHashSet<>();
 
-            // STEP 4: CALCULATE PROGRESS
+            // STEP 4: DERIVE PROGRESS FROM TASK STATES (more reliable than averaging possibly-missing percentageDone)
             for (Map<String, Object> task : tasks) {
+                // Prefer status-based counts for progress calculation
+                String taskStatus = extractLinkTitle(task, "status");
+                if (isCompletedStatus(taskStatus)) {
+                    completedCount++;
+                }
 
-                Number percent = (Number) task.get("percentageDone");
-                totalProgress += (percent != null ? percent.intValue() : 0);
-
+                // Track latest due date among tasks
                 LocalDate taskDueDate = parseLocalDate((String) task.get("dueDate"));
                 if (taskDueDate != null && (dueDate == null || taskDueDate.isAfter(dueDate))) {
                     dueDate = taskDueDate;
                 }
 
-                Map<String, Object> links = (Map<String, Object>) task.get("_links");
-                if (links == null) {
-                    continue;
-                }
-
-                if (links.get("assignee") != null) {
-                    String assignee = (String) ((Map<?, ?>) links.get("assignee")).get("title");
-                    if (assignee != null && !assignee.isBlank()) {
-                        teamMembers.add(assignee);
-                        if ("N/A".equals(lead)) {
-                            lead = assignee;
+                // Collect assignees for team and prefer first assignee as fallback lead
+                Map<String, Object> links = asObjectMap(task.get("_links"));
+                if (links != null && links.get("assignee") != null) {
+                    Object assigneeObj = links.get("assignee");
+                    if (assigneeObj instanceof Map<?, ?> assigneeMap) {
+                        Object titleObj = assigneeMap.get("title");
+                        if (titleObj instanceof String assignee && !assignee.isBlank()) {
+                            teamMembers.add(assignee);
+                            if (lead == null) {
+                                lead = assignee;
+                            }
                         }
                     }
                 }
             }
 
-            int avgProgress =
-                totalTasks > 0 ? totalProgress / totalTasks : 0;
+            // Compute progress as completed tasks ratio
+            int avgProgress = 0;
+            if (totalTasks > 0) {
+                avgProgress = (int) Math.round((completedCount * 100.0) / totalTasks);
+            }
 
-            String status =
-                avgProgress == 100 ? "COMPLETE" :
-                avgProgress > 50 ? "IN_PROGRESS" :
-                "DELAYED";
+            // Store the project status directly from OpenProject - NO normalization or fallback logic
+            String status = extractLinkTitle(projectDetail, "status");
+            log.info("Project {} raw status from OpenProject: '{}'", projectId, status);
+            if (status == null || status.isBlank()) {
+                status = "Not set";
+            }
+
+            // Prefer explicit project-level lead if present in project details (fall back to first assignee)
+            String projectLevelLead = extractLinkTitle(projectDetail, "lead");
+            if (projectLevelLead == null || projectLevelLead.isBlank()) {
+                projectLevelLead = extractLinkTitle(projectDetail, "responsible");
+            }
+            if (projectLevelLead != null && !projectLevelLead.isBlank()) {
+                lead = projectLevelLead;
+            }
+
+            if (lead == null) {
+                lead = "N/A";
+            }
 
             SprintSnapshot sprintSnapshot = buildSprintSnapshot(versions);
+            if (versions.isEmpty() && totalTasks > 0) {
+                sprintSnapshot = new SprintSnapshot(
+                    1,
+                    0,
+                    1,
+                    List.of("Backlog"),
+                    List.of("ACTIVE"),
+                    null,
+                    null
+                );
+            }
 
             String description = extractDescription(projectDetail);
-            LocalDate startDate = parseLocalDateFromDateTime((String) projectDetail.get("createdAt"));
+            LocalDate startDate = sprintSnapshot.earliestStartDate() != null
+                    ? sprintSnapshot.earliestStartDate()
+                    : parseLocalDateFromDateTime((String) projectDetail.get("createdAt"));
             String clientName = extractLinkTitle(projectDetail, "parent");
             if (clientName == null || clientName.isBlank()) {
                 clientName = "OpenProject";
             }
 
+            if (dueDate == null) {
+                dueDate = sprintSnapshot.latestEndDate();
+            }
             if (dueDate == null) {
                 dueDate = parseLocalDate((String) projectDetail.get("dueDate"));
             }
@@ -319,6 +409,10 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             projectRepository.save(project);
             successCount++;
             log.info("Successfully synced project {} ({})", projectId, projectName);
+            log.info("Project {} stored data: status='{}', progress={}, lead='{}', description='{}', teamSize={}", 
+                    projectId, status, avgProgress, lead, 
+                    description != null ? description.substring(0, Math.min(50, description.length())) + "..." : "null",
+                    teamMembers.size());
         }
         
         log.info("Sync complete. Success: {}, Errors: {}", successCount, errorCount);
@@ -381,12 +475,22 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> asObjectMap(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        return null;
+    }
+
     private SprintSnapshot buildSprintSnapshot(List<Map<String, Object>> versions) {
         List<String> names = new ArrayList<>();
         List<String> states = new ArrayList<>();
 
         int completed = 0;
         int active = 0;
+        LocalDate earliestStartDate = null;
+        LocalDate latestEndDate = null;
 
         for (Map<String, Object> version : versions) {
             String name = (String) version.get("name");
@@ -396,6 +500,15 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
             String statusTitle = extractLinkTitle(version, "status");
             String normalized = normalizeSprintState(statusTitle);
+
+            LocalDate versionStartDate = parseLocalDate((String) version.get("startDate"));
+            LocalDate versionEndDate = parseLocalDate((String) version.get("endDate"));
+            if (versionStartDate != null && (earliestStartDate == null || versionStartDate.isBefore(earliestStartDate))) {
+                earliestStartDate = versionStartDate;
+            }
+            if (versionEndDate != null && (latestEndDate == null || versionEndDate.isAfter(latestEndDate))) {
+                latestEndDate = versionEndDate;
+            }
 
             if ("COMPLETED".equals(normalized)) {
                 completed++;
@@ -407,7 +520,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             states.add(normalized);
         }
 
-        return new SprintSnapshot(versions.size(), completed, active, names, states);
+        return new SprintSnapshot(versions.size(), completed, active, names, states, earliestStartDate, latestEndDate);
     }
 
     private String normalizeSprintState(String value) {
@@ -432,19 +545,35 @@ public class OpenProjectServiceImpl implements OpenProjectService {
     public void syncSprints(Long projectId) {
         try {
             log.info("Starting sprint sync for project {}", projectId);
-            
-            // Fetch versions (sprints) for the project
-            List<Map<String, Object>> versions = extractElements(fetchResource("/projects/" + projectId + "/versions"));
-            log.info("Found {} versions (sprints) for project {}", versions.size(), projectId);
-            
-            if (versions.isEmpty()) {
-                log.warn("Project {} has no versions defined in OpenProject", projectId);
-                return;
-            }
-            
-            // Also fetch all project tasks as fallback
+            String versionPath = "/projects/" + projectId + "/versions";
+            log.info("Fetching versions from path: {}", versionPath);
+
+            // Fetch all project tasks first (used for version mapping and no-version fallback)
             List<Map<String, Object>> allProjectTasks = fetchAllProjectTasks(projectId);
             log.info("Fetched {} total tasks for project {}", allProjectTasks.size(), projectId);
+
+            // Fetch versions (sprints) for the project
+            List<Map<String, Object>> versions = fetchVersionsForProject(projectId);
+            log.info("Found {} versions (sprints) for project {}", versions.size(), projectId);
+            
+            // Log each version found
+            for (Map<String, Object> version : versions) {
+                Long vId = ((Number) version.get("id")).longValue();
+                String vName = (String) version.get("name");
+                String vStatus = extractLinkTitle(version, "status");
+                log.info("  Version in OpenProject: id={}, name='{}', status='{}'", vId, vName, vStatus);
+            }
+
+            if (versions.isEmpty()) {
+                if (allProjectTasks.isEmpty()) {
+                    log.warn("Project {} has no versions and no work packages in OpenProject", projectId);
+                    return;
+                }
+
+                log.info("Project {} has no versions; creating fallback backlog sprint from {} work packages", projectId, allProjectTasks.size());
+                createFallbackBacklogSprint(projectId, allProjectTasks);
+                return;
+            }
             
             int sprintCount = 0;
             for (Map<String, Object> version : versions) {
@@ -478,11 +607,11 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                 sprint.setTodoTasks(stats.todo);
                 sprint.setTestingTasks(stats.testing);
                 sprint.setStoryPoints(stats.storyPoints);
-                sprint.setBugsFixed(stats.bugsFixed);
-                sprint.setEstimatedHours(stats.estimatedHours);
-                sprint.setActualHours(stats.actualHours);
                 
                 sprintRepository.save(sprint);
+                log.info("Saved sprint {}: {} (status: {}, tasks: {}, progress: {}%, scrumMaster: '{}')", 
+                        sprintId, sprintName, status, tasks.size(), 
+                        sprint.getProgress(), stats.scrumMaster);
 
                 // Sync tasks for this sprint
                 syncSprintTasks(sprintId, tasks);
@@ -494,8 +623,40 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             
             log.info("Synced {} sprints for project {}", sprintCount, projectId);
         } catch (Exception ex) {
-            log.error("Error syncing sprints for project {}: {}", projectId, ex.getMessage(), ex);
+            log.error("Error syncing sprints for project {}: {} - Full stack trace:", projectId, ex.getMessage());
+            log.error("Stack trace:", ex);
         }
+    }
+
+    private void createFallbackBacklogSprint(Long projectId, List<Map<String, Object>> allProjectTasks) {
+        Long fallbackSprintId = -(projectId * 1_000_000L + 1L);
+        SprintStats stats = calculateSprintStats(allProjectTasks);
+
+        Sprint sprint = new Sprint();
+        sprint.setId(fallbackSprintId);
+        sprint.setProjectId(projectId);
+        sprint.setName("Backlog");
+        sprint.setGoal("Auto-created from unversioned work packages");
+        sprint.setStatus("ACTIVE");
+        sprint.setStartDate(null);
+        sprint.setEndDate(null);
+        sprint.setScrumMaster(stats.scrumMaster);
+        sprint.setProgress(calculateProgress(allProjectTasks));
+        sprint.setTotalTasks(stats.total);
+        sprint.setCompletedTasks(stats.completed);
+        sprint.setInProgressTasks(stats.inProgress);
+        sprint.setTodoTasks(stats.todo);
+        sprint.setTestingTasks(stats.testing);
+        sprint.setStoryPoints(stats.storyPoints);
+        sprint.setBugsFixed(stats.bugsFixed);
+        sprint.setEstimatedHours(stats.estimatedHours);
+        sprint.setActualHours(stats.actualHours);
+
+        sprintRepository.save(sprint);
+        syncSprintTasks(fallbackSprintId, allProjectTasks);
+        syncTeamMembers(fallbackSprintId, allProjectTasks);
+
+        log.info("Created fallback backlog sprint {} for project {} with {} tasks", fallbackSprintId, projectId, allProjectTasks.size());
     }
 
     private List<Map<String, Object>> fetchTasksForVersion(Long versionId, Long projectId) {
@@ -558,14 +719,15 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                     Object hrefObj = workPackagesMap.get("href");
                     if (hrefObj instanceof String hrefValue) {
                         log.info("Fetching tasks from workPackages link for project {}", projectId);
-                        return extractElements(fetchResourceFromHref(hrefValue));
+                        return fetchAllCollectionElements(hrefValue);
                     }
                 }
             }
             
-            // Fallback: fetch all work packages without filters
-            log.info("Fetching all work packages for project {}", projectId);
-            return extractElements(fetchResource("/work_packages"));
+            // Fallback: fetch work packages specifically for this project (NOT all work packages)
+            String projectWorkPackagesPath = "/projects/" + projectId + "/work_packages";
+            log.info("Fetching work packages for project {} from: {}", projectId, projectWorkPackagesPath);
+            return fetchAllCollectionElements(projectWorkPackagesPath);
         } catch (Exception ex) {
             log.warn("Failed to fetch tasks for project {}: {}", projectId, ex.getMessage());
             return Collections.emptyList();
@@ -573,6 +735,8 @@ public class OpenProjectServiceImpl implements OpenProjectService {
     }
 
     private void syncSprintTasks(Long sprintId, List<Map<String, Object>> tasks) {
+        // Remove old sprint-task associations to avoid stale rows from previous sync runs.
+        sprintTaskRepository.deleteBySprintId(sprintId);
         for (Map<String, Object> task : tasks) {
             try {
                 Long taskId = ((Number) task.get("id")).longValue();
@@ -586,7 +750,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
                 // Get assignee
                 String assignee = "Unassigned";
-                Map<String, Object> links = (Map<String, Object>) task.get("_links");
+                Map<String, Object> links = asObjectMap(task.get("_links"));
                 if (links != null && links.get("assignee") != null) {
                     assignee = (String) ((Map<?, ?>) links.get("assignee")).get("title");
                 }
@@ -612,13 +776,15 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
     private void syncTeamMembers(Long sprintId, List<Map<String, Object>> tasks) {
         log.info("Syncing team members for sprint {} with {} tasks", sprintId, tasks.size());
+        // Replace full member snapshot per sprint on each sync.
+        teamMemberRepository.deleteBySprintId(sprintId);
         
         // Group tasks by assignee
         Map<String, List<Map<String, Object>>> tasksByAssignee = new HashMap<>();
         
         for (Map<String, Object> task : tasks) {
             String assignee = "Unassigned";
-            Map<String, Object> links = (Map<String, Object>) task.get("_links");
+            Map<String, Object> links = asObjectMap(task.get("_links"));
             if (links != null && links.get("assignee") != null) {
                 Object assigneeObj = links.get("assignee");
                 if (assigneeObj instanceof Map<?, ?> assigneeMap) {
@@ -675,7 +841,9 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             member.setActualHours(actualHours);
 
             teamMemberRepository.save(member);
-            log.info("Saved team member: {} with {} tasks", name, total);
+            log.info("Saved team member: {} (role: {}, tasks: {}/{}/{}, hours: {}/{})", 
+                    name, member.getRole(), completed, inProgress, todo,
+                    estimatedHours, actualHours);
         }
         
         log.info("Total team members saved for sprint {}: {}", sprintId, memberIndex);
@@ -718,7 +886,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             if (act != null) stats.actualHours += act;
 
             // Get assignee for potential scrum master (first assignee or most tasks)
-            Map<String, Object> links = (Map<String, Object>) task.get("_links");
+            Map<String, Object> links = asObjectMap(task.get("_links"));
             if (links != null && links.get("assignee") != null) {
                 String assignee = (String) ((Map<?, ?>) links.get("assignee")).get("title");
                 if (assignee != null && !assignee.isBlank()) {
@@ -793,6 +961,47 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         return s.contains("testing") || s.contains("test") || s.contains("qa");
     }
 
+    private List<Map<String, Object>> fetchVersionsForProject(Long projectId) {
+        List<Map<String, Object>> versions = fetchAllCollectionElements("/projects/" + projectId + "/versions");
+        if (!versions.isEmpty()) {
+            return versions;
+        }
+
+        // Fallback for tenants exposing versions under global collection links/workspaces.
+        List<Map<String, Object>> allVersions = fetchAllCollectionElements("/versions");
+        return allVersions.stream()
+                .filter(version -> projectId.equals(extractVersionDefiningProjectId(version)))
+                .toList();
+    }
+
+    private Long extractVersionDefiningProjectId(Map<String, Object> version) {
+        Object linksObj = version.get("_links");
+        if (!(linksObj instanceof Map<?, ?> linksMap)) {
+            return null;
+        }
+
+        Object definingProjectObj = linksMap.get("definingProject");
+        if (!(definingProjectObj instanceof Map<?, ?> definingProjectMap)) {
+            return null;
+        }
+
+        Object hrefObj = definingProjectMap.get("href");
+        if (!(hrefObj instanceof String href) || href.isBlank()) {
+            return null;
+        }
+
+        String[] parts = href.split("/");
+        if (parts.length == 0) {
+            return null;
+        }
+
+        try {
+            return Long.parseLong(parts[parts.length - 1]);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     private static class SprintStats {
         int total = 0;
         int completed = 0;
@@ -811,7 +1020,9 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         int completedSprints,
         int activeSprints,
         List<String> names,
-        List<String> states
+        List<String> states,
+        LocalDate earliestStartDate,
+        LocalDate latestEndDate
     ) {
     }
 }

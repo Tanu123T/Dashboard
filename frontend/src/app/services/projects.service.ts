@@ -14,7 +14,7 @@ export interface Project {
   id: number;
   name: string;
   client: string;
-  status: 'complete' | 'in-progress' | 'delayed';
+  status: string;
   statusLabel: string;
   progress: number;
   lead: string;
@@ -87,15 +87,9 @@ export class ProjectsService {
 
   // Map API response to local interface
   private mapApiProjectToLocal(apiProject: any): Project {
-    const statusMap: { [key: string]: string } = {
-      'COMPLETE': 'complete',
-      'COMPLETED': 'complete',
-      'IN_PROGRESS': 'in-progress',
-      'DELAYED': 'delayed'
-    };
-
-    const status = statusMap[apiProject.status?.toUpperCase()] || apiProject.status?.toLowerCase() || 'in-progress';
-    const statusLabel = status === 'complete' ? 'Complete' : status === 'in-progress' ? 'In Progress' : 'Delayed';
+    const rawStatus = (apiProject.status || '').toString().trim();
+    const status = this.getStatusClass(rawStatus);
+    const statusLabel = rawStatus || 'Unknown';
 
     return {
       id: apiProject.id,
@@ -119,6 +113,20 @@ export class ProjectsService {
     };
   }
 
+  private getStatusClass(status: string): string {
+    const normalized = status.toLowerCase().trim();
+
+    // Handle OpenProject project statuses directly
+    if (normalized === 'on track') return 'on-track';
+    if (normalized === 'finished' || normalized === 'complete' || normalized === 'completed') return 'finished';
+    if (normalized === 'at risk') return 'at-risk';
+    if (normalized === 'off track') return 'off-track';
+    if (normalized === 'not started') return 'not-started';
+    if (normalized === 'not set' || normalized === 'discontinued' || !normalized) return 'unknown';
+    
+    return normalized || 'unknown';
+  }
+
   private formatDate(date: string | Date | null | undefined): string {
     if (!date) return '';
     const d = new Date(date);
@@ -130,14 +138,18 @@ export class ProjectsService {
   }
 
   private getProjectIcon(status: string): string {
-    return status === 'delayed' ? '🎁' : '�';
+    if (status === 'finished') return '✓';
+    if (status === 'on-track' || status === 'not-started') return '•';
+    if (status === 'at-risk' || status === 'off-track') return '!';
+    return '•';
   }
 
   private getProjectIconClass(status: string): string {
-    // Return Font Awesome icon class name based on status
-    if (status === 'delayed') return 'fas fa-briefcase';
-    if (status === 'in-progress') return 'fas fa-clipboard-check';
-    return 'fas fa-folder-open';
+    if (status === 'finished') return 'fas fa-circle-check';
+    if (status === 'on-track') return 'fas fa-circle';
+    if (status === 'at-risk' || status === 'off-track') return 'fas fa-triangle-exclamation';
+    if (status === 'not-started') return 'fas fa-circle-dot';
+    return 'fas fa-circle';
   }
 
   private updateStats(summary: any) {

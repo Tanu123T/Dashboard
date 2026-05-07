@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
     List<TeamMember> findBySprintId(Long sprintId);
     
+    void deleteBySprintId(Long sprintId);
+    
     Optional<TeamMember> findBySprintIdAndName(Long sprintId, String name);
     
     long countBySprintId(Long sprintId);

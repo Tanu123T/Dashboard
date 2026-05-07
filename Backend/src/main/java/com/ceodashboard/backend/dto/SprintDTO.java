@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SprintDTO {
     private Long id;
+    private Long projectId;
     private String name;
     private String goal;
     private String status;

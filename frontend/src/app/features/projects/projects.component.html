@@ -56,11 +56,6 @@
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
           <h3 style="font-size: 12px; color: #3b82f6; margin-bottom: 12px; font-weight: 700;">ABOUT</h3>
           <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 20px;">{{ selectedProject.description }}</p>
-          
-          <h3 style="font-size: 12px; color: #3b82f6; margin-bottom: 12px; font-weight: 700;">TECH STACK</h3>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
-            <span *ngFor="let tech of selectedProject.techStack" style="background: #f1f5f9; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; color: #475569;">{{ tech }}</span>
-          </div>
 
           <h3 style="font-size: 12px; color: #3b82f6; margin-bottom: 12px; font-weight: 700;">TEAM</h3>
           <div style="display: flex; gap: 8px;">

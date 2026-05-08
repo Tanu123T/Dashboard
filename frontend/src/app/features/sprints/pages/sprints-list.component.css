@@ -268,23 +268,37 @@
 }
 
 .team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
 }
 
 .team-member {
-  display: flex;
-  gap: 12px;
+  display: inline-flex;
+  gap: 8px;
   align-items: center;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+  padding: 8px 12px 8px 8px;
+  background: #f0f9ff;
+  border-radius: 20px;
+  border: 1px solid #bfdbfe;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.team-member:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.team-member:active {
+  transform: translateY(0);
 }
 
 .member-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -293,17 +307,20 @@
   font-weight: 700;
   font-size: 12px;
   flex-shrink: 0;
+  background: #3b82f6;
 }
 
 .member-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .member-name {
   font-size: 13px;
   font-weight: 600;
   color: #1e293b;
-  margin: 0 0 2px 0;
+  margin: 0;
 }
 
 .member-role {

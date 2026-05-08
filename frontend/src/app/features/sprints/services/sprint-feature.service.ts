@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Sprint, SprintStats, TeamMember } from '../models/sprint.model';
+import { environment } from 'src/environments/environment';
 
 export interface Project {
   id: number;
@@ -17,8 +18,8 @@ export interface ProjectsResponse {
   providedIn: 'root'
 })
 export class SprintFeatureService {
-  private apiUrl = 'http://localhost:8081/sprints';
-  private projectsApiUrl = 'http://localhost:8081/projects';
+  private apiUrl = `${environment.apiUrl}/sprints`;
+  private projectsApiUrl = `${environment.apiUrl}/projects`;
 
   constructor(private http: HttpClient) { }
 
@@ -48,13 +49,8 @@ export class SprintFeatureService {
     return this.http.get<TeamMember[]>(`${this.apiUrl}/project/${projectId}/team`);
   }
 
-  // Get all sprints by project with full details
-  getAllSprintsByProject(projectId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/project/${projectId}/all`);
-  }
-
-  // Get team member profile
-  getTeamMemberProfile(projectId: number, memberName: string): Observable<any> {
+  // Get member performance profile
+  getMemberProfile(projectId: number, memberName: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/project/${projectId}/member/${memberName}`);
   }
 }

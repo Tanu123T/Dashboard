@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { SidebarService } from '../../core/services/sidebar.service';
 
 @Component({
   selector: 'app-header',
@@ -10,6 +11,10 @@ import { CommonModule } from '@angular/common';
 })
 export class HeaderComponent {
 
-  constructor() { }
+  constructor(private sidebarService: SidebarService) { }
+
+  toggleSidebar(): void {
+    this.sidebarService.toggleSidebar();
+  }
 
 }

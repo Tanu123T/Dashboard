@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 export interface ProjectStats {
   total: number;
@@ -52,7 +53,7 @@ export interface ProjectsPageResponse {
   providedIn: 'root'
 })
 export class ProjectsService {
-  private apiUrl = 'http://localhost:8081/projects';
+  private apiUrl = `${environment.apiUrl}/projects`;
   private stats$ = new BehaviorSubject<ProjectStats>({
     total: 0,
     complete: 0,

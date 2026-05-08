@@ -161,9 +161,8 @@ export class SprintsListComponent implements OnInit, OnDestroy {
   }
 
   private generateColorForMember(name: string): string {
-    const colors = ['#3b82f6', '#1e40af', '#0284c7', '#0369a1', '#0c4a6e', '#164e63', '#1e3a8a', '#1e40af'];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
+    // Light blue color for all team member avatars
+    return '#3b82f6';
   }
 
   getStatusClass(status: string): string {
@@ -175,6 +174,17 @@ export class SprintsListComponent implements OnInit, OnDestroy {
   }
 
   openSprintDetail(sprintId: number) {
-    this.router.navigate(['/dashboard/sprints', sprintId]);
+    this.router.navigate(['/dashboard/sprints', sprintId], {
+      state: { projectName: this.selectedProject?.name }
+    });
+  }
+
+  openMemberProfile(memberName: string) {
+    if (this.selectedProjectId) {
+      const projectId = Number(this.selectedProjectId);
+      this.router.navigate(['/dashboard/members', projectId, memberName]);
+    } else {
+      console.warn('No project selected');
+    }
   }
 }

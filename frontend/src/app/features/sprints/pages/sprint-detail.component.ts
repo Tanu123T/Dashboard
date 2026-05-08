@@ -15,6 +15,7 @@ import { takeUntil } from 'rxjs/operators';
 export class SprintDetailComponent implements OnInit, OnDestroy {
   sprintId: number | null = null;
   sprintDetail: any = null;
+  projectName: string = 'Sprints';
   loading = true;
   error: string | null = null;
   private destroy$ = new Subject<void>();
@@ -23,9 +24,23 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private sprintService: SprintFeatureService
-  ) {}
+  ) {
+    // Get project name from navigation state (passed from sprints-list)
+    const historyState = (this.router.getCurrentNavigation()?.extras as any)?.state;
+    if (historyState?.projectName) {
+      this.projectName = historyState.projectName;
+    }
+  }
 
   ngOnInit() {
+    // Also try to get projectName from history state as fallback
+    if (!this.projectName || this.projectName === 'Sprints') {
+      const state = (window.history.state as any);
+      if (state?.projectName) {
+        this.projectName = state.projectName;
+      }
+    }
+
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.sprintId = +params['id'];
       if (this.sprintId) {
@@ -41,6 +56,10 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data: any) => {
           this.sprintDetail = data;
+          // If projectName still not set and API response contains it, use it
+          if ((!this.projectName || this.projectName === 'Sprints') && data?.projectName) {
+            this.projectName = data.projectName;
+          }
           this.loading = false;
         },
         error: (err: any) => {

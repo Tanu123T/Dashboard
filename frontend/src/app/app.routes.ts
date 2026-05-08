@@ -1,12 +1,20 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
   {
+    path: 'login',
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
+
+  {
     path: 'dashboard',
     loadComponent: () =>
       import('./layout/layout.component').then(m => m.LayoutComponent),
+    canActivate: [AuthGuard],
     children: [
       {
         path: '',
@@ -33,6 +41,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/sprints/pages/sprint-detail.component').then(m => m.SprintDetailComponent)
       },
+      {
+        path: 'members/:projectId/:member',
+        loadComponent: () =>
+          import('./features/sprints/pages/member-detail.component').then(m => m.MemberDetailComponent)
+      },
 
       {
         path: 'workforce-health',
@@ -55,5 +68,6 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       }
     ]
-  }
+  },
+  { path: '**', redirectTo: 'login' }
 ];

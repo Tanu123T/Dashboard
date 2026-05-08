@@ -6,9 +6,18 @@
   justify-content: space-between;
   padding: 12px 10px;
   border-right: 1px solid #d7e1ec;
-  height: calc(100vh - 64px);
+  height: 100%;
   box-sizing: border-box;
   overflow-y: auto;
+  flex-shrink: 0;
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+
+.navbar.hidden {
+  transform: translateX(-100%);
+  width: 0;
+  padding: 0;
+  border-right: none;
 }
 
 /* MENU */

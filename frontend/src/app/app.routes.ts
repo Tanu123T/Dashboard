@@ -33,6 +33,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/sprints/pages/sprint-detail.component').then(m => m.SprintDetailComponent)
       },
+      {
+        path: 'members/:projectId/:member',
+        loadComponent: () =>
+          import('./features/sprints/pages/member-detail.component').then(m => m.MemberDetailComponent)
+      },
 
       {
         path: 'workforce-health',

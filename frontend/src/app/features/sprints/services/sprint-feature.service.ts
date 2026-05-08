@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Sprint, SprintStats, TeamMember } from '../models/sprint.model';
+import { environment } from 'src/environments/environment';
 
 export interface Project {
   id: number;
@@ -17,8 +18,8 @@ export interface ProjectsResponse {
   providedIn: 'root'
 })
 export class SprintFeatureService {
-  private apiUrl = 'http://localhost:8081/sprints';
-  private projectsApiUrl = 'http://localhost:8081/projects';
+  private apiUrl = `${environment.apiUrl}/sprints`;
+  private projectsApiUrl = `${environment.apiUrl}/projects`;
 
   constructor(private http: HttpClient) { }
 

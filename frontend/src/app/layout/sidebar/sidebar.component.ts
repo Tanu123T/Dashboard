@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import keycloak from '../../keycloak.service';
 
 interface MenuItem {
   label: string;
@@ -110,8 +111,28 @@ export class SidebarComponent implements OnInit {
   }
 
   handleLogout() {
-    alert('Successfully logged out!');
-    // Add logout logic here
+    // Clear stored token and invoke Keycloak logout, then navigate to root
+    try {
+      const kc = keycloak as any;
+      // Request Keycloak to redirect back to app root after logout
+      if (kc && typeof kc.logout === 'function') {
+        kc.logout({ redirectUri: window.location.origin + '/login' }).then(() => {
+          sessionStorage.removeItem('kc_token');
+          this.router.navigate(['/login']);
+        }).catch((e: any) => {
+          console.warn('Logout error:', e);
+          sessionStorage.removeItem('kc_token');
+          this.router.navigate(['/login']);
+        });
+      } else {
+        sessionStorage.removeItem('kc_token');
+        this.router.navigate(['/login']);
+      }
+    } catch (e) {
+      console.warn('Logout failed:', e);
+      sessionStorage.removeItem('kc_token');
+      this.router.navigate(['/login']);
+    }
   }
 
   handleSettings() {

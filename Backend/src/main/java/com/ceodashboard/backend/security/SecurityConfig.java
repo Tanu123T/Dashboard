@@ -16,6 +16,16 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -53,22 +63,68 @@ public class SecurityConfig {
                 )
             )
 
-            .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> auth
 
                 // Public routes
                 .requestMatchers("/", "/health").permitAll()
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/projects/**").permitAll()
-                .requestMatchers("/sync/**").permitAll()
                 .requestMatchers("/error", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                .anyRequest().permitAll()
+                // Allow anonymous GET access to projects (list and details)
+                .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
+
+                // Require ADMIN role for mutating project endpoints
+                .requestMatchers(HttpMethod.POST, "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.PUT, "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.DELETE, "/projects/**").hasRole("admin")
+
+                // All other requests require authentication
+                .anyRequest().authenticated()
             )
 
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
+    }
+
+    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter((Jwt jwt) -> {
+            Collection<GrantedAuthority> authorities = new ArrayList<>();
+
+            // realm_access.roles -> ROLE_{role}
+            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+            if (realmAccess != null && realmAccess.get("roles") instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<String> roles = (List<String>) realmAccess.get("roles");
+                for (String role : roles) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                }
+            }
+
+            // resource_access.<client>.roles -> ROLE_{role}
+            Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
+            if (resourceAccess != null) {
+                for (Object clientEntry : resourceAccess.values()) {
+                    if (clientEntry instanceof Map) {
+                        Map<?, ?> clientMap = (Map<?, ?>) clientEntry;
+                        Object rolesObj = clientMap.get("roles");
+                        if (rolesObj instanceof List) {
+                            @SuppressWarnings("unchecked")
+                            List<String> clientRoles = (List<String>) rolesObj;
+                            for (String role : clientRoles) {
+                                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return authorities;
+        });
+
+        return converter;
     }
 
     @Bean

@@ -48,13 +48,8 @@ export class SprintFeatureService {
     return this.http.get<TeamMember[]>(`${this.apiUrl}/project/${projectId}/team`);
   }
 
-  // Get all sprints by project with full details
-  getAllSprintsByProject(projectId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/project/${projectId}/all`);
-  }
-
-  // Get team member profile
-  getTeamMemberProfile(projectId: number, memberName: string): Observable<any> {
+  // Get member performance profile
+  getMemberProfile(projectId: number, memberName: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/project/${projectId}/member/${memberName}`);
   }
 }

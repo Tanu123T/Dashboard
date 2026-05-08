@@ -1,0 +1,180 @@
+<div class="member-detail-page">
+  <!-- Back Navigation -->
+  <div class="back-navigation">
+    <button (click)="goBack()" class="back-button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading member profile...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p>{{ error }}</p>
+    <button (click)="goBack()" class="retry-button">Go Back</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error && memberProfile" class="member-content">
+    <!-- Header with Profile Info -->
+    <div class="member-header">
+      <div class="header-left">
+        <p class="header-subtitle">MEMBER PERFORMANCE PROFILE</p>
+        <h1>{{ memberProfile.name }}</h1>
+        <p class="header-description">{{ memberProfile.projectName }} - {{ memberProfile.role }}</p>
+      </div>
+      <div class="header-right">
+        <div class="header-controls">
+          <div class="project-selector-inline">
+            <label for="projectDropdown" class="project-selector-label">Select Project:</label>
+            <select 
+              id="projectDropdown"
+              class="project-dropdown" 
+              [(ngModel)]="selectedProjectId" 
+              (change)="onProjectChange()">
+              <option *ngFor="let project of projects" [value]="project.id">
+                {{ project.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="member-avatar-large">
+          {{ getInitials(memberProfile.name) }}
+        </div>
+        <div class="member-info-card">
+          <p class="member-name-large">{{ memberProfile.name }}</p>
+          <p class="member-role-large">{{ memberProfile.role }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #dbeafe;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">TOTAL STORIES</div>
+          <div class="stat-value">{{ memberProfile.totalStories }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #fee2e2;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 8 12 12 15 15"></polyline>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">BUGS RESOLVED</div>
+          <div class="stat-value">{{ memberProfile.bugsResolved }}</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" style="background: #fef3c7;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">HOURS WORKED</div>
+          <div class="stat-value">{{ memberProfile.hoursWorked }}h</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sprint-wise Deep Dive -->
+    <section class="sprint-dive-section">
+      <div class="sprint-dive-header">
+        <div>
+          <h2 class="sprint-dive-title">Sprint-wise Deep Dive</h2>
+          <p class="sprint-dive-description">Detailed sprint-level contribution and delivery quality trends</p>
+        </div>
+        <div class="carousel-controls">
+          <button class="carousel-btn" (click)="previousSprint()" [disabled]="currentSprintIndex === 0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button class="carousel-btn" (click)="nextSprint()" [disabled]="currentSprintIndex >= (memberProfile.sprintStats.length || 0) - 3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sprints-carousel">
+        <div *ngFor="let sprint of getVisibleSprints()" class="sprint-card-detail">
+          <div class="sprint-card-header">
+            <div class="sprint-info">
+              <h4 class="sprint-card-title">{{ getSprintLabel(sprint) }}</h4>
+              <p class="sprint-card-subtitle">{{ sprint.sprintName }}</p>
+            </div>
+            <span class="sprint-status" [ngClass]="getStatusClass(sprint.sprintStatus)">
+              {{ sprint.sprintStatus | uppercase }}
+            </span>
+          </div>
+
+          <div class="sprint-metrics">
+            <div class="metric">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <div class="metric-content">
+                <div class="metric-label">Story Pts</div>
+                <div class="metric-value">{{ sprint.storyPoints }}</div>
+              </div>
+            </div>
+
+            <div class="metric">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+              </svg>
+              <div class="metric-content">
+                <div class="metric-label">Bugs Fixed</div>
+                <div class="metric-value">{{ sprint.bugsFixed }}</div>
+              </div>
+            </div>
+
+            <div class="metric">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <div class="metric-content">
+                <div class="metric-label">Hours</div>
+                <div class="metric-value">{{ sprint.hours }}h</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="task-completion">
+            <div class="completion-label">
+              <span>Task Completion</span>
+              <span class="completion-percentage">{{ sprint.taskCompletionPercentage }}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" [style.width.%]="sprint.taskCompletionPercentage"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

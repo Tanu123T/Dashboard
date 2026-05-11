@@ -18,6 +18,30 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
   projectName: string = 'Sprints';
   loading = true;
   error: string | null = null;
+
+  burndown = [
+    { day: 'D1', ideal: 45, actual: 45 },
+    { day: 'D2', ideal: 38, actual: 42 },
+    { day: 'D3', ideal: 31, actual: 36 },
+    { day: 'D4', ideal: 24, actual: 30 },
+    { day: 'D5', ideal: 17, actual: 22 },
+    { day: 'D6', ideal: 10, actual: 14 },
+    { day: 'D7', ideal: 3, actual: 6 }
+  ];
+
+  sprintAlerts = [
+    { title: 'Scope change detected', detail: '2 new work items added after sprint start', tone: 'warning' },
+    { title: 'Burndown lagging', detail: 'Actual trend is 4 points above ideal', tone: 'danger' },
+    { title: 'Team capacity stable', detail: 'No blockers reported in last 24 hours', tone: 'success' }
+  ];
+
+  kpis = [
+    { label: 'Sprint Points', value: '45', tone: 'info', icon: 'chart' },
+    { label: 'Completed', value: '31', tone: 'success', icon: 'check' },
+    { label: 'Remaining', value: '14', tone: 'warning', icon: 'clock' },
+    { label: 'Blocked', value: '2', tone: 'danger', icon: 'alert' }
+  ];
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -77,5 +101,57 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
 
   goBack() {
     this.router.navigate(['/dashboard/sprints']);
+  }
+
+  get burndownIdealPath(): string {
+    return this.buildLinePath('ideal');
+  }
+
+  get burndownActualPath(): string {
+    return this.buildLinePath('actual');
+  }
+
+  get burndownAreaPath(): string {
+    return this.buildAreaPath('actual');
+  }
+
+  get burndownMax(): number {
+    return 50;
+  }
+
+  private buildLinePath(key: 'ideal' | 'actual'): string {
+    const width = 1000;
+    const height = 320;
+    const paddingTop = 24;
+    const paddingBottom = 44;
+    const usableHeight = height - paddingTop - paddingBottom;
+
+    return this.burndown
+      .map((point, index) => {
+        const x = (index / (this.burndown.length - 1)) * width;
+        const value = point[key];
+        const y = paddingTop + (usableHeight - ((value / this.burndownMax) * usableHeight));
+        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+      })
+      .join(' ');
+  }
+
+  private buildAreaPath(key: 'actual'): string {
+    const width = 1000;
+    const height = 320;
+    const paddingTop = 24;
+    const paddingBottom = 44;
+    const usableHeight = height - paddingTop - paddingBottom;
+
+    const line = this.burndown
+      .map((point, index) => {
+        const x = (index / (this.burndown.length - 1)) * width;
+        const value = point[key];
+        const y = paddingTop + (usableHeight - ((value / this.burndownMax) * usableHeight));
+        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+      })
+      .join(' ');
+
+    return `${line} L 1000 276 L 0 276 Z`;
   }
 }

@@ -9,6 +9,9 @@ export interface Sprint {
   completedTasks: number;
   totalTasks: number;
   lead?: string;
+  storyPoints?: number;
+  bugsFix?: number;
+  hours?: string;
 }
 
 export interface SprintStats {

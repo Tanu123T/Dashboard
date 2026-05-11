@@ -318,9 +318,8 @@
 /* ========== SPRINTS CAROUSEL ========== */
 .sprints-carousel {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  max-width: 500px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
 .sprint-card-detail {

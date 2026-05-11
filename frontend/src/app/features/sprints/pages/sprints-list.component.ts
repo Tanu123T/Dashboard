@@ -16,6 +16,8 @@ import { Router } from '@angular/router';
 })
 export class SprintsListComponent implements OnInit, OnDestroy {
   sprints: Sprint[] = [];
+  filteredSprints: Sprint[] = [];
+  sprintFilter: 'all' | 'active' | 'completed' = 'all';
   teamMembers: TeamMember[] = [];
   projects: Project[] = [];
   selectedProjectId: number | null = null;
@@ -108,7 +110,10 @@ export class SprintsListComponent implements OnInit, OnDestroy {
               status: sprint.status?.toLowerCase() || 'planned',
               progress: sprint.progress || 0,
               completedTasks: sprint.completedTasks || 0,
-              totalTasks: sprint.totalTasks || 0
+              totalTasks: sprint.totalTasks || 0,
+              storyPoints: sprint.storyPoints || 0,
+              bugsFix: sprint.bugsFix || 0,
+              hours: sprint.hours || '0h'
             }));
           }
 
@@ -133,6 +138,7 @@ export class SprintsListComponent implements OnInit, OnDestroy {
             }));
           }
 
+          this.filterSprints();
           this.loading = false;
         },
         error: (err: any) => {
@@ -141,6 +147,21 @@ export class SprintsListComponent implements OnInit, OnDestroy {
           this.loading = false;
         }
       });
+  }
+
+  filterSprints() {
+    if (this.sprintFilter === 'all') {
+      this.filteredSprints = this.sprints;
+    } else if (this.sprintFilter === 'active') {
+      this.filteredSprints = this.sprints.filter(s => s.status?.toLowerCase() === 'active');
+    } else if (this.sprintFilter === 'completed') {
+      this.filteredSprints = this.sprints.filter(s => s.status?.toLowerCase() === 'completed');
+    }
+  }
+
+  setSprintFilter(filter: 'all' | 'active' | 'completed') {
+    this.sprintFilter = filter;
+    this.filterSprints();
   }
 
   ngOnDestroy() {

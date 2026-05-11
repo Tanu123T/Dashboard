@@ -129,9 +129,31 @@
 
       <!-- SPRINTS LIST -->
       <section class="sprints-section">
-        <h2 class="sprints-title">Sprints ({{ sprints.length }})</h2>
+        <div class="sprints-header-row">
+          <h2 class="sprints-title">Sprints ({{ filteredSprints.length }})</h2>
+          <div class="sprint-filters">
+            <button 
+              class="filter-btn" 
+              [class.active]="sprintFilter === 'all'"
+              (click)="setSprintFilter('all')">
+              All Sprints
+            </button>
+            <button 
+              class="filter-btn" 
+              [class.active]="sprintFilter === 'active'"
+              (click)="setSprintFilter('active')">
+              Active
+            </button>
+            <button 
+              class="filter-btn" 
+              [class.active]="sprintFilter === 'completed'"
+              (click)="setSprintFilter('completed')">
+              Completed
+            </button>
+          </div>
+        </div>
         <div class="sprints-grid">
-          <div *ngFor="let sprint of sprints" class="sprint-card" (click)="openSprintDetail(sprint.id)">
+          <div *ngFor="let sprint of filteredSprints" class="sprint-card" (click)="openSprintDetail(sprint.id)">
             <div class="sprint-header">
               <div>
                 <h4 class="sprint-name">{{ sprint.name }}</h4>
@@ -140,6 +162,37 @@
               <span class="sprint-status-pill" [ngClass]="getStatusClass(sprint.status)">
                 ● {{ sprint.status | titlecase }}
               </span>
+            </div>
+
+            <div class="sprint-metrics">
+              <div class="metric-card">
+                <div class="metric-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                </div>
+                <div class="metric-value">{{ sprint.storyPoints || 0 }}</div>
+                <div class="metric-label">Story Pts</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"></path>
+                  </svg>
+                </div>
+                <div class="metric-value">{{ sprint.bugsFix || 0 }}</div>
+                <div class="metric-label">Bugs Fixed</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="metric-value">{{ sprint.hours || '0h' }}</div>
+                <div class="metric-label">Hours</div>
+              </div>
             </div>
 
             <div class="sprint-progress">

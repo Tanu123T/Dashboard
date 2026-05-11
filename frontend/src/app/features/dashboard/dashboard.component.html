@@ -1,3 +1,20 @@
-<div class="dashboard-content">
-  <!-- Dashboard content will be added here -->
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Stats Cards Section -->
+  <div class="stats-grid">
+    <div *ngFor="let stat of stats" class="stat-card" [style.--accent-color]="stat.color">
+      <div class="stat-icon">{{ stat.icon }}</div>
+      <div class="stat-content">
+        <p class="stat-label">{{ stat.label }}</p>
+        <p class="stat-value">{{ stat.value }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <!-- Additional dashboard content will be added here -->
+  </div>
 </div>

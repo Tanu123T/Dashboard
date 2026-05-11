@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 export interface ProjectStats {
   total: number;
@@ -52,7 +53,7 @@ export interface ProjectsPageResponse {
   providedIn: 'root'
 })
 export class ProjectsService {
-  private apiUrl = 'http://localhost:8081/projects';
+  private apiUrl = `${environment.apiUrl}/projects`;
   private stats$ = new BehaviorSubject<ProjectStats>({
     total: 0,
     complete: 0,
@@ -145,11 +146,11 @@ export class ProjectsService {
   }
 
   private getProjectIconClass(status: string): string {
-    if (status === 'finished') return 'fas fa-circle-check';
-    if (status === 'on-track') return 'fas fa-circle';
-    if (status === 'at-risk' || status === 'off-track') return 'fas fa-triangle-exclamation';
-    if (status === 'not-started') return 'fas fa-circle-dot';
-    return 'fas fa-circle';
+    if (status === 'finished') return 'fas fa-briefcase';
+    if (status === 'on-track') return 'fas fa-briefcase';
+    if (status === 'at-risk' || status === 'off-track') return 'fas fa-briefcase';
+    if (status === 'not-started') return 'fas fa-briefcase';
+    return 'fas fa-briefcase';
   }
 
   private updateStats(summary: any) {

@@ -1,7 +1,11 @@
 .projects-page {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
   padding: 24px;
   background: #f1f5f9;
   min-height: 100vh;
+  box-sizing: border-box;
   font-family: 'Inter', -apple-system, sans-serif;
 }
 

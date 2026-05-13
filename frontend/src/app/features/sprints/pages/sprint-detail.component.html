@@ -77,7 +77,7 @@
       </div>
       <div class="info-card">
         <div class="info-label">SPRINT MASTER</div>
-        <div class="info-value">{{ sprintDetail.sprintMaster ? sprintDetail.sprintMaster : '-' }}</div>
+        <div class="info-value">{{ sprintMasterLabel }}</div>
       </div>
       <div class="info-card">
         <div class="info-label">SCOPE MEMBERS</div>
@@ -95,41 +95,40 @@
         <h3>Burndown Chart</h3>
         <p class="chart-subtitle">Ideal vs Actual sprint burndown</p>
         <div class="burndown-chart-wrap">
-          <div class="burndown-plot-shell">
-            <div class="burndown-tooltip" aria-hidden="true">
-              <strong>Day 5</strong>
-              <span>Ideal: 17</span>
-              <span>Actual: 22</span>
-            </div>
-          </div>
-          <svg class="burndown-chart" viewBox="0 0 1000 320" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="actualFill" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#10b981" stop-opacity="0.18"></stop>
-                <stop offset="100%" stop-color="#10b981" stop-opacity="0.02"></stop>
-              </linearGradient>
-            </defs>
-            <g class="burndown-grid">
-              <line x1="0" y1="30" x2="1000" y2="30"></line>
-              <line x1="0" y1="95" x2="1000" y2="95"></line>
-              <line x1="0" y1="160" x2="1000" y2="160"></line>
-              <line x1="0" y1="225" x2="1000" y2="225"></line>
-            </g>
-            <path [attr.d]="burndownAreaPath" class="burndown-area"></path>
-            <path [attr.d]="burndownIdealPath" class="burndown-ideal"></path>
-            <path [attr.d]="burndownActualPath" class="burndown-actual"></path>
-          </svg>
+          <ng-container *ngIf="burndownPoints.length > 0; else emptyBurndownChart">
+            <svg class="burndown-chart" viewBox="0 0 1000 320" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="actualFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.18"></stop>
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0.02"></stop>
+                </linearGradient>
+              </defs>
+              <g class="burndown-grid">
+                <line x1="0" y1="30" x2="1000" y2="30"></line>
+                <line x1="0" y1="95" x2="1000" y2="95"></line>
+                <line x1="0" y1="160" x2="1000" y2="160"></line>
+                <line x1="0" y1="225" x2="1000" y2="225"></line>
+              </g>
+              <path [attr.d]="burndownAreaPath" class="burndown-area"></path>
+              <path [attr.d]="burndownIdealPath" class="burndown-ideal"></path>
+              <path [attr.d]="burndownActualPath" class="burndown-actual"></path>
+            </svg>
 
-          <div class="burndown-legend">
-            <div class="legend-item">
-              <span class="legend-line ideal"></span>
-              <span>Ideal</span>
+            <div class="burndown-legend">
+              <div class="legend-item">
+                <span class="legend-line ideal"></span>
+                <span>Ideal</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-line actual"></span>
+                <span>Actual</span>
+              </div>
             </div>
-            <div class="legend-item">
-              <span class="legend-line actual"></span>
-              <span>Actual</span>
-            </div>
-          </div>
+          </ng-container>
+
+          <ng-template #emptyBurndownChart>
+            <div class="chart-placeholder"></div>
+          </ng-template>
         </div>
       </div>
 
@@ -156,19 +155,6 @@
           <p>Time usage visualization would appear here</p>
         </div>
       </div>
-    </div>
-
-    <div class="alert-panel sprint-alert-panel">
-      <h3>Risk Alerts</h3>
-      <ul class="ph-alert-list">
-        <li *ngFor="let alert of sprintAlerts" [attr.data-tone]="alert.tone">
-              <span aria-hidden="true"></span>
-          <div>
-            <strong>{{ alert.title }}</strong>
-            <p>{{ alert.detail }}</p>
-          </div>
-        </li>
-      </ul>
     </div>
   </div>
 </div>

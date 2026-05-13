@@ -40,10 +40,6 @@ interface RepeatedLateOrAbsentItem {
 export class DashboardComponent {
   @ViewChild('attendanceDateInput') attendanceDateInput?: ElementRef<HTMLInputElement>;
 
-  activeTab = 'WorkForce Health';
-
-  tabs = ['WorkForce Health', 'Employee Hub', 'Work Calender', 'Org Hierarchy'];
-
   attendanceSnapshot: AttendanceSnapshot = {
     present: 228,
     absent: 9,

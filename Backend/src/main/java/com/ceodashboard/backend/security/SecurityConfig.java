@@ -71,8 +71,9 @@ public class SecurityConfig {
                 .requestMatchers("/error", "/error/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Allow anonymous GET access to projects (list and details)
+                // Allow anonymous GET access to projects and sprints (list and details)
                 .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/sprints/**").permitAll()
 
                 // Require ADMIN role for mutating project endpoints
                 .requestMatchers(HttpMethod.POST, "/projects/**").hasRole("admin")

@@ -5,6 +5,25 @@ import { SprintFeatureService } from '../services/sprint-feature.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+interface BurndownPoint {
+  day: string;
+  ideal: number;
+  actual: number;
+}
+
+interface SprintKpi {
+  label: string;
+  value: string;
+  tone: 'info' | 'success' | 'warning' | 'danger';
+  icon: 'chart' | 'check' | 'clock' | 'alert';
+}
+
+interface SprintAlert {
+  title: string;
+  detail: string;
+  tone: 'warning' | 'danger' | 'success';
+}
+
 @Component({
   selector: 'app-sprint-detail',
   standalone: true,
@@ -19,28 +38,9 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
 
-  burndown = [
-    { day: 'D1', ideal: 45, actual: 45 },
-    { day: 'D2', ideal: 38, actual: 42 },
-    { day: 'D3', ideal: 31, actual: 36 },
-    { day: 'D4', ideal: 24, actual: 30 },
-    { day: 'D5', ideal: 17, actual: 22 },
-    { day: 'D6', ideal: 10, actual: 14 },
-    { day: 'D7', ideal: 3, actual: 6 }
-  ];
-
-  sprintAlerts = [
-    { title: 'Scope change detected', detail: '2 new work items added after sprint start', tone: 'warning' },
-    { title: 'Burndown lagging', detail: 'Actual trend is 4 points above ideal', tone: 'danger' },
-    { title: 'Team capacity stable', detail: 'No blockers reported in last 24 hours', tone: 'success' }
-  ];
-
-  kpis = [
-    { label: 'Sprint Points', value: '45', tone: 'info', icon: 'chart' },
-    { label: 'Completed', value: '31', tone: 'success', icon: 'check' },
-    { label: 'Remaining', value: '14', tone: 'warning', icon: 'clock' },
-    { label: 'Blocked', value: '2', tone: 'danger', icon: 'alert' }
-  ];
+  burndownPoints: BurndownPoint[] = [];
+  sprintAlerts: SprintAlert[] = [];
+  kpis: SprintKpi[] = [];
 
   private destroy$ = new Subject<void>();
 
@@ -80,6 +80,9 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (data: any) => {
           this.sprintDetail = data;
+          this.burndownPoints = this.mapBurndownPoints(data?.burndownChart);
+          this.kpis = this.buildKpis(data);
+
           // If projectName still not set and API response contains it, use it
           if ((!this.projectName || this.projectName === 'Sprints') && data?.projectName) {
             this.projectName = data.projectName;
@@ -103,6 +106,10 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard/sprints']);
   }
 
+  get sprintMasterLabel(): string {
+    return this.sprintDetail?.scrumMaster || this.sprintDetail?.sprintMaster || '-';
+  }
+
   get burndownIdealPath(): string {
     return this.buildLinePath('ideal');
   }
@@ -116,19 +123,25 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
   }
 
   get burndownMax(): number {
-    return 50;
+    return this.burndownPoints.reduce((max, point) => Math.max(max, point.ideal, point.actual), 0);
   }
 
   private buildLinePath(key: 'ideal' | 'actual'): string {
+    if (!this.burndownPoints.length || this.burndownMax <= 0) {
+      return '';
+    }
+
     const width = 1000;
     const height = 320;
     const paddingTop = 24;
     const paddingBottom = 44;
     const usableHeight = height - paddingTop - paddingBottom;
 
-    return this.burndown
+    return this.burndownPoints
       .map((point, index) => {
-        const x = (index / (this.burndown.length - 1)) * width;
+        const x = this.burndownPoints.length === 1
+          ? width / 2
+          : (index / (this.burndownPoints.length - 1)) * width;
         const value = point[key];
         const y = paddingTop + (usableHeight - ((value / this.burndownMax) * usableHeight));
         return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
@@ -137,21 +150,53 @@ export class SprintDetailComponent implements OnInit, OnDestroy {
   }
 
   private buildAreaPath(key: 'actual'): string {
-    const width = 1000;
-    const height = 320;
-    const paddingTop = 24;
-    const paddingBottom = 44;
-    const usableHeight = height - paddingTop - paddingBottom;
-
-    const line = this.burndown
-      .map((point, index) => {
-        const x = (index / (this.burndown.length - 1)) * width;
-        const value = point[key];
-        const y = paddingTop + (usableHeight - ((value / this.burndownMax) * usableHeight));
-        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-      })
-      .join(' ');
+    const line = this.buildLinePath(key);
+    if (!line) {
+      return '';
+    }
 
     return `${line} L 1000 276 L 0 276 Z`;
+  }
+
+  private mapBurndownPoints(chartData: any): BurndownPoint[] {
+    if (!Array.isArray(chartData)) {
+      return [];
+    }
+
+    return chartData
+      .map((point: any) => ({
+        day: String(point?.day ?? '').trim(),
+        ideal: this.toNumber(point?.ideal),
+        actual: this.toNumber(point?.actual)
+      }))
+      .filter(point => point.day.length > 0);
+  }
+
+  private buildKpis(data: any): SprintKpi[] {
+    const totalTasks = this.toNumber(data?.totalTasks);
+    const completedTasks = this.toNumber(data?.completedTasks);
+    const hasRemainingData = data?.todoTasks !== undefined || data?.inProgressTasks !== undefined || data?.testingTasks !== undefined;
+    const remainingTasks = [data?.todoTasks, data?.inProgressTasks, data?.testingTasks]
+      .reduce((sum, value) => sum + this.toNumber(value), 0);
+
+    return [
+      { label: 'Sprint Points', value: this.formatMetric(data?.storyPoints), tone: 'info', icon: 'chart' },
+      { label: 'Completed', value: this.formatMetric(data?.completedTasks), tone: 'success', icon: 'check' },
+      { label: 'Remaining', value: hasRemainingData ? String(remainingTasks) : (data?.totalTasks != null && data?.completedTasks != null ? String(Math.max(totalTasks - completedTasks, 0)) : ''), tone: 'warning', icon: 'clock' },
+      { label: 'Blocked', value: this.formatMetric(data?.blockedTasks ?? data?.blocked), tone: 'danger', icon: 'alert' }
+    ];
+  }
+
+  private buildAlerts(_: any): SprintAlert[] {
+    return [];
+  }
+
+  private formatMetric(value: any): string {
+    return value === null || value === undefined ? '' : String(value);
+  }
+
+  private toNumber(value: any): number {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
   }
 }

@@ -76,6 +76,23 @@ export class DashboardComponent implements OnInit {
 
   chartPoints = [52, 53, 54, 55, 56, 57];
 
+  chartData = [
+    { month: 'Jan', actual: 207, target: 209 },
+    { month: 'Feb', actual: 207, target: 209 },
+    { month: 'Mar', actual: 207, target: 209 },
+    { month: 'Apr', actual: 207, target: 209 },
+    { month: 'May', actual: 207, target: 209 },
+    { month: 'Jun', actual: 207, target: 209 }
+  ];
+
+  showTooltip = false;
+  tooltipX = 0;
+  tooltipY = 0;
+  tooltipMonth = '';
+  tooltipValue = 0;
+  tooltipTarget = 0;
+  hoverLineX = 0;
+
   selectedAttendanceDate = '2026-05-11';
 
   attendanceRows: AttendanceRow[] = [
@@ -124,6 +141,64 @@ export class DashboardComponent implements OnInit {
         return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
       })
       .join(' ');
+  }
+
+  private generateChartPoints(dataKey: 'actual' | 'target'): Array<{ x: number; y: number }> {
+    const width = 1000;
+    const height = 220;
+    const minVal = 0;
+    const maxVal = 240;
+    const chartHeight = 160;
+
+    return this.chartData.map((data, index) => {
+      const x = (index / (this.chartData.length - 1)) * width;
+      const value = dataKey === 'actual' ? data.actual : data.target;
+      const normalized = (value - minVal) / (maxVal - minVal);
+      const y = height - (normalized * chartHeight) - 30;
+      return { x, y };
+    });
+  }
+
+  private generateSmoothPath(points: Array<{ x: number; y: number }>): string {
+    if (points.length < 2) return '';
+
+    let path = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+
+      // Control points for smooth cubic bezier curve
+      const cp1x = current.x + (next.x - current.x) * 0.33;
+      const cp1y = current.y;
+      const cp2x = next.x - (next.x - current.x) * 0.33;
+      const cp2y = next.y;
+
+      path += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${next.x} ${next.y}`;
+    }
+
+    return path;
+  }
+
+  get actualLinePath(): string {
+    const points = this.generateChartPoints('actual');
+    return this.generateSmoothPath(points);
+  }
+
+  get targetLinePath(): string {
+    const points = this.generateChartPoints('target');
+    return this.generateSmoothPath(points);
+  }
+
+  get areaPath(): string {
+    const points = this.generateChartPoints('actual');
+    const width = 1000;
+    const height = 220;
+
+    let path = this.generateSmoothPath(points);
+    // Close the area
+    path += ` L ${width} ${height} L 0 ${height} Z`;
+    return path;
   }
 
   getInitials(name: string): string {
@@ -191,4 +266,37 @@ export class DashboardComponent implements OnInit {
   trackByLabel(_: number, item: { label: string }): string {
     return item.label;
   }
+
+  onChartHover(event: MouseEvent): void {
+    const chartArea = event.currentTarget as HTMLElement;
+    const rect = chartArea.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Calculate which month is being hovered based on x position
+    const relativeX = x / rect.width; // 0 to 1
+    const monthIndex = Math.round(relativeX * (this.chartData.length - 1));
+    const clampedIndex = Math.max(0, Math.min(monthIndex, this.chartData.length - 1));
+
+    const data = this.chartData[clampedIndex];
+    this.tooltipMonth = data.month;
+    this.tooltipValue = data.actual;
+    this.tooltipTarget = data.target;
+
+    // Calculate hover line X position - position at center of each month column
+    const monthWidth = 1000 / this.chartData.length;
+    this.hoverLineX = (clampedIndex + 0.5) * monthWidth;
+
+    // Position tooltip
+    this.tooltipX = x - 60;
+    this.tooltipY = y - 100;
+
+    this.showTooltip = true;
+  }
+
+  hideTooltip(): void {
+    this.showTooltip = false;
+  }
+
+  constructor() { }
 }

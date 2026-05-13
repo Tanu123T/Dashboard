@@ -1,5 +1,6 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 
 type AttendanceStatus = 'present' | 'late' | 'leave';
 
@@ -37,8 +38,19 @@ interface RepeatedLateOrAbsentItem {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   @ViewChild('attendanceDateInput') attendanceDateInput?: ElementRef<HTMLInputElement>;
+  
+  isWorkforceHealthRoute = false;
+
+  constructor(private route: ActivatedRoute) {}
+
+  ngOnInit() {
+    // Check if this route is 'workforce-health', if so show content, otherwise empty
+    this.isWorkforceHealthRoute = this.route.snapshot.component === DashboardComponent && 
+                                   this.route.snapshot.url.length > 0 &&
+                                   this.route.snapshot.url[0].path === 'workforce-health';
+  }
 
   attendanceSnapshot: AttendanceSnapshot = {
     present: 228,
@@ -179,6 +191,4 @@ export class DashboardComponent {
   trackByLabel(_: number, item: { label: string }): string {
     return item.label;
   }
-
-  constructor() { }
 }

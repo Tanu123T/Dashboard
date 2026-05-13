@@ -1,4 +1,4 @@
-<div class="workforce-page ph-page-root">
+<div class="workforce-page ph-page-root" *ngIf="isWorkforceHealthRoute">
   <section class="hero-panel ph-header-card">
     <div class="hero-copy">
       <p class="eyebrow">People Health</p>
@@ -178,4 +178,8 @@
       </li>
     </ul>
   </section>
+</div>
+
+<div *ngIf="!isWorkforceHealthRoute" style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
+  <p style="color: #64748b; font-size: 16px;">Dashboard</p>
 </div>

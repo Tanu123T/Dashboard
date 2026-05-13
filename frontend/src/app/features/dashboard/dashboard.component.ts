@@ -297,6 +297,4 @@ export class DashboardComponent implements OnInit {
   hideTooltip(): void {
     this.showTooltip = false;
   }
-
-  constructor() { }
 }

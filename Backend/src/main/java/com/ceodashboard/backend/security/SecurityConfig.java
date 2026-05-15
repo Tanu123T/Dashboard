@@ -29,9 +29,14 @@ import java.util.Map;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Configuration
 public class SecurityConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
@@ -139,6 +144,8 @@ public class SecurityConfig {
         String message,
         String path
     ) throws IOException {
+        String errorId = UUID.randomUUID().toString();
+        logger.warn("Auth error (errorId={}) on path {}: {}", errorId, path, message);
         response.setStatus(status.value());
         response.setContentType("application/json");
         response.getWriter().write(
@@ -147,7 +154,8 @@ public class SecurityConfig {
                 + "\"status\":" + status.value() + ","
                 + "\"error\":\"" + escapeJson(status.getReasonPhrase()) + "\"," 
                 + "\"message\":\"" + escapeJson(message) + "\"," 
-                + "\"path\":\"" + escapeJson(path) + "\""
+                + "\"path\":\"" + escapeJson(path) + "\"," 
+                + "\"errorId\":\"" + escapeJson(errorId) + "\""
                 + "}"
         );
     }

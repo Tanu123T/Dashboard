@@ -1,20 +1,197 @@
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <h1>Dashboard</h1>
-  </div>
+<div class="workforce-page ph-page-root" *ngIf="isWorkforceHealthRoute">
+  <section class="hero-panel ph-header-card">
+    <div class="hero-copy">
+      <p class="eyebrow">People Health</p>
+      <h1>Workforce readiness, attendance trends, and talent continuity insights.</h1>
+    </div>
 
-  <!-- Stats Cards Section -->
-  <div class="stats-grid">
-    <div *ngFor="let stat of stats" class="stat-card" [style.--accent-color]="stat.color">
-      <div class="stat-icon">{{ stat.icon }}</div>
-      <div class="stat-content">
-        <p class="stat-label">{{ stat.label }}</p>
-        <p class="stat-value">{{ stat.value }}</p>
+    <div class="updated-pill ph-updated-pill">
+      <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="4" y="5" width="16" height="15" rx="3"></rect>
+        <path d="M8 3.8v3.4M16 3.8v3.4M4 9.5h16"></path>
+        <path d="M9.5 14.2h2.2"></path>
+      </svg>
+      <span>Last updated: May 11, 2026, 2:30 PM</span>
+    </div>
+  </section>
+
+  <section class="summary-grid ph-kpi-grid">
+    <article *ngFor="let card of summaryCards" class="summary-card" [attr.data-tone]="card.tone">
+      <div class="summary-topline">
+        <div>
+          <p class="summary-label">{{ card.label }}</p>
+          <h2>{{ card.value }}</h2>
+        </div>
+        <div class="summary-icon" [attr.data-icon]="card.icon">
+          <svg *ngIf="card.icon === 'user-check'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M16 19v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="8" r="3"></circle>
+            <path d="M16 11l2 2 4-4"></path>
+          </svg>
+          <svg *ngIf="card.icon === 'coffee'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h13v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8Z"></path>
+            <path d="M16 10h2a2 2 0 0 1 0 4h-2"></path>
+            <path d="M7 4v3M11 4v3M15 4v3"></path>
+            <path d="M5 20h12"></path>
+          </svg>
+          <svg *ngIf="card.icon === 'calendar'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect>
+            <path d="M8 3.8v3.4M16 3.8v3.4M3.5 9.5h17"></path>
+          </svg>
+          <svg *ngIf="card.icon === 'clock'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5"></circle>
+            <path d="M12 8.5V12l2.8 1.7"></path>
+          </svg>
+          <svg *ngIf="card.icon === 'building'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="4.5" width="16" height="15" rx="2.5"></rect>
+            <path d="M8 19.5V15M12 19.5V15M16 19.5V15"></path>
+            <path d="M8 9h0M12 9h0M16 9h0M8 12h0M12 12h0M16 12h0"></path>
+          </svg>
+          <svg *ngIf="card.icon === 'users'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 20v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="11" cy="8" r="3"></circle>
+            <path d="M22 20v-1.5a3.5 3.5 0 0 0-3-3.45"></path>
+            <path d="M17 4.8a3 3 0 0 1 0 5.8"></path>
+          </svg>
+        </div>
+      </div>
+      <p class="summary-subtitle">{{ card.subtitle }}</p>
+    </article>
+  </section>
+
+  <section class="panel chart-panel ph-panel-card">
+    <header class="panel-header ph-header-actions">
+      <div>
+        <h3>Headcount Growth Trend</h3>
+        <p>Monthly movement versus hiring target</p>
+      </div>
+    </header>
+
+    <div class="chart-wrap">
+      <div class="chart-axis chart-axis-y">
+        <span>240</span>
+        <span>180</span>
+        <span>120</span>
+        <span>60</span>
+        <span>0</span>
+      </div>
+
+      <div class="chart-area" (mousemove)="onChartHover($event)" (mouseleave)="hideTooltip()">
+        <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="headcountFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stop-color="#3f89de" stop-opacity="0.26" />
+              <stop offset="95%" stop-color="#3f89de" stop-opacity="0.02" />
+            </linearGradient>
+          </defs>
+          <!-- Area fill for actual data -->
+          <path [attr.d]="areaPath" fill="url(#headcountFill)" class="chart-area-fill"></path>
+          <!-- Target line (dashed) -->
+          <path [attr.d]="targetLinePath" class="target-line"></path>
+          <!-- Actual line (solid) -->
+          <path [attr.d]="actualLinePath" class="actual-line"></path>
+          <!-- Hover indicator line -->
+          <line *ngIf="showTooltip" [attr.x1]="hoverLineX" [attr.y1]="0" [attr.x2]="hoverLineX" [attr.y2]="220" class="hover-line"></line>
+        </svg>
+
+        <div class="chart-tooltip" *ngIf="showTooltip" [style.left.px]="tooltipX" [style.top.px]="tooltipY">
+          <p class="tooltip-title">{{ tooltipMonth }}</p>
+          <p class="tooltip-data"><span class="tooltip-label">Headcount:</span> <span class="tooltip-value">{{ tooltipValue }} employees</span></p>
+          <p class="tooltip-data"><span class="tooltip-label">Target:</span> <span class="tooltip-value">{{ tooltipTarget }} employees</span></p>
+        </div>
+
+        <div class="chart-months">
+          <span *ngFor="let month of months">{{ month }}</span>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="dashboard-content">
-    <!-- Additional dashboard content will be added here -->
-  </div>
+  <section class="panel table-panel ph-panel-card">
+    <header class="panel-header table-header ph-full-card ph-attendance-panel">
+      <div>
+        <h3>Attendance Log</h3>
+        <p>Real-time employee check-in/out records</p>
+      </div>
+
+      <div class="table-actions ph-attendance-toolbar">
+        <button class="ph-date-pill" type="button">{{ attendanceDateLabel }}</button>
+        <button class="icon-button ph-date-icon-btn" type="button" aria-label="Calendar" (click)="openAttendanceDatePicker()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="15" rx="3"></rect>
+            <path d="M8 3.8v3.4M16 3.8v3.4M4 9.5h16"></path>
+          </svg>
+        </button>
+        <input
+          #attendanceDateInput
+          class="ph-date-input-hidden"
+          type="date"
+          [value]="selectedAttendanceDate"
+          (change)="onAttendanceDateChange($any($event.target).value)" />
+        <button class="ph-btn ghost export-button" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 4v9"></path>
+            <path d="M8.5 9.5 12 13l3.5-3.5"></path>
+            <path d="M5 19h14"></path>
+          </svg>
+          Export
+        </button>
+      </div>
+    </header>
+
+    <div class="table-wrap ph-attendance-table-wrap">
+      <table class="ph-attendance-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Department</th>
+            <th>Check-In</th>
+            <th>Check-Out</th>
+            <th>Hours</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of attendanceRows" class="ph-attendance-row">
+            <td>
+              <div class="ph-attendance-employee">
+                <span class="ph-attendance-avatar">{{ row.initials }}</span>
+                <div>
+                  <strong>{{ row.name }}</strong>
+                  <small>{{ row.employeeCode }}</small>
+                </div>
+              </div>
+            </td>
+            <td>{{ row.department }}</td>
+            <td>{{ row.checkIn }}</td>
+            <td>{{ row.checkOut || '' }}</td>
+            <td>{{ row.hours || '' }}</td>
+            <td>
+              <span class="ph-attendance-status" [attr.data-tone]="getStatusTone(row.status)">{{ getStatusLabel(row.status) }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel watchlist-panel ph-panel-card ph-full-card">
+    <header class="panel-header">
+      <div>
+        <h3>Repeated Late and Absence Watchlist</h3>
+        <p>Requires manager action</p>
+      </div>
+    </header>
+
+    <ul class="ph-alert-list" role="list">
+      <li *ngFor="let item of repeatedLateOrAbsent" class="medium">
+        <span>{{ item.name }} - {{ item.issue }}</span>
+        <small>{{ item.department }}</small>
+      </li>
+    </ul>
+  </section>
+</div>
+
+<div *ngIf="!isWorkforceHealthRoute" style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
+  <p style="color: #64748b; font-size: 16px;">Dashboard</p>
 </div>

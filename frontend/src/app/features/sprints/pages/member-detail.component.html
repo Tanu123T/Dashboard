@@ -39,7 +39,7 @@
               class="project-dropdown" 
               [(ngModel)]="selectedProjectId" 
               (change)="onProjectChange()">
-              <option *ngFor="let project of projects" [value]="project.id">
+              <option *ngFor="let project of memberProjects" [value]="project.id">
                 {{ project.name }}
               </option>
             </select>

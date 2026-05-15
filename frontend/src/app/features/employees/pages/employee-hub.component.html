@@ -38,7 +38,7 @@
     </div>
 
     <div class="members-grid">
-      <div *ngFor="let emp of filteredEmployees" class="member-card">
+      <div *ngFor="let emp of filteredEmployees" class="member-card" (click)="viewEmployeeDetail(emp.id)" style="cursor: pointer;">
         <div class="card-header">
           <div>
             <div class="member-avatar" [style.background]="emp.color">

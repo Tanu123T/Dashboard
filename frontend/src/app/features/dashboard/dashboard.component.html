@@ -1,4 +1,4 @@
-<div class="workforce-page ph-page-root">
+<div class="workforce-page ph-page-root" *ngIf="isWorkforceHealthRoute">
   <section class="hero-panel ph-header-card">
     <div class="hero-copy">
       <p class="eyebrow">People Health</p>
@@ -76,17 +76,29 @@
         <span>0</span>
       </div>
 
-      <div class="chart-area">
+      <div class="chart-area" (mousemove)="onChartHover($event)" (mouseleave)="hideTooltip()">
         <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <linearGradient id="lineFill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#54c6d9" stop-opacity="0.22" />
-              <stop offset="100%" stop-color="#54c6d9" stop-opacity="0.02" />
+            <linearGradient id="headcountFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stop-color="#3f89de" stop-opacity="0.26" />
+              <stop offset="95%" stop-color="#3f89de" stop-opacity="0.02" />
             </linearGradient>
           </defs>
-          <path [attr.d]="'M 0 170 L 200 166 L 400 162 L 600 158 L 800 154 L 1000 150 L 1000 220 L 0 220 Z'" fill="url(#lineFill)"></path>
-          <path [attr.d]="chartPath" class="trend-line"></path>
+          <!-- Area fill for actual data -->
+          <path [attr.d]="areaPath" fill="url(#headcountFill)" class="chart-area-fill"></path>
+          <!-- Target line (dashed) -->
+          <path [attr.d]="targetLinePath" class="target-line"></path>
+          <!-- Actual line (solid) -->
+          <path [attr.d]="actualLinePath" class="actual-line"></path>
+          <!-- Hover indicator line -->
+          <line *ngIf="showTooltip" [attr.x1]="hoverLineX" [attr.y1]="0" [attr.x2]="hoverLineX" [attr.y2]="220" class="hover-line"></line>
         </svg>
+
+        <div class="chart-tooltip" *ngIf="showTooltip" [style.left.px]="tooltipX" [style.top.px]="tooltipY">
+          <p class="tooltip-title">{{ tooltipMonth }}</p>
+          <p class="tooltip-data"><span class="tooltip-label">Headcount:</span> <span class="tooltip-value">{{ tooltipValue }} employees</span></p>
+          <p class="tooltip-data"><span class="tooltip-label">Target:</span> <span class="tooltip-value">{{ tooltipTarget }} employees</span></p>
+        </div>
 
         <div class="chart-months">
           <span *ngFor="let month of months">{{ month }}</span>
@@ -178,4 +190,8 @@
       </li>
     </ul>
   </section>
+</div>
+
+<div *ngIf="!isWorkforceHealthRoute" style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
+  <p style="color: #64748b; font-size: 16px;">Dashboard</p>
 </div>

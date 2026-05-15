@@ -55,7 +55,12 @@ export const routes: Routes = [
       {
         path: 'employee-hub',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+          import('./features/employees/pages/employee-hub.component').then(m => m.EmployeeHubComponent)
+      },
+      {
+        path: 'employee-detail/:id',
+        loadComponent: () =>
+          import('./features/employees/pages/employee-detail.component').then(m => m.EmployeeDetailComponent)
       },
       {
         path: 'work-calendar',

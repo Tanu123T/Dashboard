@@ -1,0 +1,72 @@
+<div class="employee-hub-page">
+  <section class="hero-panel eh-header-card">
+    <div class="hero-copy">
+      <p class="eyebrow">People Health</p>
+      <h1>Workforce readiness, attendance trends, and talent continuity insights.</h1>
+    </div>
+  </section>
+
+  <nav class="hub-tabs" aria-label="People Health sections">
+    <a class="hub-tab" routerLink="/dashboard/workforce-health">WorkForce Health</a>
+    <a class="hub-tab is-active" routerLink="/dashboard/employee-hub">Employee Hub</a>
+    <a class="hub-tab" routerLink="/dashboard/work-calendar">Work Calender</a>
+    <a class="hub-tab" routerLink="/dashboard/org-hierarchy">Org Hierarchy</a>
+  </nav>
+
+  <section class="members-section eh-panel">
+    <header class="members-header">
+      <div>
+        <h2 class="members-title">All Members</h2>
+        <p class="members-subtitle">{{ getShowCount() }}</p>
+      </div>
+      <button type="button" class="view-all-link" (click)="toggleShowAllEmployees()">
+        {{ getViewAllLabel() }}
+      </button>
+    </header>
+
+    <div class="search-container">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search by name, role, department, or location..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()">
+    </div>
+
+    <div class="members-grid">
+      <div *ngFor="let emp of filteredEmployees" class="member-card" (click)="viewEmployeeDetail(emp.id)" style="cursor: pointer;">
+        <div class="card-header">
+          <div>
+            <div class="member-avatar" [style.background]="emp.color">
+              {{ emp.initials }}
+            </div>
+          </div>
+          <div class="header-info">
+            <h3 class="member-name">{{ emp.name }}</h3>
+            <p class="member-title">{{ emp.title }}</p>
+          </div>
+          <span class="status-badge" [ngClass]="'status-' + emp.status.toLowerCase().replace(' ', '-')">{{ emp.status }}</span>
+        </div>
+
+        <div class="card-tags">
+          <span class="tag">{{ emp.department }}</span>
+          <span class="tag">{{ emp.location }}</span>
+        </div>
+
+        <div class="stability-section">
+          <div class="stability-header">
+            <span class="stability-label">STABILITY</span>
+            <span class="stability-value">{{ emp.stability }}%</span>
+          </div>
+          <div class="stability-bar">
+            <div class="stability-fill" [style.width.%]="emp.stability"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

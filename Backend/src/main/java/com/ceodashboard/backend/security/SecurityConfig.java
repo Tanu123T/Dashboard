@@ -72,13 +72,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Allow anonymous GET access to projects and sprints (list and details)
-                .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/sprints/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/projects", "/projects/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/sprints", "/sprints/**").permitAll()
 
                 // Require ADMIN role for mutating project endpoints
-                .requestMatchers(HttpMethod.POST, "/projects/**").hasRole("admin")
-                .requestMatchers(HttpMethod.PUT, "/projects/**").hasRole("admin")
-                .requestMatchers(HttpMethod.DELETE, "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.POST, "/projects", "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.PUT, "/projects", "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.DELETE, "/projects", "/projects/**").hasRole("admin")
 
                 // All other requests require authentication
                 .anyRequest().authenticated()
@@ -165,7 +165,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000", "http://localhost:5200"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

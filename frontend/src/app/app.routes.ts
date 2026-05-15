@@ -29,7 +29,7 @@ export const routes: Routes = [
       {
         path: 'projects/:id',
         loadComponent: () =>
-          import('./features/projects/projects.component').then(m => m.ProjectsComponent)
+          import('./features/projects/pages/project-detail.component').then(m => m.ProjectDetailComponent)
       },
       {
         path: 'sprints',

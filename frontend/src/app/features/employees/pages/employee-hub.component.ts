@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 interface EmployeeCard {
   id: string;
@@ -162,6 +162,8 @@ export class EmployeeHubComponent implements OnInit {
 
   filteredEmployees: EmployeeCard[] = [];
 
+  constructor(private router: Router) {}
+
   ngOnInit() {
     this.filterEmployees();
   }
@@ -185,6 +187,10 @@ export class EmployeeHubComponent implements OnInit {
   toggleShowAllEmployees() {
     this.showAllEmployees = !this.showAllEmployees;
     this.filterEmployees();
+  }
+
+  viewEmployeeDetail(employeeId: string) {
+    this.router.navigate(['/dashboard/employee-detail', employeeId]);
   }
 
   getShowCount(): string {

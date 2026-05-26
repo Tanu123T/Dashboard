@@ -61,6 +61,11 @@ public class PrimaryDbConfig {
         org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter vendorAdapter = new org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
 
+        java.util.Map<String, Object> properties = new java.util.HashMap<>();
+        properties.put("hibernate.physical_naming_strategy",
+                "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy");
+        em.setJpaPropertyMap(properties);
+
         return em;
     }
 

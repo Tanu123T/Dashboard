@@ -15,8 +15,11 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
     
     @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
     Optional<Employee> findByOfficialEmail(String officialEmail);
+
+    @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
+    Optional<Employee> findByEmployeeCode(String employeeCode);
     
-    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH e.designation WHERE e.id = :id")
+    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH e.designation LEFT JOIN FETCH e.reportingManager WHERE e.id = :id")
     Optional<Employee> findByIdWithDetails(@Param("id") Long id);
     
     @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})

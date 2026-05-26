@@ -37,6 +37,6 @@ public class HrmsGlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex) {
         log.error("Internal server error: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(500, "An unexpected internal server error occurred.", "Internal Server Error"));
+                .body(ApiResponse.error(500, ex.getClass().getSimpleName() + ": " + ex.getMessage(), "Internal Server Error"));
     }
 }

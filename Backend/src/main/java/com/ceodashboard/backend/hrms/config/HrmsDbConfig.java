@@ -6,6 +6,7 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -28,6 +29,11 @@ public class HrmsDbConfig {
     @ConfigurationProperties(prefix = "hrms.datasource")
     public DataSource hrmsDataSource() {
         return DataSourceBuilder.create().build();
+    }
+
+    @Bean(name = "hrmsJdbcTemplate")
+    public JdbcTemplate hrmsJdbcTemplate(@Qualifier("hrmsDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 
     @Bean(name = "hrmsEntityManagerFactory")

@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
         String errorId = UUID.randomUUID().toString();
         logger.error("Unhandled exception (errorId={}) for path {}", errorId, request.getRequestURI(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(errorBody(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected server error", request, errorId));
+            .body(errorBody(HttpStatus.INTERNAL_SERVER_ERROR, ex.getClass().getSimpleName() + ": " + ex.getMessage(), request, errorId));
     }
 
     private Map<String, Object> errorBody(HttpStatus status, String message, HttpServletRequest request, String errorId) {

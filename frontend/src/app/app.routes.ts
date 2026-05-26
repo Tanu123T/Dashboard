@@ -53,6 +53,10 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
+        path: 'db',
+        loadComponent: () => import('./features/db-browser/db-browser.component').then(m => m.DbBrowserComponent)
+      },
+      {
         path: 'employee-hub',
         loadComponent: () =>
           import('./features/employees/pages/employee-hub.component').then(m => m.EmployeeHubComponent)

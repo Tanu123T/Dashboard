@@ -80,6 +80,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/projects", "/projects/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/sprints", "/sprints/**").permitAll()
 
+                // Allow public GET access to HRMS employee and analytics data (dashboard display)
+                .requestMatchers(HttpMethod.GET, "/api/v1/hrms/employees", "/api/v1/hrms/employees/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/hrms/analytics", "/api/v1/hrms/analytics/**").permitAll()
+
+                // Allow public GET access for internal DB inspection during development
+                .requestMatchers(HttpMethod.GET, "/internal/db/**").permitAll()
+
                 // Require ADMIN role for mutating project endpoints
                 .requestMatchers(HttpMethod.POST, "/projects", "/projects/**").hasRole("admin")
                 .requestMatchers(HttpMethod.PUT, "/projects", "/projects/**").hasRole("admin")

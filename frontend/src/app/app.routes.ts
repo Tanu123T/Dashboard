@@ -65,7 +65,7 @@ export const routes: Routes = [
       {
         path: 'work-calendar',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+          import('./features/work-calendar/pages/work-calendar-list.component').then(m => m.WorkCalendarListComponent)
       },
       {
         path: 'org-hierarchy',

@@ -23,11 +23,12 @@
 .hero-panel {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 16px 14px;
+  align-items: center;
+  gap: 2rem;
+  padding: 24px 32px;
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(246, 250, 255, 0.98));
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
 }
 
 .ph-header-card {
@@ -41,18 +42,20 @@
 }
 
 .eyebrow {
-  margin: 0 0 6px;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.035em;
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  color: #64748b;
 }
 
 .hero-copy h1 {
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 28px;
+  line-height: 1.4;
   font-weight: 700;
-  color: #8f9fb5;
-  margin-bottom: 12px;
+  color: #333333;
+  margin: 0;
 }
 
 .tabs {
@@ -85,21 +88,21 @@
 .updated-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #d4deeb;
-  background: linear-gradient(180deg, #f8fbff, #eef5ff);
-  color: #7f91aa;
-  font-size: 10px;
-  font-weight: 600;
-  box-shadow: 0 4px 16px rgba(114, 145, 182, 0.1);
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #bae6fd;
+  background: #e8f4f8;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
 .pill-icon {
-  width: 12px;
-  height: 12px;
-  color: #8ea7c2;
+  width: 16px;
+  height: 16px;
+  color: #0369a1;
 }
 
 .summary-grid {

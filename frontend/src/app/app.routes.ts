@@ -75,6 +75,11 @@ export const routes: Routes = [
         path: 'org-hierarchy',
         loadComponent: () =>
           import('./features/people-health/pages/org-hierarchy/org-hierarchy.component').then(m => m.OrgHierarchyComponent)
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings.component').then(m => m.SettingsComponent)
       }
     ]
   },

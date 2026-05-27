@@ -142,7 +142,7 @@ export class SidebarComponent implements OnInit {
   }
 
   handleSettings() {
-    // Add settings navigation here
+    this.router.navigate(['/dashboard/settings']);
   }
 }
 

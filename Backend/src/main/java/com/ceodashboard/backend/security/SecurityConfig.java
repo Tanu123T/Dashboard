@@ -29,9 +29,14 @@ import java.util.Map;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Configuration
 public class SecurityConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
@@ -72,13 +77,20 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Allow anonymous GET access to projects and sprints (list and details)
-                .requestMatchers(HttpMethod.GET, "/projects", "/projects/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/sprints", "/sprints/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/sprints/**").permitAll()
+
+                // Allow public GET access to HRMS employee and analytics data (dashboard display)
+                .requestMatchers(HttpMethod.GET, "/api/v1/hrms/employees", "/api/v1/hrms/employees/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/hrms/analytics", "/api/v1/hrms/analytics/**").permitAll()
+
+                // Allow public GET access for internal DB inspection during development
+                .requestMatchers(HttpMethod.GET, "/internal/db/**").permitAll()
 
                 // Require ADMIN role for mutating project endpoints
-                .requestMatchers(HttpMethod.POST, "/projects", "/projects/**").hasRole("admin")
-                .requestMatchers(HttpMethod.PUT, "/projects", "/projects/**").hasRole("admin")
-                .requestMatchers(HttpMethod.DELETE, "/projects", "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.POST, "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.PUT, "/projects/**").hasRole("admin")
+                .requestMatchers(HttpMethod.DELETE, "/projects/**").hasRole("admin")
 
                 // All other requests require authentication
                 .anyRequest().authenticated()
@@ -139,6 +151,8 @@ public class SecurityConfig {
         String message,
         String path
     ) throws IOException {
+        String errorId = UUID.randomUUID().toString();
+        logger.warn("Auth error (errorId={}) on path {}: {}", errorId, path, message);
         response.setStatus(status.value());
         response.setContentType("application/json");
         response.getWriter().write(
@@ -147,7 +161,8 @@ public class SecurityConfig {
                 + "\"status\":" + status.value() + ","
                 + "\"error\":\"" + escapeJson(status.getReasonPhrase()) + "\"," 
                 + "\"message\":\"" + escapeJson(message) + "\"," 
-                + "\"path\":\"" + escapeJson(path) + "\""
+                + "\"path\":\"" + escapeJson(path) + "\"," 
+                + "\"errorId\":\"" + escapeJson(errorId) + "\""
                 + "}"
         );
     }
@@ -165,7 +180,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000", "http://localhost:5200"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

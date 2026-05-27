@@ -1,0 +1,507 @@
+.settings-container {
+  padding: 40px 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.settings-header {
+  max-width: 1400px;
+  margin: 0 auto 40px;
+}
+
+.settings-header h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a365d;
+  margin-bottom: 8px;
+}
+
+.settings-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #7b92b8;
+  font-weight: 500;
+}
+
+.settings-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+}
+
+.settings-left {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e8ecf1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a365d;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header lucide-icon {
+  color: #5f87c9;
+}
+
+.edit-btn,
+.change-pwd-btn {
+  background: transparent;
+  border: 1px solid #d7e4f2;
+  color: #5f87c9;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.edit-btn:hover,
+.change-pwd-btn:hover {
+  background: #f4f9ff;
+  border-color: #5f87c9;
+}
+
+/* Profile Section */
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5fa2ff 0%, #2fd0ae 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.profile-text h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a365d;
+  margin-bottom: 4px;
+}
+
+.profile-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #7b92b8;
+}
+
+/* Form Styles */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5f87c9;
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.form-group input {
+  padding: 10px 12px;
+  border: 1px solid #d7e4f2;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1a365d;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group input::placeholder {
+  color: #b8c5d8;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #5fa2ff;
+  background: #f4f9ff;
+}
+
+/* Preferences & Security Items */
+.preference-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.preference-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.preference-text h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a365d;
+  margin-bottom: 4px;
+}
+
+.preference-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #7b92b8;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-input {
+  display: none;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d7e4f2;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-input:checked + .toggle-slider {
+  background-color: #2fd0ae;
+}
+
+.toggle-input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Active Sessions */
+.devices-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.device-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid #e8ecf1;
+  border-radius: 8px;
+  gap: 16px;
+  transition: all 0.3s ease;
+}
+
+.device-item:hover {
+  border-color: #d7e4f2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.device-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.device-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #e8ecf1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f87c9;
+  flex-shrink: 0;
+}
+
+.device-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.device-info h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a365d;
+}
+
+.device-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #8b9ac8;
+}
+
+.device-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.status-text {
+  color: #2fd0ae;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.time-text {
+  color: #2fd0ae;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  color: #5f87c9;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.remove-btn:hover {
+  color: #2f5c99;
+}
+
+.active-badge {
+  background: #2fd0ae;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Connected Apps */
+.apps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.app-info h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a365d;
+  margin-bottom: 2px;
+}
+
+.app-info p {
+  margin: 0;
+  font-size: 11px;
+  color: #7b92b8;
+}
+
+.connect-btn,
+.disconnect-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.connect-btn {
+  background: transparent;
+  color: #5f87c9;
+  border: 1px solid #d7e4f2;
+}
+
+.connect-btn:hover {
+  background: #f4f9ff;
+  border-color: #5f87c9;
+}
+
+.disconnect-btn {
+  background: #e8ecf1;
+  color: #5f87c9;
+}
+
+.disconnect-btn:hover {
+  background: #d7e4f2;
+}
+
+/* Danger Zone */
+.danger-zone {
+  border-color: #fde2e4;
+  background: #fff5f6;
+}
+
+.danger-zone .card-header {
+  border-bottom-color: #fde2e4;
+  color: #d32f2f;
+}
+
+.danger-zone .card-header h2 {
+  color: #d32f2f;
+}
+
+.danger-zone .card-header lucide-icon {
+  color: #d32f2f;
+}
+
+.danger-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.danger-text p {
+  margin: 0;
+  font-size: 12px;
+  color: #7b92b8;
+  line-height: 1.6;
+}
+
+.deactivate-btn {
+  background: transparent;
+  border: 1.5px solid #d32f2f;
+  color: #d32f2f;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.deactivate-btn:hover {
+  background: rgba(211, 47, 47, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .settings-content {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 24px 16px;
+  }
+
+  .settings-header h1 {
+    font-size: 24px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .device-item,
+  .app-item {
+    flex-wrap: wrap;
+  }
+
+  .profile-info {
+    flex-direction: column;
+    text-align: center;
+  }
+}

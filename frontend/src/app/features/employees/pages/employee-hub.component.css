@@ -338,3 +338,5 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+@keyframes spin { 100% { transform: rotate(360deg); } }

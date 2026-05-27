@@ -37,7 +37,18 @@
         (input)="onSearchChange()">
     </div>
 
-    <div class="members-grid">
+    <!-- Error Banner -->
+    <div *ngIf="errorMessage" class="error-banner" style="background: #fde8e8; color: #c81e1e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 500;">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state" style="text-align: center; padding: 40px; color: #6b7280;">
+      <div class="spinner" style="border: 3px solid #e5e7eb; border-top-color: #4f46e5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+      <p>Loading member directory...</p>
+    </div>
+
+    <div *ngIf="!isLoading && !errorMessage" class="members-grid">
       <div *ngFor="let emp of filteredEmployees" class="member-card" (click)="viewEmployeeDetail(emp.id)" style="cursor: pointer;">
         <div class="card-header">
           <div>

@@ -1,0 +1,12 @@
+.db-browser { padding: 16px; }
+.columns { display: flex; gap: 20px; }
+.left { width: 280px; border-right: 1px solid #eee; padding-right: 12px; }
+.left ul { list-style: none; padding: 0; margin: 0; }
+.left li { padding: 6px 8px; cursor: pointer; border-radius: 4px; }
+.left li.selected { background: #eef; }
+.left li:hover { background: #f7f7ff; }
+.right { flex: 1; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #eee; padding: 6px 8px; font-size: 13px; }
+.pager { margin-top: 8px; display: flex; gap: 8px; align-items: center; }
+.muted { color: #666; font-size: 12px; }

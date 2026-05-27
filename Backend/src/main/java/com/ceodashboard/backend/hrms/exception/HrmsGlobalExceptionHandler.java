@@ -33,6 +33,20 @@ public class HrmsGlobalExceptionHandler {
                 .body(ApiResponse.error(403, "Access denied. Insufficient privileges.", "Forbidden"));
     }
 
+    @ExceptionHandler(InvalidFilterException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidFilterException(InvalidFilterException ex) {
+        log.error("Invalid filter parameter: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(400, ex.getMessage(), "Invalid Filter"));
+    }
+
+    @ExceptionHandler(WorkforceHealthDataException.class)
+    public ResponseEntity<ApiResponse<Object>> handleWorkforceHealthDataException(WorkforceHealthDataException ex) {
+        log.error("Workforce health data error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(500, ex.getMessage(), "Workforce Health Data Error"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGlobalException(Exception ex) {
         log.error("Internal server error: ", ex);

@@ -19,6 +19,12 @@ public class WorkforceHealthWatchlistResponse {
 
     private Long attendanceId;
 
+    /** Employee ID */
+    private Long employeeId;
+
+    /** Employee Department */
+    private String department;
+
     /** Attendance status */
     private String status;
 

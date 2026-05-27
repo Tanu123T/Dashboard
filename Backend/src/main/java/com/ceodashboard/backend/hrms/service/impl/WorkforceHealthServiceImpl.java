@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class WorkforceHealthServiceImpl implements WorkforceHealthService {
 
         private final WorkforceHealthRepository repository;
@@ -67,13 +69,13 @@ public class WorkforceHealthServiceImpl implements WorkforceHealthService {
                 log.info("Fetching attendance log - department: {}, fromDate: {}, toDate: {}",
                                 departmentId, fromDate, toDate);
 
-                // Get filtered attendance records
-                List<Attendance> attendanceRecords = repository.getFilteredAttendanceLog(
+                // Get filtered attendance records (as Maps to avoid entity loading)
+                List<Map<String, Object>> attendanceRecords = repository.getFilteredAttendanceLog(
                                 searchTerm, departmentId, fromDate, toDate);
 
-                // Convert to DTOs
+                // Convert Maps to DTOs
                 List<WorkforceHealthAttendanceLogResponse> dtoList = attendanceRecords.stream()
-                                .map(mapper::toAttendanceLogResponse)
+                                .map(mapper::toAttendanceLogResponseFromMap)
                                 .collect(Collectors.toList());
 
                 // Apply pagination manually
@@ -91,10 +93,10 @@ public class WorkforceHealthServiceImpl implements WorkforceHealthService {
         public List<WorkforceHealthWatchlistResponse> getWorkforceHealthWatchlist() {
                 log.info("Generating workforce health watchlist");
 
-                List<Attendance> atRiskRecords = repository.getAtRiskEmployees();
+                List<Map<String, Object>> atRiskRecords = repository.getAtRiskEmployees();
 
                 return atRiskRecords.stream()
-                                .map(mapper::toWatchlistResponse)
+                                .map(mapper::toWatchlistResponseFromMap)
                                 .collect(Collectors.toList());
         }
 }

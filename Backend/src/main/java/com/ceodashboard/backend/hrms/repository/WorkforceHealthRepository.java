@@ -72,25 +72,38 @@ public interface WorkforceHealthRepository
 
         /**
          * Get at-risk employees (recently absent or inconsistent)
+         * Returns Map with a.id, a.employee_id, a.date, a.status, e.id as emp_id,
+         * d.name as dept_name
          */
-        @Query(value = "SELECT a.* FROM attendance a " +
+        @Query(value = "SELECT a.id, a.employee_id, a.date as attendanceDate, a.status, " +
+                        "COALESCE(e.id, 0) as emp_id, COALESCE(d.name, 'Unknown') as dept_name " +
+                        "FROM attendance a " +
+                        "LEFT JOIN employee e ON a.employee_id = e.id " +
+                        "LEFT JOIN department d ON e.department_id = d.id " +
                         "WHERE a.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) " +
                         "AND (a.has_checked_in = 0 OR a.status IN ('ABSENT', 'ON_LEAVE', 'LATE')) " +
                         "ORDER BY a.date DESC " +
                         "LIMIT 50", nativeQuery = true)
-        List<Attendance> getAtRiskEmployees();
+        List<Map<String, Object>> getAtRiskEmployees();
 
         /**
          * Get attendance log with optional filters
+         * Returns Map with attendance data + employee_id and department name (no entity
+         * loading)
          */
-        @Query(value = "SELECT a.* FROM attendance a " +
-                        "WHERE (:searchTerm IS NULL OR a.employee_id LIKE CONCAT('%', :searchTerm, '%')) " +
-                        "AND (:departmentId IS NULL OR a.employee_id IN (SELECT id FROM employee WHERE department_id = :departmentId)) "
-                        +
+        @Query(value = "SELECT a.id, a.employee_id, a.date as attendanceDate, a.has_checked_in, " +
+                        "a.status, a.hours as work_hours, NULL as checkout_time, " +
+                        "COALESCE(e.id, 0) as emp_id, COALESCE(d.name, 'Unknown') as dept_name " +
+                        "FROM attendance a " +
+                        "LEFT JOIN employee e ON a.employee_id = e.id " +
+                        "LEFT JOIN department d ON e.department_id = d.id " +
+                        "WHERE (:searchTerm IS NULL OR e.emp_unique_id LIKE CONCAT('%', :searchTerm, '%') OR " +
+                        "       CONCAT(e.first_name, ' ', e.last_name) LIKE CONCAT('%', :searchTerm, '%')) " +
+                        "AND (:departmentId IS NULL OR d.id = :departmentId) " +
                         "AND (:fromDate IS NULL OR a.date >= :fromDate) " +
                         "AND (:toDate IS NULL OR a.date <= :toDate) " +
                         "ORDER BY a.date DESC", nativeQuery = true)
-        List<Attendance> getFilteredAttendanceLog(
+        List<Map<String, Object>> getFilteredAttendanceLog(
                         @Param("searchTerm") String searchTerm,
                         @Param("departmentId") Long departmentId,
                         @Param("fromDate") LocalDate fromDate,

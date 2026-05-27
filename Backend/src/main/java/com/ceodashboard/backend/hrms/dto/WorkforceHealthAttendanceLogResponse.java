@@ -19,6 +19,12 @@ public class WorkforceHealthAttendanceLogResponse {
 
     private Long attendanceId;
 
+    /** Employee ID */
+    private Long employeeId;
+
+    /** Employee Department */
+    private String department;
+
     /** Attendance date */
     private LocalDate attendanceDate;
 
@@ -30,4 +36,7 @@ public class WorkforceHealthAttendanceLogResponse {
 
     /** Total working hours */
     private String workHours;
+
+    /** Checkout time */
+    private String checkOut;
 }

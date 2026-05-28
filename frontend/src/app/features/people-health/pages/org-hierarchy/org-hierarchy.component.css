@@ -1,0 +1,356 @@
+.org-hierarchy-container {
+  width: 100%;
+  padding: 20px 0;
+}
+
+.org-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e7edf3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+.org-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.org-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a365d;
+  margin-bottom: 6px;
+}
+
+.org-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #7b92b8;
+  font-weight: 500;
+}
+
+.org-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid #d7e4f2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #5f87c9;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.org-view-toggle:hover {
+  border-color: #5f87c9;
+  background: #f4f9ff;
+  color: #3d73ad;
+}
+
+.org-view-toggle.active {
+  border-color: #4a7dd9;
+  background: #e8f1ff;
+  color: #2f5bb1;
+}
+
+.org-scroll-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e7edf3;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  scrollbar-width: 16px;
+  scrollbar-color: #3b82f6 #e0f2fe;
+}
+
+.org-scroll-wrap::-webkit-scrollbar {
+  height: 16px;
+  background: #e0f2fe;
+  border-radius: 8px;
+}
+
+.org-scroll-wrap::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 8px;
+  border: 2px solid #e0f2fe;
+}
+
+.org-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+.org-scroll-wrap.org-full-view {
+  overflow: visible;
+  max-width: 100%;
+  padding-bottom: 20px;
+}
+
+.org-chart {
+  --org-card-width: 240px;
+  --org-card-height: 88px;
+  --org-card-gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: max-content;
+  min-width: max-content;
+  padding: 32px 40px;
+  border-radius: 16px;
+}
+
+.org-scroll-wrap.org-full-view .org-chart {
+  --org-card-width: 180px;
+  --org-card-height: 70px;
+  --org-card-gap: 20px;
+  min-width: auto;
+  width: 100%;
+  gap: 30px;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.org-tier {
+  display: grid;
+  gap: 8px;
+  width: max-content;
+  min-width: 100%;
+  justify-items: center;
+}
+
+.org-scroll-wrap.org-full-view .org-tier {
+  min-width: auto;
+  width: 100%;
+  justify-items: center;
+}
+
+.org-tier-linked {
+  position: relative;
+  padding-top: 20px;
+}
+
+.org-tier-linked::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(180deg, #5fa2ff 0%, #2fd0ae 100%);
+  border-radius: 1px;
+}
+
+.org-scroll-wrap.org-full-view .org-tier-linked::before {
+  display: none;
+}
+
+.org-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  align-items: center;
+}
+
+.org-scroll-wrap.org-full-view .org-grid {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.org-grid-root {
+  justify-content: center;
+}
+
+.org-scroll-wrap.org-full-view .org-grid-root {
+  margin-bottom: 20px;
+}
+
+.org-grid-linked {
+  position: relative;
+  padding-top: 16px;
+}
+
+.org-grid-linked::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: calc(var(--org-card-width) / 2);
+  right: calc(var(--org-card-width) / 2);
+  height: 2px;
+  background: linear-gradient(90deg, #5fa2ff 0%, #2fd0ae 100%);
+  border-radius: 1px;
+}
+
+.org-scroll-wrap.org-full-view .org-grid-linked::before {
+  display: none;
+}
+
+.org-scroll-wrap.org-full-view .org-grid-linked::after {
+  content: '↓';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #5fa2ff;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 1;
+}
+
+.org-node {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: var(--org-card-width);
+  height: var(--org-card-height);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.org-node:hover {
+  border-color: #5fa2ff;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f1ff 100%);
+  box-shadow: 0 4px 12px rgba(95, 162, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.org-node h6 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a365d;
+  line-height: 1.2;
+}
+
+.org-node p {
+  margin: 0;
+  font-size: 11px;
+  color: #7b92b8;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.org-root {
+  background: linear-gradient(135deg, #5fa2ff 0%, #2fd0ae 100%);
+  border: none;
+  box-shadow: 0 4px 16px rgba(95, 162, 255, 0.25);
+}
+
+.org-root h6 {
+  color: #ffffff;
+}
+
+.org-root p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.org-root:hover {
+  background: linear-gradient(135deg, #4a8ae6 0%, #1fb89a 100%);
+  box-shadow: 0 6px 20px rgba(95, 162, 255, 0.35);
+}
+
+.org-scroll-wrap.org-full-view .org-node {
+  position: relative;
+}
+
+.org-scroll-wrap.org-full-view .org-node:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, #5fa2ff 0%, #2fd0ae 100%);
+  z-index: 1;
+}
+
+@media (max-width: 1200px) {
+  .org-chart {
+    padding: 24px 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .org-card {
+    padding: 16px;
+  }
+
+  .org-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .org-header h2 {
+    font-size: 16px;
+  }
+
+  .org-header p {
+    font-size: 12px;
+  }
+
+  .org-chart {
+    padding: 20px 24px;
+  }
+
+  .org-scroll-wrap.org-full-view .org-chart {
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .org-card {
+    padding: 12px;
+  }
+
+  .org-header h2 {
+    font-size: 14px;
+  }
+
+  .org-header p {
+    font-size: 11px;
+  }
+
+  .org-chart {
+    padding: 16px;
+    --org-card-width: 160px;
+    --org-card-height: 70px;
+  }
+
+  .org-scroll-wrap.org-full-view .org-chart {
+    --org-card-width: 140px;
+    --org-card-height: 60px;
+  }
+
+  .org-node h6 {
+    font-size: 11px;
+  }
+
+  .org-node p {
+    font-size: 9px;
+  }
+}

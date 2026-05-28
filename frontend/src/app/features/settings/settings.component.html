@@ -1,0 +1,250 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>Settings</h1>
+    <p>Manage your account, security, notifications, and connected tools.</p>
+  </div>
+
+  <div class="settings-content">
+    <div class="settings-left">
+      <!-- Profile Section -->
+      <div class="settings-card">
+        <div class="card-header">
+          <h2>
+            <lucide-icon name="user" size="20"></lucide-icon>
+            Profile
+          </h2>
+          <button class="edit-btn" (click)="saveProfile()">Edit</button>
+        </div>
+        
+        <div class="profile-info">
+          <div class="profile-avatar">
+            <span>JD</span>
+          </div>
+          <div class="profile-text">
+            <h3>{{ profile.firstName }} {{ profile.lastName }}</h3>
+            <p>{{ profile.role }}</p>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" [value]="profile.firstName" [(ngModel)]="profile.firstName" />
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" [value]="profile.lastName" [(ngModel)]="profile.lastName" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [value]="profile.email" [(ngModel)]="profile.email" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" [value]="profile.phone" [(ngModel)]="profile.phone" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Timezone</label>
+            <input type="text" [value]="profile.timezone" [(ngModel)]="profile.timezone" />
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <input type="text" [value]="profile.role" [(ngModel)]="profile.role" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences Section -->
+      <div class="settings-card">
+        <div class="card-header">
+          <h2>
+            <lucide-icon name="settings" size="20"></lucide-icon>
+            Preferences
+          </h2>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-text">
+            <h4>Email Alerts</h4>
+            <p>Receive important account and delivery updates</p>
+          </div>
+          <div class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="preferences.emailAlerts"
+              (change)="togglePreference('emailAlerts')"
+              class="toggle-input"
+            />
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-text">
+            <h4>Push Notifications</h4>
+            <p>Show browser notifications for urgent events</p>
+          </div>
+          <div class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="preferences.pushNotifications"
+              (change)="togglePreference('pushNotifications')"
+              class="toggle-input"
+            />
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-text">
+            <h4>Weekly Digest</h4>
+            <p>Get daily consolidated summary every Monday morning</p>
+          </div>
+          <div class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="preferences.weeklyDigest"
+              (change)="togglePreference('weeklyDigest')"
+              class="toggle-input"
+            />
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Section -->
+      <div class="settings-card">
+        <div class="card-header">
+          <h2>
+            <lucide-icon name="shield" size="20"></lucide-icon>
+            Security
+          </h2>
+          <button class="change-pwd-btn" (click)="changePassword()">Change Password</button>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-text">
+            <h4>Two-factor authentication</h4>
+            <p>Protect your account with OTP verification.</p>
+          </div>
+          <div class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="security.twoFactorAuth"
+              (change)="toggleSecurity('twoFactorAuth')"
+              class="toggle-input"
+            />
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-text">
+            <h4>Login alerts</h4>
+            <p>Notify me whenever a new login is detected</p>
+          </div>
+          <div class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="security.loginAlerts"
+              (change)="toggleSecurity('loginAlerts')"
+              class="toggle-input"
+            />
+            <span class="toggle-slider"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-right">
+      <!-- Active Sessions Section -->
+      <div class="settings-card">
+        <div class="card-header">
+          <h2>
+            <lucide-icon name="monitor" size="20"></lucide-icon>
+            Active Sessions
+          </h2>
+        </div>
+
+        <div class="devices-list">
+          <div *ngFor="let device of devices" class="device-item">
+            <div class="device-left">
+              <div class="device-icon">
+                <lucide-icon 
+                  [name]="device.type === 'Windows' ? 'monitor' : device.type === 'iOS' ? 'smartphone' : 'laptop'"
+                  size="24"
+                ></lucide-icon>
+              </div>
+              <div class="device-info">
+                <h4>{{ device.name }}</h4>
+                <p>{{ device.location }}</p>
+              </div>
+            </div>
+            <div class="device-right">
+              <span class="status-text" *ngIf="device.status === 'active'">Active now</span>
+              <span class="time-text" *ngIf="device.status !== 'active'">{{ device.lastActive }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected Apps Section -->
+      <div class="settings-card">
+        <div class="card-header">
+          <h2>
+            <lucide-icon name="link-2" size="20"></lucide-icon>
+            Connected Apps
+          </h2>
+        </div>
+
+        <div class="apps-list">
+          <div *ngFor="let app of connectedApps" class="app-item">
+            <div class="app-info">
+              <h4>{{ app.name }}</h4>
+              <p>{{ app.description }}</p>
+            </div>
+            <button 
+              *ngIf="app.status === 'disconnected'"
+              class="connect-btn"
+              (click)="connectApp(app.name)"
+            >
+              Connect
+            </button>
+            <button 
+              *ngIf="app.status === 'connected'"
+              class="disconnect-btn"
+              (click)="disconnectApp(app.name)"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone Section -->
+      <div class="settings-card danger-zone">
+        <div class="card-header">
+          <h2>
+            <lucide-icon name="alert-circle" size="20"></lucide-icon>
+            Danger Zone
+          </h2>
+        </div>
+
+        <div class="danger-content">
+          <div class="danger-text">
+            <p>Deactivate your account and delete all active sessions. This action can be reversed by an admin within 7 days.</p>
+          </div>
+          <button class="deactivate-btn" (click)="deactivateAccount()">
+            Deactivate Account
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

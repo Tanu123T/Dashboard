@@ -1,0 +1,206 @@
+<div class="project-detail-page">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container"><div class="spinner"></div></div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error && project">
+    <!-- Header -->
+    <header class="project-detail-header">
+      <div>
+        <h1 class="page-title">Project Health</h1>
+        <p class="page-subtitle">{{ project.name }} - execution, sprint, and budget overview</p>
+      </div>
+      <div class="last-updated">Last updated: {{ pageLastUpdated }}</div>
+    </header>
+
+    <button class="back-button" (click)="backToProjects()">← Back to Projects</button>
+
+    <!-- Project Hero Section -->
+    <section class="project-hero">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+        <div>
+          <h1 class="project-title">{{ project.name }}</h1>
+        </div>
+        <button class="status-button on-track">● On track</button>
+      </div>
+
+      <!-- Milestone Dates -->
+      <div class="milestone-grid">
+        <div class="milestone-card">
+          <div class="milestone-icon">📋</div>
+          <div>
+            <p class="milestone-label">START DATE</p>
+            <p class="milestone-sublabel">Project Initiation</p>
+            <p class="milestone-value">{{ project.startDate }}</p>
+          </div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">💻</div>
+          <div>
+            <p class="milestone-label">DEVELOPMENT START</p>
+            <p class="milestone-sublabel">Sprint Execution Start</p>
+            <p class="milestone-value">01 Feb 2026</p>
+          </div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">📅</div>
+          <div>
+            <p class="milestone-label">PLANNED GO-LIVE</p>
+            <p class="milestone-sublabel">Target Release</p>
+            <p class="milestone-value">30 Apr 2026</p>
+          </div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">🚀</div>
+          <div>
+            <p class="milestone-label">ACTUAL GO-LIVE</p>
+            <p class="milestone-sublabel">Actual Release</p>
+            <p class="milestone-value">{{ project.dueDate || '-' }}</p>
+          </div>
+        </div>
+        <div class="milestone-card">
+          <div class="milestone-icon">⏱️</div>
+          <div>
+            <p class="milestone-label">SPRINT DURATION</p>
+            <p class="milestone-sublabel">Sprint Cycle</p>
+            <p class="milestone-value">2 Weeks</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">👤</div>
+        <div>
+          <p class="kpi-label">LEAD</p>
+          <p class="kpi-value">{{ project.lead }}</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📊</div>
+        <div>
+          <p class="kpi-label">TOTAL PLANNED SPRINTS</p>
+          <p class="kpi-value">{{ project.totalPlannedSprints }}</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">✓</div>
+        <div>
+          <p class="kpi-label">COMPLETED SPRINTS</p>
+          <p class="kpi-value">{{ completedSprints }}</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📈</div>
+        <div>
+          <p class="kpi-label">PROJECT TIMELINE</p>
+          <p class="kpi-value">{{ project.progress }}%</p>
+          <p class="kpi-sublabel">Overall Progress</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Left Panel: About & Team -->
+      <section class="content-panel">
+        <div class="panel-section">
+          <h3 class="section-title">ABOUT</h3>
+          <p class="section-content">{{ project.description }}</p>
+        </div>
+
+        <div class="panel-section">
+          <h3 class="section-title">TEAM</h3>
+          <div class="team-badges">
+            <span *ngFor="let member of project.team" class="team-badge">{{ member }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Progress Ring -->
+      <section class="progress-panel">
+        <div class="progress-ring-container">
+          <svg viewBox="0 0 180 180" class="progress-ring-svg">
+            <circle cx="90" cy="90" r="70" fill="none" stroke="#f1f5f9" stroke-width="12" />
+            <circle cx="90" cy="90" r="70" fill="none" stroke="#10b981" stroke-width="12" 
+              [style.stroke-dasharray]="440" 
+              [style.stroke-dashoffset]="440 - (project.progress * 4.4)" 
+              stroke-linecap="round" 
+              class="progress-ring-fill"/>
+          </svg>
+          <div class="progress-text">
+            <p class="progress-value">{{ project.progress }}%</p>
+            <p class="progress-label">Complete</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Sprint Timeline Section -->
+    <section class="sprint-timeline-section">
+      <div class="section-header">
+        <div>
+          <h3 class="section-title">SPRINT TIMELINE</h3>
+          <h2 class="section-heading">{{ completedSprints }} of {{ project.totalPlannedSprints }} sprints completed</h2>
+          <p class="section-meta" *ngIf="activeSprintNumber">{{ activeSprintNumber }} active (S{{ activeSprintNumber }})</p>
+        </div>
+        <button class="view-sprint-btn" (click)="viewSprint()">View Sprint →</button>
+      </div>
+
+      <div class="sprint-timeline-track">
+        <div *ngFor="let dot of sprintRoadmapDots" class="sprint-item">
+          <div class="sprint-dot" [ngClass]="dot.status">S{{ dot.id }}</div>
+          <p class="sprint-status">{{ dot.status | titlecase }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Project Lifecycle Status Table -->
+    <section class="lifecycle-section">
+      <h3 class="section-title">PROJECT LIFECYCLE STATUS</h3>
+      <div class="lifecycle-table-wrapper">
+        <table class="lifecycle-table">
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Milestone</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>Target Completion</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="phase-badge phase-1">Phase 1</span></td>
+              <td>Project Initiation & Requirement Engineering</td>
+              <td><span class="status-badge completed">Completed</span></td>
+              <td>01 Jan 2026</td>
+              <td>20 Jan 2026</td>
+            </tr>
+            <tr>
+              <td><span class="phase-badge phase-2">Phase 2</span></td>
+              <td>Product Development & Sprint Execution</td>
+              <td><span class="status-badge in-progress">In Progress</span></td>
+              <td>21 Jan 2026</td>
+              <td>30 Apr 2026</td>
+            </tr>
+            <tr>
+              <td><span class="phase-badge phase-3">Phase 3</span></td>
+              <td>Release Stabilization & Production Rollout</td>
+              <td><span class="status-badge pending">Pending</span></td>
+              <td>01 May 2026</td>
+              <td>20 May 2026</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!loading && error" class="error-container">
+    <p>{{ error }}</p>
+  </div>
+</div>

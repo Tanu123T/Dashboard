@@ -72,7 +72,7 @@ export class WorkCalendarListComponent implements OnInit {
     for (let i = 9; i <= 18; i++) {
       const hour = i % 12 || 12;
       const period = i < 12 ? 'AM' : 'PM';
-      slots.push(`${hour}:00 ${period}`);
+      slots.push(`${hour} ${period}`);
     }
     return slots;
   }

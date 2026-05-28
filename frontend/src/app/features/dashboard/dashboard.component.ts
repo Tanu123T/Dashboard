@@ -275,7 +275,7 @@ export class DashboardComponent implements OnInit {
 
     // Calculate which month is being hovered based on x position
     const relativeX = x / rect.width; // 0 to 1
-    const monthIndex = Math.round(relativeX * (this.chartData.length - 1));
+    let monthIndex = Math.floor(relativeX * this.chartData.length);
     const clampedIndex = Math.max(0, Math.min(monthIndex, this.chartData.length - 1));
 
     const data = this.chartData[clampedIndex];
@@ -283,12 +283,16 @@ export class DashboardComponent implements OnInit {
     this.tooltipValue = data.actual;
     this.tooltipTarget = data.target;
 
-    // Calculate hover line X position - position at center of each month column
-    const monthWidth = 1000 / this.chartData.length;
-    this.hoverLineX = (clampedIndex + 0.5) * monthWidth;
+    // Calculate hover line X position
+    // First, get the pixel-based center of the month column
+    const monthPixelWidth = rect.width / this.chartData.length;
+    const monthCenterPixel = (clampedIndex + 0.5) * monthPixelWidth;
+    
+    // Convert pixel position to SVG viewBox coordinates (0-1000)
+    this.hoverLineX = (monthCenterPixel / rect.width) * 1000;
 
-    // Position tooltip
-    this.tooltipX = x - 60;
+    // Position tooltip at the actual mouse position
+    this.tooltipX = x - 90;
     this.tooltipY = y - 100;
 
     this.showTooltip = true;

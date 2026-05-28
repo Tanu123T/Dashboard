@@ -1,0 +1,84 @@
+<div class="org-hierarchy-container">
+  <div class="org-card">
+    <div class="org-header">
+      <div>
+        <h2>Organization Hierarchy</h2>
+        <p>Hierarchy view with CEO, leadership, and staff cards</p>
+      </div>
+      <button
+        type="button"
+        class="org-view-toggle"
+        [ngClass]="{ active: isFullView }"
+        (click)="toggleView()"
+        [attr.aria-label]="isFullView ? 'Switch to Scroll View' : 'Switch to Full View'"
+      >
+        <svg
+          *ngIf="isFullView"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <svg
+          *ngIf="!isFullView"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+          ></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+        {{ isFullView ? 'Full View' : 'Scroll View' }}
+      </button>
+    </div>
+
+    <div
+      class="org-scroll-wrap"
+      [ngClass]="{ 'org-full-view': isFullView }"
+      (wheel)="!isFullView && handleOrgChartWheel($event)"
+      [attr.tabIndex]="0"
+    >
+      <div class="org-chart">
+        <!-- CEO Level -->
+        <div class="org-tier">
+          <div class="org-grid org-grid-root">
+            <div class="org-node org-root">
+              <h6>{{ hierarchy.ceo.name }}</h6>
+              <p>{{ hierarchy.ceo.role }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tier 2 - Managers & Directors -->
+        <div class="org-tier org-tier-linked" *ngIf="hierarchy.tierTwo.length > 0">
+          <div class="org-grid org-grid-linked">
+            <div *ngFor="let member of hierarchy.tierTwo" class="org-node">
+              <h6>{{ member.name }}</h6>
+              <p>{{ member.role }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tier 3 - Team Members -->
+        <div class="org-tier org-tier-linked" *ngIf="hierarchy.tierThree.length > 0">
+          <div class="org-grid org-grid-linked">
+            <div *ngFor="let member of hierarchy.tierThree" class="org-node">
+              <h6>{{ member.name }}</h6>
+              <p>{{ member.role }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

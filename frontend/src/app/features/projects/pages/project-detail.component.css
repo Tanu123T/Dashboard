@@ -120,6 +120,22 @@
   color: #3b82f6;
 }
 
+.status-button.complete,
+.status-button.completed {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.status-button.in-progress {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.status-button.delayed {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
 /* Milestone Grid */
 .milestone-grid {
   display: grid;
@@ -139,9 +155,13 @@
 
 .milestone-icon {
   font-size: 24px;
+  width: 40px;
+  height: 40px;
   min-width: 40px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  color: #3b82f6;
 }
 
 .milestone-label {
@@ -164,6 +184,71 @@
   font-size: 15px;
   font-weight: 700;
   color: #1e293b;
+}
+
+.editable-date {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.editable-date:hover {
+  background-color: #f1f5f9;
+}
+
+.date-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.date-input {
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  flex: 1;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.date-btn {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: white;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.date-btn:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.date-btn.cancel {
+  color: #ef4444;
+}
+
+.date-btn.cancel:hover {
+  border-color: #fca5a5;
+}
+
+.duration-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
 }
 
 /* KPI Grid */
@@ -504,4 +589,109 @@
 .status-badge.pending {
   background: #fed7aa;
   color: #92400e;
+}
+
+.editable-cell {
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: inline-block;
+}
+
+.editable-cell:hover {
+  background-color: #f1f5f9;
+}
+
+.date-input-wrapper-inline {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.date-input-inline {
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.date-input-inline:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.date-btn-inline {
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: white;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.date-btn-inline:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.date-btn-inline.cancel {
+  color: #ef4444;
+}
+
+.date-btn-inline.cancel:hover {
+  border-color: #fca5a5;
+}
+
+.editable-status {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.editable-status:hover {
+  opacity: 0.8;
+}
+
+.status-dropdown-wrapper {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.status-select {
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.status-btn {
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: white;
+  color: #3b82f6;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.status-btn:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
 }

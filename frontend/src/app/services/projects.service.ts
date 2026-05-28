@@ -20,7 +20,9 @@ export interface Project {
   progress: number;
   lead: string;
   startDate: string;
+  endDate?: string;
   dueDate: string;
+  deadline?: string;
   description: string;
   techStack: string[];
   team: string[];

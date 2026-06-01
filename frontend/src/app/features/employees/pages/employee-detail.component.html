@@ -3,7 +3,7 @@
   <a routerLink="/dashboard/employee-hub" class="back-button">← Back</a>
 
   <!-- Main Container -->
-  <div class="detail-container">
+  <div class="detail-wrapper">
     <!-- Left Sidebar -->
     <aside class="sidebar-section">
       <!-- Employee Photo / Avatar -->
@@ -22,9 +22,9 @@
         </ng-template>
       </div>
 
-      <!-- Personal Information -->
-      <div class="info-section">
-        <h3 class="section-title">Personal Information</h3>
+      <!-- Personal Information Card -->
+      <div class="info-card">
+        <h3 class="card-title">Personal Information</h3>
         <div class="info-items">
           <div class="info-item">
             <svg
@@ -113,9 +113,9 @@
         </div>
       </div>
 
-      <!-- Skills Section -->
-      <div class="info-section" *ngIf="employee.skills.length > 0">
-        <h3 class="section-title">Skills</h3>
+      <!-- Skills Card -->
+      <div class="info-card" *ngIf="employee.skills && employee.skills.length > 0">
+        <h3 class="card-title">Skills</h3>
         <div class="skills-container">
           <span class="skill-badge" *ngFor="let skill of employee.skills">{{
             skill
@@ -123,9 +123,9 @@
         </div>
       </div>
 
-      <!-- Projects List Sidebar -->
-      <div class="info-section" *ngIf="employee.projects.length > 0">
-        <h3 class="section-title">Projects</h3>
+      <!-- Projects Card -->
+      <div class="info-card" *ngIf="employee.projects && employee.projects.length > 0">
+        <h3 class="card-title">Projects</h3>
         <div class="projects-list">
           <a
             href="#"
@@ -148,9 +148,9 @@
         </div>
       </div>
 
-      <!-- Education Section -->
-      <div class="info-section" *ngIf="employee.education.length > 0">
-        <h3 class="section-title">Education</h3>
+      <!-- Education Card -->
+      <div class="info-card" *ngIf="employee.education && employee.education.length > 0">
+        <h3 class="card-title">Education</h3>
         <div class="education-list">
           <div class="edu-item" *ngFor="let edu of employee.education">
             <p class="edu-degree">{{ edu.degree }}</p>
@@ -160,9 +160,9 @@
         </div>
       </div>
 
-      <!-- Achievements Section -->
-      <div class="info-section" *ngIf="employee.achievements.length > 0">
-        <h3 class="section-title">Achievements</h3>
+      <!-- Achievements Card -->
+      <div class="info-card" *ngIf="employee.achievements && employee.achievements.length > 0">
+        <h3 class="card-title">Achievements</h3>
         <div class="achievements-list">
           <div
             class="achievement-badge"
@@ -179,12 +179,16 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Header -->
+      <!-- Header Section -->
       <div class="header-section">
         <h1 class="employee-name">{{ employee.name }}</h1>
         <p class="employee-title">{{ employee.title }}</p>
       </div>
 
+      <!-- Metrics Section -->
+      <div class="metrics-section">
+        <!-- Performance Card -->
+        <div class="metric-card performance-card" *ngIf="employee.performanceTrends && employee.performanceTrends.length > 0">
       <!-- Profile Details -->
       <section class="details-section" *ngIf="employee.detailItems.length > 0">
         <div class="section-header">
@@ -297,6 +301,8 @@
           </svg>
         </div>
 
+        <!-- Attendance Card -->
+        <div class="metric-card attendance-card" *ngIf="employee.attendance && employee.attendance.attendanceRate > 0">
         <!-- Attendance Rate -->
         <div
           class="metric-card attendance-card"

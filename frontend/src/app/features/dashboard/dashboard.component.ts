@@ -1,6 +1,9 @@
-import { Component, ElementRef, ViewChild, OnInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { PeopleHealthService, WorkforceHealthSummary } from '../people-health/services/people-health.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 type AttendanceStatus = 'present' | 'late' | 'leave';
 
@@ -17,12 +20,12 @@ interface AttendanceRow {
 }
 
 interface AttendanceSnapshot {
-  present: number;
-  absent: number;
-  leave: number;
-  late: number;
-  onBreak: number;
-  remoteActive: number;
+  present: number | null;
+  absent: number | null;
+  leave: number | null;
+  late: number | null;
+  onBreak: number | null;
+  remoteActive: number | null;
 }
 
 interface RepeatedLateOrAbsentItem {
@@ -38,52 +41,136 @@ interface RepeatedLateOrAbsentItem {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('attendanceDateInput') attendanceDateInput?: ElementRef<HTMLInputElement>;
   
   isWorkforceHealthRoute = false;
+  private destroy$ = new Subject<void>();
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private peopleHealthService: PeopleHealthService
+  ) {}
 
   ngOnInit() {
     // Check if this route is 'workforce-health', if so show content, otherwise empty
     this.isWorkforceHealthRoute = this.route.snapshot.component === DashboardComponent && 
                                    this.route.snapshot.url.length > 0 &&
                                    this.route.snapshot.url[0].path === 'workforce-health';
+
+    // Fetch real workforce health data from API
+    if (this.isWorkforceHealthRoute) {
+      this.loadWorkforceHealthData();
+    }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load workforce health data from API
+   */
+  private loadWorkforceHealthData(): void {
+    this.peopleHealthService.getWorkforceHealthSummary()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: WorkforceHealthSummary) => {
+          // Update attendance snapshot with real API data
+          this.attendanceSnapshot = {
+            present: data.presentToday ?? null,
+            absent: null, // Not provided by API
+            leave: data.onLeave ?? null,
+            late: data.lateArrivals ?? null,
+            onBreak: data.onBreak ?? null,
+            remoteActive: null // Not provided by API
+          };
+          
+          // Update summary cards with real data
+          this.updateSummaryCards();
+        },
+        error: (error) => {
+          console.error('Error loading workforce health data:', error);
+          // Keep showing dashes for missing data
+          this.attendanceSnapshot = {
+            present: null,
+            absent: null,
+            leave: null,
+            late: null,
+            onBreak: null,
+            remoteActive: null
+          };
+          this.updateSummaryCards();
+        }
+      });
+
+    // Load attendance log data
+    this.loadAttendanceLogData();
+
+    // Load headcount trend data
+    this.loadHeadcountTrendData();
+  }
+
+  /**
+   * Update summary cards dynamically based on real API data
+   */
+  private updateSummaryCards(): void {
+    this.summaryCards = [
+      { label: 'Present Today', value: this.formatValue(this.attendanceSnapshot.present), subtitle: 'Checked in and active', icon: 'user-check', tone: 'green' },
+      { label: 'On Break', value: this.formatValue(this.attendanceSnapshot.onBreak), subtitle: 'Temporarily unavailable', icon: 'coffee', tone: 'blue' },
+      { label: 'On Leave', value: this.formatValue(this.attendanceSnapshot.leave), subtitle: 'Planned leaves in effect', icon: 'calendar', tone: 'amber' },
+      { label: 'Late Arrivals', value: this.formatValue(this.attendanceSnapshot.late), subtitle: 'Past shift start threshold', icon: 'clock', tone: 'orange' },
+      { label: 'Present in Office', value: this.formatValue(null), subtitle: 'On-site and active', icon: 'building', tone: 'mint' }, // Not in API yet
+      { label: 'Attendance Consistency', value: this.formatPercentage(null), subtitle: 'Last 7 operational days', icon: 'users', tone: 'green' } // Not in API yet
+    ];
+  }
+
+  /**
+   * Format value or return dash if null
+   */
+  private formatValue(value: number | null): string {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+    return String(value);
+  }
+
+  /**
+   * Format percentage or return dash if null
+   */
+  private formatPercentage(value: number | null): string {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+    return `${value.toFixed(1)}%`;
   }
 
   attendanceSnapshot: AttendanceSnapshot = {
-    present: 228,
-    absent: 9,
-    leave: 7,
-    late: 14,
-    onBreak: 11,
-    remoteActive: 62
+    present: null,
+    absent: null,
+    leave: null,
+    late: null,
+    onBreak: null,
+    remoteActive: null
   };
 
   summaryCards = [
-    { label: 'Present Today', value: String(this.attendanceSnapshot.present), subtitle: 'Checked in and active', icon: 'user-check', tone: 'green' },
-    { label: 'On Break', value: String(this.attendanceSnapshot.onBreak), subtitle: 'Temporarily unavailable', icon: 'coffee', tone: 'blue' },
-    { label: 'On Leave', value: String(this.attendanceSnapshot.leave), subtitle: 'Planned leaves in effect', icon: 'calendar', tone: 'amber' },
-    { label: 'Late Arrivals', value: String(this.attendanceSnapshot.late), subtitle: 'Past shift start threshold', icon: 'clock', tone: 'orange' },
-    { label: 'Present in Office', value: '166', subtitle: 'On-site and active', icon: 'building', tone: 'mint' },
-    { label: 'Attendance Consistency', value: '94%', subtitle: 'Last 7 operational days', icon: 'users', tone: 'green' }
+    { label: 'Present Today', value: '-', subtitle: 'Checked in and active', icon: 'user-check', tone: 'green' },
+    { label: 'On Break', value: '-', subtitle: 'Temporarily unavailable', icon: 'coffee', tone: 'blue' },
+    { label: 'On Leave', value: '-', subtitle: 'Planned leaves in effect', icon: 'calendar', tone: 'amber' },
+    { label: 'Late Arrivals', value: '-', subtitle: 'Past shift start threshold', icon: 'clock', tone: 'orange' },
+    { label: 'Present in Office', value: '-', subtitle: 'On-site and active', icon: 'building', tone: 'mint' },
+    { label: 'Attendance Consistency', value: '-', subtitle: 'Last 7 operational days', icon: 'users', tone: 'green' }
   ];
 
   iconStroke = 'currentColor';
 
-  months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  months: string[] = [];
 
-  chartPoints = [52, 53, 54, 55, 56, 57];
+  chartPoints: number[] = [];
 
-  chartData = [
-    { month: 'Jan', actual: 207, target: 209 },
-    { month: 'Feb', actual: 207, target: 209 },
-    { month: 'Mar', actual: 207, target: 209 },
-    { month: 'Apr', actual: 207, target: 209 },
-    { month: 'May', actual: 207, target: 209 },
-    { month: 'Jun', actual: 207, target: 209 }
-  ];
+  chartData: Array<{ month: string; actual: number; target: number }> = [];
 
   showTooltip = false;
   tooltipX = 0;
@@ -95,38 +182,92 @@ export class DashboardComponent implements OnInit {
 
   selectedAttendanceDate = '2026-05-11';
 
-  attendanceRows: AttendanceRow[] = [
-    { id: 'E-001', name: 'Sarah Chen', initials: 'SC', employeeCode: 'E001', department: 'Engineering', checkIn: '08:31', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-002', name: 'James Wilson', initials: 'JW', employeeCode: 'E002', department: 'Sales', checkIn: '08:48', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-003', name: 'Priya Patel', initials: 'PP', employeeCode: 'E003', department: 'Product', checkIn: '09:05', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-004', name: 'Marcus Lee', initials: 'ML', employeeCode: 'E004', department: 'Marketing', checkIn: '09:22', checkOut: '', hours: '', status: 'late' },
-    { id: 'E-005', name: 'Elena Torres', initials: 'ET', employeeCode: 'E005', department: 'Design', checkIn: '--', checkOut: '', hours: '', status: 'leave' },
-    { id: 'E-006', name: 'Alex Kim', initials: 'AK', employeeCode: 'E006', department: 'Engineering', checkIn: '09:56', checkOut: '', hours: '', status: 'late' },
-    { id: 'E-007', name: 'Anna Kowalski', initials: 'AK', employeeCode: 'E007', department: 'HR', checkIn: '10:13', checkOut: '', hours: '', status: 'late' },
-    { id: 'E-008', name: 'Li Wei', initials: 'LW', employeeCode: 'E008', department: 'Engineering', checkIn: '08:25', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-009', name: 'Ryan O Brien', initials: 'RB', employeeCode: 'E009', department: 'Sales', checkIn: '08:42', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-010', name: 'Sofia Garcia', initials: 'SG', employeeCode: 'E010', department: 'Marketing', checkIn: '08:59', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-011', name: 'Maya Singh', initials: 'MS', employeeCode: 'E011', department: 'Design', checkIn: '09:16', checkOut: '', hours: '', status: 'present' },
-    { id: 'E-012', name: 'David Brown', initials: 'DB', employeeCode: 'E012', department: 'Finance', checkIn: '09:33', checkOut: '', hours: '', status: 'late' }
-  ];
+  attendanceRows: AttendanceRow[] = [];
 
-  repeatedLateOrAbsent: RepeatedLateOrAbsentItem[] = [
-    {
-      name: 'Ryan O Brien',
-      department: 'Sales',
-      issue: '3 late check-ins this week'
-    },
-    {
-      name: 'Maya Singh',
-      department: 'Design',
-      issue: '2 absences in 10 days'
-    },
-    {
-      name: 'Sofia Garcia',
-      department: 'Marketing',
-      issue: 'Extended leave overlap with campaign sprint'
+  repeatedLateOrAbsent: RepeatedLateOrAbsentItem[] = [];
+
+  /**
+   * Fetch attendance log data from API
+   */
+  private loadAttendanceLogData(): void {
+    this.peopleHealthService.getAttendanceLog(undefined, undefined, undefined, undefined, 0, 100)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: any) => {
+          const content = data.content || [];
+          // Map API response to attendance rows
+          this.attendanceRows = content.map((log: any) => ({
+            id: log.id || log.employeeId,
+            name: log.employeeName || '-',
+            initials: this.getInitials(log.employeeName || ''),
+            employeeCode: log.employeeId || '-',
+            department: log.department || '-',
+            checkIn: log.checkInTime || '-',
+            checkOut: log.checkOutTime || '-',
+            hours: log.hours || '-',
+            status: this.determineStatus(log.status) as AttendanceStatus
+          }));
+        },
+        error: (error) => {
+          console.error('Error loading attendance log:', error);
+          this.attendanceRows = [];
+        }
+      });
+  }
+
+  /**
+   * Fetch headcount trend data from API
+   */
+  private loadHeadcountTrendData(): void {
+    this.peopleHealthService.getHeadcountTrend()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (trends: any[]) => {
+          if (trends && trends.length > 0) {
+            // Map trend data to chart format
+            this.chartData = trends.map((trend: any) => ({
+              month: this.formatMonthFromDate(trend.date),
+              actual: trend.headcount || 0,
+              target: 209 // Default target if not provided
+            }));
+
+            // Extract months
+            this.months = this.chartData.map(d => d.month);
+
+            // Extract chart points
+            this.chartPoints = this.chartData.map(d => d.actual);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading headcount trend:', error);
+          this.chartData = [];
+          this.months = [];
+          this.chartPoints = [];
+        }
+      });
+  }
+
+  /**
+   * Format date to month abbreviation
+   */
+  private formatMonthFromDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short' });
+    } catch {
+      return dateString;
     }
-  ];
+  }
+
+  /**
+   * Determine attendance status from API data
+   */
+  private determineStatus(status: string): AttendanceStatus {
+    const statusLower = status?.toLowerCase() || '';
+    if (statusLower.includes('late')) return 'late';
+    if (statusLower.includes('leave') || statusLower.includes('absent')) return 'leave';
+    return 'present';
+  }
 
   get chartPath(): string {
     const width = 1000;

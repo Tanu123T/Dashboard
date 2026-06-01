@@ -432,6 +432,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onChartHover(event: MouseEvent): void {
+    if (!this.chartData || this.chartData.length === 0) {
+      this.hideTooltip();
+      return;
+    }
+
     const chartArea = event.currentTarget as HTMLElement;
     const rect = chartArea.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -443,6 +448,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const clampedIndex = Math.max(0, Math.min(monthIndex, this.chartData.length - 1));
 
     const data = this.chartData[clampedIndex];
+    if (!data) {
+      this.hideTooltip();
+      return;
+    }
     this.tooltipMonth = data.month;
     this.tooltipValue = data.actual;
     this.tooltipTarget = data.target;

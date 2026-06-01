@@ -11,23 +11,37 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSpecificationExecutor<Employee> {
-    
+/**
+ * JPA repository for Employee.
+ *
+ * The Employee entity carries @SQLRestriction("company_id = 1") so Hibernate
+ * automatically appends that condition to EVERY generated SQL — no manual
+ * WHERE clause needed here.
+ */
+public interface EmployeeRepository
+        extends JpaRepository<Employee, Long>, JpaSpecificationExecutor<Employee> {
+
+    // @SQLRestriction automatically adds AND company_id = 1 to all queries below.
+
     @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
     Optional<Employee> findByOfficialEmail(String officialEmail);
 
     @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
     Optional<Employee> findByEmployeeCode(String employeeCode);
-    
-    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH e.designation LEFT JOIN FETCH e.reportingManager WHERE e.id = :id")
+
+    @Query("SELECT e FROM Employee e " +
+           "LEFT JOIN FETCH e.department " +
+           "LEFT JOIN FETCH e.designation " +
+           "LEFT JOIN FETCH e.reportingManager " +
+           "WHERE e.id = :id")
     Optional<Employee> findByIdWithDetails(@Param("id") Long id);
-    
+
     @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
     @Query("SELECT e FROM Employee e WHERE e.reportingManager.id = :managerId")
     Page<Employee> findByReportingManagerId(@Param("managerId") Long managerId, Pageable pageable);
-    
+
     @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
     Page<Employee> findAll(Pageable pageable);
-    
+
     long countByEmployeeStatus(String employeeStatus);
 }

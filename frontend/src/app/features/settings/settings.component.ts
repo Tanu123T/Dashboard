@@ -15,11 +15,11 @@ interface ConnectedApp {
   name: string;
   description: string;
   icon: string;
-  status: 'connected' | 'disconnected';
+  status: "connected" | "disconnected";
 }
 
 @Component({
-  selector: 'app-settings',
+  selector: "app-settings",
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './settings.component.html',
@@ -27,118 +27,121 @@ interface ConnectedApp {
 })
 export class SettingsComponent implements OnInit {
   profile = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'ceo@company.com',
-    phone: '+91 98765 43210',
-    timezone: 'Asia/Kolkata',
-    role: 'Chief Executive Officer'
+    firstName: "John",
+    lastName: "Doe",
+    email: "ceo@company.com",
+    phone: "+91 98765 43210",
+    timezone: "Asia/Kolkata",
+    role: "Chief Executive Officer",
   };
 
   preferences = {
     emailAlerts: true,
     pushNotifications: true,
-    weeklyDigest: false
+    weeklyDigest: false,
   };
 
   security = {
     twoFactorAuth: true,
-    loginAlerts: true
+    loginAlerts: true,
   };
 
   devices: Device[] = [
     {
-      name: 'Windows Laptop',
-      type: 'Windows',
-      location: 'Pune, IN',
-      lastActive: 'Today, 10:14 AM',
-      status: 'active'
+      name: "Windows Laptop",
+      type: "Windows",
+      location: "Pune, IN",
+      lastActive: "Today, 10:14 AM",
+      status: "active",
     },
     {
-      name: 'iPhone 15',
-      type: 'iOS',
-      location: 'Mumbai, IN',
-      lastActive: 'Today, 10:14 AM',
-      status: 'inactive'
+      name: "iPhone 15",
+      type: "iOS",
+      location: "Mumbai, IN",
+      lastActive: "Today, 10:14 AM",
+      status: "inactive",
     },
     {
-      name: 'MacBook Air',
-      type: 'macOS',
-      location: 'Bengaluru, IN',
-      lastActive: 'Yesterday, 06:49 PM',
-      status: 'inactive'
-    }
+      name: "MacBook Air",
+      type: "macOS",
+      location: "Bengaluru, IN",
+      lastActive: "Yesterday, 06:49 PM",
+      status: "inactive",
+    },
   ];
 
   connectedApps: ConnectedApp[] = [
     {
-      name: 'Slack Workspace',
-      description: 'Notifications + profile',
-      icon: 'slack',
-      status: 'disconnected'
+      name: "Slack Workspace",
+      description: "Notifications + profile",
+      icon: "slack",
+      status: "disconnected",
     },
     {
-      name: 'Google Calendar',
-      description: 'Meeting sync',
-      icon: 'calendar',
-      status: 'disconnected'
+      name: "Google Calendar",
+      description: "Meeting sync",
+      icon: "calendar",
+      status: "disconnected",
     },
     {
-      name: 'Jira Cloud',
-      description: 'Task updates',
-      icon: 'briefcase',
-      status: 'connected'
-    }
+      name: "Jira Cloud",
+      description: "Task updates",
+      icon: "briefcase",
+      status: "connected",
+    },
   ];
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   saveProfile(): void {
-    console.log('Profile saved:', this.profile);
+    console.log("Profile saved:", this.profile);
   }
 
   changePassword(): void {
-    console.log('Change password');
+    console.log("Change password");
   }
 
   togglePreference(key: string): void {
-    if (key === 'emailAlerts') {
+    if (key === "emailAlerts") {
       this.preferences.emailAlerts = !this.preferences.emailAlerts;
-    } else if (key === 'pushNotifications') {
+    } else if (key === "pushNotifications") {
       this.preferences.pushNotifications = !this.preferences.pushNotifications;
-    } else if (key === 'weeklyDigest') {
+    } else if (key === "weeklyDigest") {
       this.preferences.weeklyDigest = !this.preferences.weeklyDigest;
     }
   }
 
   toggleSecurity(key: string): void {
-    if (key === 'twoFactorAuth') {
+    if (key === "twoFactorAuth") {
       this.security.twoFactorAuth = !this.security.twoFactorAuth;
-    } else if (key === 'loginAlerts') {
+    } else if (key === "loginAlerts") {
       this.security.loginAlerts = !this.security.loginAlerts;
     }
   }
 
   connectApp(appName: string): void {
-    console.log('Connect to:', appName);
+    console.log("Connect to:", appName);
   }
 
   disconnectApp(appName: string): void {
-    console.log('Disconnect from:', appName);
+    console.log("Disconnect from:", appName);
   }
 
   deactivateAccount(): void {
-    if (confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) {
-      console.log('Account deactivation initiated');
+    if (
+      confirm(
+        "Are you sure you want to deactivate your account? This action cannot be undone.",
+      )
+    ) {
+      console.log("Account deactivation initiated");
     }
   }
 
   removeDevice(deviceName: string): void {
     if (confirm(`Remove ${deviceName}?`)) {
-      this.devices = this.devices.filter(d => d.name !== deviceName);
+      this.devices = this.devices.filter((d) => d.name !== deviceName);
     }
   }
 }

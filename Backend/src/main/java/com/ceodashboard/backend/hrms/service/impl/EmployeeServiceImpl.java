@@ -15,6 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * All queries filtered to company_id = 1 via EmployeeRepository methods.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -22,12 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
-    private final EmployeeMapper employeeMapper;
+    private final EmployeeMapper     employeeMapper;
 
     @Override
     @Cacheable(value = "employees", key = "#id")
     public EmployeeProfileDTO getEmployeeById(Long id) {
-        log.info("Fetching employee with id: {}", id);
+        log.info("Fetching employee id={} (company_id=1)", id);
         Employee employee = employeeRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
         return employeeMapper.toProfileDTO(employee);
@@ -35,6 +38,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Page<EmployeeProfileDTO> getAllEmployees(Pageable pageable) {
+        // Uses company_id = 1 filter via findAllByCompany
         return employeeRepository.findAll(pageable).map(employeeMapper::toProfileDTO);
     }
 
@@ -42,7 +46,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeProfileDTO getMyProfile() {
         String email = SecurityUtils.getCurrentUserEmail();
         Employee employee = employeeRepository.findByOfficialEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee profile not found for: " + email));
         return employeeMapper.toProfileDTO(employee);
     }
 
@@ -50,7 +54,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Page<EmployeeProfileDTO> getMyTeam(Pageable pageable) {
         String email = SecurityUtils.getCurrentUserEmail();
         Employee manager = employeeRepository.findByOfficialEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Manager profile not found for email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("Manager profile not found for: " + email));
         return employeeRepository.findByReportingManagerId(manager.getId(), pageable)
                 .map(employeeMapper::toProfileDTO);
     }

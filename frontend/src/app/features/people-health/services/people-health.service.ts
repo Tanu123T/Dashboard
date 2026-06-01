@@ -33,6 +33,7 @@ export interface WatchlistEntry {
   id: number;
   employeeId: string;
   employeeName: string;
+  department: string;
   reason: string;
   severity: string;
   date: string;

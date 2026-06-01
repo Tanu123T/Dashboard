@@ -126,13 +126,83 @@
       </div>
 
       <!-- Headcount Trend Chart -->
-      <div class="trend-section" *ngIf="headcountTrend && headcountTrend.length > 0">
+      <div class="trend-section" *ngIf="trendLoading || (headcountTrend && headcountTrend.length > 0)">
         <h2 class="section-title">Headcount Trend</h2>
-        <div class="trend-chart-container">
-          <p class="chart-placeholder">
-            <mat-icon>show_chart</mat-icon>
-            Headcount trend data available ({{ headcountTrend.length }} data points)
-          </p>
+        
+        <!-- Loading State -->
+        <div *ngIf="trendLoading" class="loading-state">
+          <div class="spinner-small"></div>
+          <p>Loading headcount trend...</p>
+        </div>
+
+        <!-- Chart -->
+        <div *ngIf="!trendLoading && headcountTrend.length > 0" class="trend-chart-container">
+          <svg viewBox="0 0 600 300" class="chart-svg">
+            <!-- Grid background -->
+            <defs>
+              <pattern id="grid" width="50" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 50 0 L 0 0 0 30" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="600" height="300" fill="url(#grid)" />
+            
+            <!-- X axis -->
+            <line x1="40" y1="250" x2="580" y2="250" stroke="#d0d0d0" stroke-width="2" />
+            
+            <!-- Y axis -->
+            <line x1="40" y1="50" x2="40" y2="250" stroke="#d0d0d0" stroke-width="2" />
+            
+            <!-- Chart line path -->
+            <path 
+              [attr.d]="'M' + generateChartPath()" 
+              fill="none" 
+              stroke="#3b82f6" 
+              stroke-width="3" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" />
+            
+            <!-- Data points (circles) -->
+            <ng-container *ngFor="let trend of headcountTrend; let i = index">
+              <ng-container *ngIf="headcountTrend.length > 0">
+                <circle 
+                  [attr.cx]="40 + (i / (headcountTrend.length - 1 || 1)) * 540" 
+                  [attr.cy]="250 - ((trend.headcount - getMinHeadcount()) / (getMaxHeadcount() - getMinHeadcount() || 1)) * 200" 
+                  r="4" 
+                  fill="#3b82f6" />
+              </ng-container>
+            </ng-container>
+
+            <!-- X axis labels -->
+            <text *ngFor="let trend of headcountTrend | slice:0:5; let i = index" 
+              [attr.x]="40 + (i / 4) * 540" 
+              y="275" 
+              text-anchor="middle" 
+              font-size="12" 
+              fill="#666">
+              {{ trend.date | slice:5:10 }}
+            </text>
+
+            <!-- Y axis labels -->
+            <text x="30" y="55" text-anchor="end" font-size="12" fill="#666">
+              {{ getMaxHeadcount() }}
+            </text>
+            <text x="30" y="250" text-anchor="end" font-size="12" fill="#666">
+              {{ getMinHeadcount() }}
+            </text>
+          </svg>
+          
+          <div class="chart-legend">
+            <span class="legend-item">
+              <span class="legend-dot" style="background-color: #3b82f6;"></span>
+              Headcount Count
+            </span>
+          </div>
+        </div>
+
+        <!-- No Data State -->
+        <div *ngIf="!trendLoading && headcountTrend.length === 0" class="placeholder">
+          <mat-icon>show_chart</mat-icon>
+          <p>No headcount trend data available</p>
         </div>
       </div>
     </section>
@@ -140,10 +210,47 @@
     <!-- Attendance Tab -->
     <section *ngIf="activeTab === 'attendance'" class="tab-content">
       <h2 class="section-title">Attendance Log</h2>
-      <p class="tab-info">Attendance details and logs can be viewed here</p>
-      <div class="placeholder">
+      
+      <!-- Loading State for Attendance -->
+      <div *ngIf="attendanceLoading" class="loading-state">
+        <div class="spinner-small"></div>
+        <p>Loading attendance data...</p>
+      </div>
+
+      <!-- Attendance Table -->
+      <div *ngIf="!attendanceLoading && attendanceLog && attendanceLog.length > 0" class="attendance-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>Department</th>
+              <th>Check-in Time</th>
+              <th>Check-out Time</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of attendanceLog" [ngClass]="entry.status?.toLowerCase()">
+              <td>{{ entry.employeeName || '-' }}</td>
+              <td>{{ entry.department || '-' }}</td>
+              <td>{{ entry.checkInTime || '-' }}</td>
+              <td>{{ entry.checkOutTime || '-' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="entry.status?.toLowerCase()">
+                  {{ entry.status || '-' }}
+                </span>
+              </td>
+              <td>{{ entry.date || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- No Data State -->
+      <div *ngIf="!attendanceLoading && (!attendanceLog || attendanceLog.length === 0)" class="placeholder">
         <mat-icon>event_note</mat-icon>
-        <p>Attendance log data will be displayed here</p>
+        <p>No attendance log data available</p>
       </div>
     </section>
 

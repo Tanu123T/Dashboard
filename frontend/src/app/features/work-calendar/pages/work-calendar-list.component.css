@@ -255,8 +255,8 @@
 }
 
 .time-column .time-header {
-  height: 44px;
-  border-bottom: 1px solid #e8f0f8;
+  height: 60px;
+  border-bottom: 2px solid #e8f0f8;
   border-right: 1px solid #e8f0f8;
 }
 
@@ -271,10 +271,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   color: #7d93aa;
-  font-weight: 400;
-  padding: 4px;
+  font-weight: 500;
+  padding: 8px;
   text-align: center;
   border-bottom: 1px solid #e8f0f8;
   border-right: 1px solid #e8f0f8;
@@ -320,20 +320,21 @@
 }
 
 .day-column.is-today:not(.is-selected) {
-  background: rgba(173, 216, 230, 0.3);
+  background: rgba(173, 216, 230, 0.15);
 }
 
 .day-column.is-today:not(.is-selected):hover {
-  background: rgba(173, 216, 230, 0.4);
+  background: rgba(173, 216, 230, 0.25);
 }
 
 .day-column.is-selected {
-  background: rgba(173, 216, 230, 0.3);
+  background: rgba(75, 143, 231, 0.1);
   position: relative;
+  border-left: 3px solid #4b8fe7;
 }
 
 .day-column.is-selected:hover {
-  background: rgba(173, 216, 230, 0.4);
+  background: rgba(75, 143, 231, 0.15);
 }
 
 .day-column:last-child {
@@ -341,13 +342,13 @@
 }
 
 .day-column .day-header {
-  height: 44px;
+  height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  border-bottom: 1px solid #e8f0f8;
+  gap: 6px;
+  border-bottom: 2px solid #e8f0f8;
   border-right: 1px solid #e8f0f8;
   padding: 0 8px;
   background: #ffffff;
@@ -357,11 +358,12 @@
 }
 
 .day-column.is-today:not(.is-selected) .day-header {
-  background: linear-gradient(180deg, rgba(200, 237, 247, 0.3) 0%, rgba(173, 216, 230, 0.2) 100%);
+  background: linear-gradient(180deg, rgba(173, 216, 230, 0.15) 0%, rgba(173, 216, 230, 0.1) 100%);
 }
 
 .day-column.is-selected .day-header {
-  background: linear-gradient(180deg, rgba(200, 237, 247, 0.3) 0%, rgba(173, 216, 230, 0.2) 100%);
+  background: linear-gradient(180deg, rgba(75, 143, 231, 0.1) 0%, rgba(75, 143, 231, 0.05) 100%);
+  border-left: 3px solid #4b8fe7;
 }
 
 .day-column:last-child .day-header {
@@ -439,8 +441,21 @@
   overflow: hidden;
 }
 
-.day-column:not(.is-today) .day-cells .time-cell {
+.day-column:not(.is-today):not(.is-selected) .day-cells .time-cell {
   background-color: white;
+}
+
+/* Selection highlighting extends to all time cells */
+.day-column.is-selected .day-cells .time-cell {
+  background-color: rgba(75, 143, 231, 0.1);
+}
+
+.day-column.is-selected .day-cells .time-cell:first-child {
+  border-top: 1px solid #e8f0f8;
+}
+
+.day-column.is-today .day-cells .time-cell {
+  background-color: rgba(173, 216, 230, 0.08);
 }
 
 .day-column .day-cells .time-cell:first-child {
@@ -453,6 +468,10 @@
 
 .day-column.is-today .day-cells .time-cell:hover {
   background-color: rgba(75, 143, 231, 0.12);
+}
+
+.day-column.is-selected .day-cells .time-cell:hover {
+  background-color: rgba(75, 143, 231, 0.15);
 }
 
 .day-column:last-child .day-cells .time-cell {
@@ -648,7 +667,7 @@
 }
 
 .mini-calendar .mini-weeks .mini-week .mini-day.has-events:not(.today):not(.selected) {
-  box-shadow: inset 0 0 0 1.5px rgba(75, 143, 231, 0.45);
+  /* Removed colored border - only selected date should show border */
 }
 
 .mini-calendar .mini-weeks .mini-week .mini-day.weekend {

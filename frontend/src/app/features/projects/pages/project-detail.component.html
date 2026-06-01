@@ -21,13 +21,13 @@
         <div>
           <h1 class="project-title">{{ project.name }}</h1>
         </div>
-        <button class="status-button on-track">● On track</button>
+        <button class="status-button" [ngClass]="project.status">● {{ projectStatus }}</button>
       </div>
 
       <!-- Milestone Dates -->
       <div class="milestone-grid">
         <div class="milestone-card">
-          <div class="milestone-icon">📋</div>
+          <mat-icon class="milestone-icon">event</mat-icon>
           <div>
             <p class="milestone-label">START DATE</p>
             <p class="milestone-sublabel">Project Initiation</p>
@@ -35,69 +35,89 @@
           </div>
         </div>
         <div class="milestone-card">
-          <div class="milestone-icon">💻</div>
+          <mat-icon class="milestone-icon">rocket_launch</mat-icon>
+          <div>
+            <p class="milestone-label">DEADLINE</p>
+            <p class="milestone-sublabel">Actual Release</p>
+            <div *ngIf="editingField !== 'deadline'" class="milestone-value editable-date" (click)="editDate('deadline')">
+              {{ deadline }}
+            </div>
+            <div *ngIf="editingField === 'deadline'" class="date-input-wrapper">
+              <input 
+                type="date" 
+                [(ngModel)]="tempDate" 
+                class="date-input"
+                (keyup.enter)="saveDate()"
+                (keyup.escape)="cancelEdit()"
+                (blur)="saveDate()"
+                autofocus>
+              <button class="date-btn" (click)="saveDate()">✓</button>
+            </div>
+          </div>
+        </div>
+        <div class="milestone-card">
+          <mat-icon class="milestone-icon">code</mat-icon>
           <div>
             <p class="milestone-label">DEVELOPMENT START</p>
             <p class="milestone-sublabel">Sprint Execution Start</p>
-            <p class="milestone-value">01 Feb 2026</p>
+            <div *ngIf="editingField !== 'developmentStart'" class="milestone-value editable-date" (click)="editDate('developmentStart')">
+              {{ developmentStartDate }}
+            </div>
+            <div *ngIf="editingField === 'developmentStart'" class="date-input-wrapper">
+              <input 
+                type="date" 
+                [(ngModel)]="tempDate" 
+                class="date-input"
+                (keyup.enter)="saveDate()"
+                (keyup.escape)="cancelEdit()"
+                autofocus>
+              <button class="date-btn" (click)="saveDate()">✓</button>
+              <button class="date-btn cancel" (click)="cancelEdit()">✕</button>
+            </div>
           </div>
         </div>
         <div class="milestone-card">
-          <div class="milestone-icon">📅</div>
+          <mat-icon class="milestone-icon">calendar_today</mat-icon>
           <div>
-            <p class="milestone-label">PLANNED GO-LIVE</p>
+            <p class="milestone-label">END DATE</p>
             <p class="milestone-sublabel">Target Release</p>
-            <p class="milestone-value">30 Apr 2026</p>
+            <div *ngIf="editingField !== 'endDate'" class="milestone-value editable-date" (click)="editDate('endDate')">
+              {{ endDate }}
+            </div>
+            <div *ngIf="editingField === 'endDate'" class="date-input-wrapper">
+              <input 
+                type="date" 
+                [(ngModel)]="tempDate" 
+                class="date-input"
+                (keyup.enter)="saveDate()"
+                (keyup.escape)="cancelEdit()"
+                (blur)="saveDate()"
+                autofocus>
+              <button class="date-btn" (click)="saveDate()">✓</button>
+            </div>
           </div>
         </div>
         <div class="milestone-card">
-          <div class="milestone-icon">🚀</div>
-          <div>
-            <p class="milestone-label">ACTUAL GO-LIVE</p>
-            <p class="milestone-sublabel">Actual Release</p>
-            <p class="milestone-value">{{ project.dueDate || '-' }}</p>
-          </div>
-        </div>
-        <div class="milestone-card">
-          <div class="milestone-icon">⏱️</div>
+          <mat-icon class="milestone-icon">schedule</mat-icon>
           <div>
             <p class="milestone-label">SPRINT DURATION</p>
             <p class="milestone-sublabel">Sprint Cycle</p>
-            <p class="milestone-value">2 Weeks</p>
+            <div *ngIf="editingField !== 'sprintDuration'" class="milestone-value editable-date" (click)="editSprintDuration()">
+              {{ sprintDuration }}
+            </div>
+            <div *ngIf="editingField === 'sprintDuration'" class="duration-input-wrapper">
+              <input 
+                type="text" 
+                [(ngModel)]="tempValue" 
+                class="date-input"
+                placeholder="e.g. 2 Weeks"
+                (keyup.enter)="saveSprintDuration()"
+                (keyup.escape)="cancelSprintEdit()"
+                autofocus>
+              <button class="date-btn" (click)="saveSprintDuration()">✓</button>
+              <button class="date-btn cancel" (click)="cancelSprintEdit()">✕</button>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- KPI Grid -->
-    <section class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-icon">👤</div>
-        <div>
-          <p class="kpi-label">LEAD</p>
-          <p class="kpi-value">{{ project.lead }}</p>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon">📊</div>
-        <div>
-          <p class="kpi-label">TOTAL PLANNED SPRINTS</p>
-          <p class="kpi-value">{{ project.totalPlannedSprints }}</p>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon">✓</div>
-        <div>
-          <p class="kpi-label">COMPLETED SPRINTS</p>
-          <p class="kpi-value">{{ completedSprints }}</p>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-icon">📈</div>
-        <div>
-          <p class="kpi-label">PROJECT TIMELINE</p>
-          <p class="kpi-value">{{ project.progress }}%</p>
-          <p class="kpi-sublabel">Overall Progress</p>
         </div>
       </div>
     </section>
@@ -126,12 +146,12 @@
             <circle cx="90" cy="90" r="70" fill="none" stroke="#f1f5f9" stroke-width="12" />
             <circle cx="90" cy="90" r="70" fill="none" stroke="#10b981" stroke-width="12" 
               [style.stroke-dasharray]="440" 
-              [style.stroke-dashoffset]="440 - (project.progress * 4.4)" 
+              [style.stroke-dashoffset]="440 - (calculatedProgress * 4.4)" 
               stroke-linecap="round" 
               class="progress-ring-fill"/>
           </svg>
           <div class="progress-text">
-            <p class="progress-value">{{ project.progress }}%</p>
+            <p class="progress-value">{{ calculatedProgress }}%</p>
             <p class="progress-label">Complete</p>
           </div>
         </div>
@@ -172,26 +192,53 @@
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td><span class="phase-badge phase-1">Phase 1</span></td>
-              <td>Project Initiation & Requirement Engineering</td>
-              <td><span class="status-badge completed">Completed</span></td>
-              <td>01 Jan 2026</td>
-              <td>20 Jan 2026</td>
-            </tr>
-            <tr>
-              <td><span class="phase-badge phase-2">Phase 2</span></td>
-              <td>Product Development & Sprint Execution</td>
-              <td><span class="status-badge in-progress">In Progress</span></td>
-              <td>21 Jan 2026</td>
-              <td>30 Apr 2026</td>
-            </tr>
-            <tr>
-              <td><span class="phase-badge phase-3">Phase 3</span></td>
-              <td>Release Stabilization & Production Rollout</td>
-              <td><span class="status-badge pending">Pending</span></td>
-              <td>01 May 2026</td>
-              <td>20 May 2026</td>
+            <tr *ngFor="let phase of lifecyclePhases">
+              <td><span class="phase-badge" [ngClass]="'phase-' + phase.id">{{ phase.name }}</span></td>
+              <td>{{ phase.milestone }}</td>
+              <td>
+                <div *ngIf="editingField !== 'phase-' + phase.id + '-status'" (click)="editStatus(phase.id)" class="editable-status">
+                  <span class="status-badge" [ngClass]="phase.statusClass">{{ phase.status }}</span>
+                </div>
+                <div *ngIf="editingField === 'phase-' + phase.id + '-status'" class="status-dropdown-wrapper">
+                  <select class="status-select" (change)="onStatusChange(phase.id, $event)" autofocus>
+                    <option value="">Select Status</option>
+                    <option *ngFor="let status of getStatusOptions()" [value]="status">{{ status }}</option>
+                  </select>
+                  <button class="status-btn" (click)="editingField = null">Close</button>
+                </div>
+              </td>
+              <td>
+                <div *ngIf="editingField !== 'phase-' + phase.id + '-start'" class="editable-cell" (click)="editDate('phase-' + phase.id + '-start')">
+                  {{ phase.startDate }}
+                </div>
+                <div *ngIf="editingField === 'phase-' + phase.id + '-start'" class="date-input-wrapper-inline">
+                  <input 
+                    type="date" 
+                    [(ngModel)]="tempDate" 
+                    class="date-input-inline"
+                    (keyup.enter)="saveDate()"
+                    (keyup.escape)="cancelEdit()"
+                    autofocus>
+                  <button class="date-btn-inline" (click)="saveDate()">✓</button>
+                  <button class="date-btn-inline cancel" (click)="cancelEdit()">✕</button>
+                </div>
+              </td>
+              <td>
+                <div *ngIf="editingField !== 'phase-' + phase.id + '-target'" class="editable-cell" (click)="editDate('phase-' + phase.id + '-target')">
+                  {{ phase.targetCompletion }}
+                </div>
+                <div *ngIf="editingField === 'phase-' + phase.id + '-target'" class="date-input-wrapper-inline">
+                  <input 
+                    type="date" 
+                    [(ngModel)]="tempDate" 
+                    class="date-input-inline"
+                    (keyup.enter)="saveDate()"
+                    (keyup.escape)="cancelEdit()"
+                    autofocus>
+                  <button class="date-btn-inline" (click)="saveDate()">✓</button>
+                  <button class="date-btn-inline cancel" (click)="cancelEdit()">✕</button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>

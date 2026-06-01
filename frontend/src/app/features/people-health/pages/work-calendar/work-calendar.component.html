@@ -1,0 +1,52 @@
+<div class="wc-header-wrapper">
+  <div class="wc-header-container">
+    <div class="wc-header-content">
+      <div class="wc-header-text">
+        <h1>Work Calendar</h1>
+        <p>Track your work schedule, availability, and team calendars.</p>
+      </div>
+      <div class="wc-header-timestamp">
+        <lucide-icon name="clock" size="18"></lucide-icon>
+        <span>Last updated: {{ lastUpdated }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wc-calendar-section">
+  <div class="calendar-container">
+    <!-- Calendar Header -->
+    <div class="calendar-header">
+      <button class="nav-btn" (click)="previousMonth()">
+        <lucide-icon name="chevron-left" size="20"></lucide-icon>
+      </button>
+      <h2>{{ getMonthYear() }}</h2>
+      <button class="nav-btn" (click)="nextMonth()">
+        <lucide-icon name="chevron-right" size="20"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Day names -->
+    <div class="calendar-weekdays">
+      <div *ngFor="let day of weekDays" class="weekday">{{ day }}</div>
+    </div>
+
+    <!-- Calendar grid -->
+    <div class="calendar-grid">
+      <div 
+        *ngFor="let day of calendarDays" 
+        [ngClass]="{'calendar-day': true, 'other-month': !day.isCurrentMonth, 'today': day.isToday, 'selected': day.isSelected}"
+        (click)="selectDate(day)"
+        class="calendar-day-item"
+      >
+        <div class="day-header">
+          <span class="day-name">{{ day.dayName }}</span>
+          <span class="day-date">{{ day.date }}</span>
+        </div>
+        <div class="day-content">
+          <!-- Events or empty space -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

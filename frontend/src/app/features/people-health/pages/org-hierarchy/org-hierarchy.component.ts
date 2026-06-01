@@ -1,11 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface Member {
-  id: string;
-  name: string;
-  role: string;
-}
+import { EmployeeService, Member } from '../../../../core/services/employee.service';
 
 interface Hierarchy {
   ceo: { name: string; role: string };
@@ -22,21 +17,48 @@ interface Hierarchy {
 })
 export class OrgHierarchyComponent implements OnInit {
   isFullView = false;
+  lastUpdated = '';
   hierarchy: Hierarchy = {
     ceo: { name: 'Rajendra Gangarde', role: 'Chief Executive Officer' },
     tierTwo: [],
     tierThree: []
   };
-  members: Member[] = [
-    { id: '1', name: 'Ravindra Kulkarni', role: 'HR Manager' },
-    { id: '2', name: 'Deepak Desai', role: 'Project Manager' },
-    { id: '3', name: 'Employee 1', role: 'Staff' },
-    { id: '4', name: 'Employee 2', role: 'Staff' },
-    { id: '5', name: 'Employee 3', role: 'Staff' }
-  ];
+  members: Member[] = [];
+
+  constructor(private employeeService: EmployeeService) {}
 
   ngOnInit() {
-    this.buildHierarchy();
+    this.loadEmployees();
+    this.setLastUpdated();
+  }
+
+  /**
+   * Load employees from service
+   * When API is integrated, this will automatically fetch from the backend
+   */
+  private loadEmployees() {
+    this.employeeService.getEmployees().subscribe(
+      (employees: Member[]) => {
+        this.members = employees;
+        this.buildHierarchy();
+      },
+      (error: unknown) => {
+        console.error('Error loading employees:', error);
+      }
+    );
+  }
+
+  private setLastUpdated() {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    };
+    this.lastUpdated = now.toLocaleDateString('en-US', options);
   }
 
   private sortByName(a: Member, b: Member): number {
@@ -54,7 +76,12 @@ export class OrgHierarchyComponent implements OnInit {
           role.includes('lead')
         );
       })
-      .sort((a, b) => this.sortByName(a, b));
+      .sort((a, b) => {
+        // HR Manager should come first (higher priority)
+        if (a.role.toLowerCase().includes('hr')) return -1;
+        if (b.role.toLowerCase().includes('hr')) return 1;
+        return this.sortByName(a, b);
+      });
 
     const tierTwoIds = new Set(tierTwo.map((member) => member.id));
     const tierThree = this.members

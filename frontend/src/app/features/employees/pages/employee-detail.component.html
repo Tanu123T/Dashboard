@@ -3,7 +3,7 @@
   <a routerLink="/dashboard/employee-hub" class="back-button">← Back</a>
 
   <!-- Main Container -->
-  <div class="detail-container">
+  <div class="detail-wrapper">
     <!-- Left Sidebar -->
     <aside class="sidebar-section">
       <!-- Employee Photo / Avatar -->
@@ -14,9 +14,9 @@
         </ng-template>
       </div>
 
-      <!-- Personal Information -->
-      <div class="info-section">
-        <h3 class="section-title">Personal Information</h3>
+      <!-- Personal Information Card -->
+      <div class="info-card">
+        <h3 class="card-title">Personal Information</h3>
         <div class="info-items">
           <div class="info-item">
             <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -30,13 +30,6 @@
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
             </svg>
             <span>{{ employee.personalInfo.phone }}</span>
-          </div>
-          <div class="info-item">
-            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span>{{ employee.department }}</span>
           </div>
           <div class="info-item">
             <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -65,17 +58,17 @@
         </div>
       </div>
 
-      <!-- Skills Section -->
-      <div class="info-section" *ngIf="employee.skills.length > 0">
-        <h3 class="section-title">Skills</h3>
+      <!-- Skills Card -->
+      <div class="info-card" *ngIf="employee.skills && employee.skills.length > 0">
+        <h3 class="card-title">Skills</h3>
         <div class="skills-container">
           <span class="skill-badge" *ngFor="let skill of employee.skills">{{ skill }}</span>
         </div>
       </div>
 
-      <!-- Projects List Sidebar -->
-      <div class="info-section" *ngIf="employee.projects.length > 0">
-        <h3 class="section-title">Projects</h3>
+      <!-- Projects Card -->
+      <div class="info-card" *ngIf="employee.projects && employee.projects.length > 0">
+        <h3 class="card-title">Projects</h3>
         <div class="projects-list">
           <a href="#" class="project-item" *ngFor="let proj of employee.projects">
             <svg class="project-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -86,9 +79,9 @@
         </div>
       </div>
 
-      <!-- Education Section -->
-      <div class="info-section" *ngIf="employee.education.length > 0">
-        <h3 class="section-title">Education</h3>
+      <!-- Education Card -->
+      <div class="info-card" *ngIf="employee.education && employee.education.length > 0">
+        <h3 class="card-title">Education</h3>
         <div class="education-list">
           <div class="edu-item" *ngFor="let edu of employee.education">
             <p class="edu-degree">{{ edu.degree }}</p>
@@ -98,9 +91,9 @@
         </div>
       </div>
 
-      <!-- Achievements Section -->
-      <div class="info-section" *ngIf="employee.achievements.length > 0">
-        <h3 class="section-title">Achievements</h3>
+      <!-- Achievements Card -->
+      <div class="info-card" *ngIf="employee.achievements && employee.achievements.length > 0">
+        <h3 class="card-title">Achievements</h3>
         <div class="achievements-list">
           <div class="achievement-badge" *ngFor="let ach of employee.achievements">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -114,28 +107,15 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
-      <!-- Header -->
+      <!-- Header Section -->
       <div class="header-section">
         <h1 class="employee-name">{{ employee.name }}</h1>
         <p class="employee-title">{{ employee.title }}</p>
       </div>
 
-      <!-- Profile Details -->
-      <section class="details-section" *ngIf="employee.detailItems.length > 0">
-        <div class="section-header">
-          <h2>Profile Details</h2>
-        </div>
-        <div class="details-grid">
-          <div class="detail-card" *ngFor="let item of employee.detailItems">
-            <span class="detail-label">{{ item.label }}</span>
-            <span class="detail-value">{{ item.value }}</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Metrics Row -->
-      <div class="metrics-row" *ngIf="(employee.performanceTrends && employee.performanceTrends.length > 0) || employee.attendance.attendanceRate > 0">
-        <!-- Performance Trends -->
+      <!-- Metrics Section -->
+      <div class="metrics-section">
+        <!-- Performance Card -->
         <div class="metric-card performance-card" *ngIf="employee.performanceTrends && employee.performanceTrends.length > 0">
           <h3>Performance Trends</h3>
           <svg class="performance-chart" viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
@@ -158,8 +138,8 @@
           </svg>
         </div>
 
-        <!-- Attendance Rate -->
-        <div class="metric-card attendance-card" *ngIf="employee.attendance.attendanceRate > 0">
+        <!-- Attendance Card -->
+        <div class="metric-card attendance-card" *ngIf="employee.attendance && employee.attendance.attendanceRate > 0">
           <div class="attendance-header">
             <h3>Attendance Rate</h3>
             <div class="month-selector-wrapper">
@@ -202,66 +182,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Projects Section -->
-      <section class="projects-section" *ngIf="employee.projects.length > 0">
-        <div class="section-header">
-          <h2>Projects</h2>
-          <p class="section-info">{{ employee.projects.length }} TOTAL • {{ getActiveProjectsCount() }} ACTIVE</p>
-        </div>
-        <div class="projects-grid">
-          <div class="project-card" *ngFor="let proj of employee.projects">
-            <div class="project-header">
-              <h3 style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ proj.name }}</h3>
-              <span class="project-status" [ngClass]="proj.status === 'In Progress' ? 'status-in-progress' : 'status-completed'">
-                <span class="status-dot"></span>
-                {{ proj.status }}
-              </span>
-            </div>
-            <div class="project-techstack" *ngIf="proj.stages && proj.stages.length > 0">
-              <span class="tech-label">TECH STACK</span>
-              <div class="tech-badges">
-                <span class="tech-badge" *ngFor="let stage of proj.stages">{{ stage }}</span>
-              </div>
-            </div>
-            <div class="project-progress" *ngIf="proj.progress !== undefined">
-              <span class="project-progress-label">PROGRESS</span>
-              <div class="project-progress-bar">
-                <span class="project-progress-fill" [style.width.%]="proj.progress"></span>
-              </div>
-              <span class="project-progress-value">{{ proj.progress }}%</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Work Experience Section -->
-      <section class="experience-section" *ngIf="employee.workExperience.length > 0">
-        <div class="section-header">
-          <h2>Work Experience</h2>
-        </div>
-        <div class="experience-grid">
-          <div class="experience-card" *ngFor="let exp of employee.workExperience; let isFirst = first">
-            <h3 class="exp-title">{{ exp.title }}</h3>
-            <div class="exp-badge" [ngClass]="isFirst ? 'current' : 'past'">{{ isFirst ? 'Current' : 'Past' }}</div>
-            <div class="exp-details">
-              <div class="exp-detail">
-                <span class="label">COMPANY</span>
-                <span class="value">{{ exp.company }}</span>
-              </div>
-              <div class="exp-detail">
-                <span class="label">DURATION</span>
-                <span class="value">{{ exp.duration }}</span>
-              </div>
-              <div class="exp-detail" *ngIf="exp.description">
-                <span class="label">DESCRIPTION</span>
-                <span class="value">{{ exp.description }}</span>
-              </div>
-            </div>
-            <span [ngClass]="isFirst ? 'active-position' : 'past-experience'">{{ isFirst ? 'Active Position' : 'Past Experience' }}</span>
-          </div>
-        </div>
-      </section>
     </main>
   </div>
 </div>

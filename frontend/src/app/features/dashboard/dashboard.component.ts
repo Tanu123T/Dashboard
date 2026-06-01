@@ -275,9 +275,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const min = 0;
     const max = 100;
 
+    if (this.chartPoints.length === 0) {
+      return '';
+    }
+
+    const denominator = Math.max(1, this.chartPoints.length - 1);
+
     return this.chartPoints
       .map((value, index) => {
-        const x = (index / (this.chartPoints.length - 1)) * width;
+        const x = (index / denominator) * width;
         const y = height - ((value - min) / (max - min)) * 150 - 30;
         return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
       })
@@ -291,8 +297,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const maxVal = 240;
     const chartHeight = 160;
 
+    if (this.chartData.length === 0) {
+      return [];
+    }
+
+    const denominator = Math.max(1, this.chartData.length - 1);
+
     return this.chartData.map((data, index) => {
-      const x = (index / (this.chartData.length - 1)) * width;
+      const x = (index / denominator) * width;
       const value = dataKey === 'actual' ? data.actual : data.target;
       const normalized = (value - minVal) / (maxVal - minVal);
       const y = height - (normalized * chartHeight) - 30;
@@ -301,7 +313,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private generateSmoothPath(points: Array<{ x: number; y: number }>): string {
-    if (points.length < 2) return '';
+    if (points.length === 0) return '';
+
+    if (points.length === 1) {
+      return `M ${points[0].x} ${points[0].y}`;
+    }
 
     let path = `M ${points[0].x} ${points[0].y}`;
 
@@ -333,12 +349,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get areaPath(): string {
     const points = this.generateChartPoints('actual');
-    const width = 1000;
     const height = 220;
 
+    if (points.length === 0) {
+      return '';
+    }
+
     let path = this.generateSmoothPath(points);
-    // Close the area
-    path += ` L ${width} ${height} L 0 ${height} Z`;
+
+    const firstX = points[0].x;
+    const lastX = points[points.length - 1].x;
+
+    // Close the area to the baseline.
+    path += ` L ${lastX} ${height} L ${firstX} ${height} Z`;
     return path;
   }
 

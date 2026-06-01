@@ -185,10 +185,6 @@
         <p class="employee-title">{{ employee.title }}</p>
       </div>
 
-      <!-- Metrics Section -->
-      <div class="metrics-section">
-        <!-- Performance Card -->
-        <div class="metric-card performance-card" *ngIf="employee.performanceTrends && employee.performanceTrends.length > 0">
       <!-- Profile Details -->
       <section class="details-section" *ngIf="employee.detailItems.length > 0">
         <div class="section-header">
@@ -302,11 +298,9 @@
         </div>
 
         <!-- Attendance Card -->
-        <div class="metric-card attendance-card" *ngIf="employee.attendance && employee.attendance.attendanceRate > 0">
-        <!-- Attendance Rate -->
         <div
           class="metric-card attendance-card"
-          *ngIf="employee.attendance.attendanceRate > 0"
+          *ngIf="employee.attendance && employee.attendance.attendanceRate > 0"
         >
           <div class="attendance-header">
             <h3>Attendance Rate</h3>

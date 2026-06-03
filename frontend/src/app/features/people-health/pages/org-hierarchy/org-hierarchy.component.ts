@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { EmployeeService, Member } from '../../../../core/services/employee.service';
 
 interface Hierarchy {
@@ -18,6 +19,7 @@ interface Hierarchy {
 export class OrgHierarchyComponent implements OnInit {
   isFullView = false;
   lastUpdated = '';
+  activeTab = 'org-hierarchy'; // Set default active tab
   hierarchy: Hierarchy = {
     ceo: { name: 'Rajendra Gangarde', role: 'Chief Executive Officer' },
     tierTwo: [],
@@ -25,7 +27,7 @@ export class OrgHierarchyComponent implements OnInit {
   };
   members: Member[] = [];
 
-  constructor(private employeeService: EmployeeService) {}
+  constructor(private employeeService: EmployeeService, private router: Router) {}
 
   ngOnInit() {
     this.loadEmployees();
@@ -97,6 +99,23 @@ export class OrgHierarchyComponent implements OnInit {
 
   toggleView() {
     this.isFullView = !this.isFullView;
+  }
+
+  navigateToTab(tabName: string) {
+    switch(tabName) {
+      case 'workforce':
+        this.router.navigate(['/dashboard/workforce-health']);
+        break;
+      case 'employee-hub':
+        this.router.navigate(['/dashboard/employee-hub']);
+        break;
+      case 'work-calendar':
+        this.router.navigate(['/dashboard/work-calendar']);
+        break;
+      case 'org-hierarchy':
+        this.router.navigate(['/dashboard/org-hierarchy']);
+        break;
+    }
   }
 
   handleOrgChartWheel(event: WheelEvent) {

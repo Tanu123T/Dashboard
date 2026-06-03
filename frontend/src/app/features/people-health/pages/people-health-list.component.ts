@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { PeopleHealthService, WorkforceHealthSummary, HeadcountTrend, WatchlistEntry } from '../services/people-health.service';
-import { Subject } from 'rxjs';
+import { PeopleHealthService, WorkforceHealthSummary, HeadcountTrend, WatchlistEntry, AttendanceLogEntry } from '../services/people-health.service';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,9 +17,14 @@ export class PeopleHealthListComponent implements OnInit, OnDestroy {
   workforceHealthSummary: WorkforceHealthSummary | null = null;
   headcountTrend: HeadcountTrend[] = [];
   watchlist: WatchlistEntry[] = [];
+  attendanceLog: AttendanceLogEntry[] = [];
 
   // UI states
   loading = true;
+  summaryLoading = false;
+  trendLoading = false;
+  attendanceLoading = false;
+  watchlistLoading = false;
   error: string | null = null;
   activeTab = 'overview'; // overview, attendance, watchlist
 
@@ -38,59 +43,103 @@ export class PeopleHealthListComponent implements OnInit, OnDestroy {
 
   /**
    * Load all workforce health data from API
+   * Uses forkJoin to coordinate all parallel requests
    */
   loadWorkforceHealthData(): void {
     this.loading = true;
     this.error = null;
+    this.summaryLoading = true;
+    this.trendLoading = true;
+    this.attendanceLoading = true;
+    this.watchlistLoading = true;
 
-    // Fetch summary data
-    this.peopleHealthService.getWorkforceHealthSummary()
+    // Coordinate all API calls with forkJoin
+    forkJoin({
+      summary: this.peopleHealthService.getWorkforceHealthSummary(),
+      trends: this.peopleHealthService.getHeadcountTrend(),
+      attendance: this.peopleHealthService.getAttendanceLog(),
+      watchlist: this.peopleHealthService.getWorkforceHealthWatchlist()
+    })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (summary) => {
-          this.workforceHealthSummary = summary;
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('Failed to load workforce health summary:', err);
-          this.error = 'Failed to load workforce health data';
-          this.workforceHealthSummary = {
-            presentToday: null,
-            onBreak: null,
-            onLeave: null,
-            lateArrivals: null,
-            presentInOffice: null,
-            attendanceConsistency: null
-          };
-          this.loading = false;
-        }
-      });
+        next: (result) => {
+          // Set all data
+          this.workforceHealthSummary = result.summary;
+          this.headcountTrend = result.trends || [];
+          this.attendanceLog = result.attendance?.content || [];
+          this.watchlist = result.watchlist || [];
 
-    // Fetch headcount trend data
-    this.peopleHealthService.getHeadcountTrend()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (trends) => {
-          this.headcountTrend = trends || [];
+          // Update individual loading states
+          this.summaryLoading = false;
+          this.trendLoading = false;
+          this.attendanceLoading = false;
+          this.watchlistLoading = false;
+          this.loading = false;
+          this.error = null;
         },
         error: (err) => {
-          console.error('Failed to load headcount trend:', err);
+          console.error('Failed to load workforce health data:', err);
+          this.error = 'Failed to load workforce health data. Please try again.';
+          
+          // Reset loading states and data on error
+          this.workforceHealthSummary = null;
           this.headcountTrend = [];
-        }
-      });
-
-    // Fetch watchlist data
-    this.peopleHealthService.getWorkforceHealthWatchlist()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (watchlist) => {
-          this.watchlist = watchlist || [];
-        },
-        error: (err) => {
-          console.error('Failed to load watchlist:', err);
+          this.attendanceLog = [];
           this.watchlist = [];
+          
+          this.summaryLoading = false;
+          this.trendLoading = false;
+          this.attendanceLoading = false;
+          this.watchlistLoading = false;
+          this.loading = false;
         }
       });
+  }
+
+  /**
+   * Reload all data (for retry button)
+   */
+  reloadData(): void {
+    this.loadWorkforceHealthData();
+  }
+
+  /**
+   * Generate SVG path for headcount trend chart
+   */
+  generateChartPath(): string {
+    if (!this.headcountTrend || this.headcountTrend.length === 0) {
+      return '';
+    }
+
+    const width = 540;
+    const height = 200;
+    const minHeadcount = Math.min(...this.headcountTrend.map(t => t.headcount));
+    const maxHeadcount = Math.max(...this.headcountTrend.map(t => t.headcount));
+    const range = maxHeadcount - minHeadcount || 1;
+
+    const points = this.headcountTrend.map((trend, index) => {
+      const x = 40 + (index / (this.headcountTrend.length - 1 || 1)) * width;
+      const y = 250 - ((trend.headcount - minHeadcount) / range) * height;
+      return `${x},${y}`;
+    });
+
+    return points.join(' L');
+  }
+
+  /**
+   * Get minimum headcount value
+   */
+  getMinHeadcount(): number {
+    if (!this.headcountTrend || this.headcountTrend.length === 0) return 0;
+    return Math.min(...this.headcountTrend.map(t => t.headcount));
+  }
+
+  /**
+   * Get maximum headcount value
+   */
+  getMaxHeadcount(): number {
+    if (!this.headcountTrend || this.headcountTrend.length === 0) return 0;
+    return Math.max(...this.headcountTrend.map(t => t.headcount));
   }
 
   /**

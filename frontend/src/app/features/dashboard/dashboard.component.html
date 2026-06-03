@@ -1,197 +1,400 @@
-<div class="workforce-page ph-page-root" *ngIf="isWorkforceHealthRoute">
-  <section class="hero-panel ph-header-card">
-    <div class="hero-copy">
-      <p class="eyebrow">People Health</p>
-      <h1>Workforce readiness, attendance trends, and talent continuity insights.</h1>
+<div class="dashboard-wrapper">
+
+  <div class="dashboard-header-container">
+    <div class="welcome-card">
+      <div class="welcome-text-section">
+        <h1 class="greeting">Good morning, CEO</h1>
+        <p class="subtitle">Live performance, progress, and priorities at a glance.</p>
+      </div>
+
+      <div class="live-tag-container">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span class="live-text">LIVE</span>
+        </div>
+        <span class="timestamp-text">Tuesday, June 2, 2026</span>
+        <span class="inner-dot"></span>
+        <span class="timestamp-text">02:03:12 PM</span>
+      </div>
+
+      <div class="quote-box">
+        <div class="quote-header">
+          <lucide-icon [name]="'sparkles'" class="sparkle-icon"></lucide-icon>
+          <button class="refresh-btn">
+            <lucide-icon [name]="'rotate-cw'" class="refresh-icon"></lucide-icon>
+            Refresh
+          </button>
+        </div>
+        <p class="quote-text">
+          "Focus creates speed, and speed creates advantage when teams are empowered to ship value without unnecessary friction."
+        </p>
+        <p class="quote-author">Eric Ries</p>
+      </div>
     </div>
 
-    <div class="updated-pill ph-updated-pill">
-      <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="4" y="5" width="16" height="15" rx="3"></rect>
-        <path d="M8 3.8v3.4M16 3.8v3.4M4 9.5h16"></path>
-        <path d="M9.5 14.2h2.2"></path>
-      </svg>
-      <span>Last updated: May 11, 2026, 2:30 PM</span>
-    </div>
-  </section>
-
-  <section class="summary-grid ph-kpi-grid">
-    <article *ngFor="let card of summaryCards" class="summary-card" [attr.data-tone]="card.tone">
-      <div class="summary-topline">
-        <div>
-          <p class="summary-label">{{ card.label }}</p>
-          <h2>{{ card.value }}</h2>
+    <div class="schedule-card">
+      <div class="schedule-header">
+        <div class="schedule-title">
+          <lucide-icon [name]="'calendar'" class="calendar-icon"></lucide-icon>
+          <h2>Today's Schedule</h2>
         </div>
-        <div class="summary-icon" [attr.data-icon]="card.icon">
-          <svg *ngIf="card.icon === 'user-check'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M16 19v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="8" r="3"></circle>
-            <path d="M16 11l2 2 4-4"></path>
-          </svg>
-          <svg *ngIf="card.icon === 'coffee'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 8h13v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8Z"></path>
-            <path d="M16 10h2a2 2 0 0 1 0 4h-2"></path>
-            <path d="M7 4v3M11 4v3M15 4v3"></path>
-            <path d="M5 20h12"></path>
-          </svg>
-          <svg *ngIf="card.icon === 'calendar'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect>
-            <path d="M8 3.8v3.4M16 3.8v3.4M3.5 9.5h17"></path>
-          </svg>
-          <svg *ngIf="card.icon === 'clock'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="8.5"></circle>
-            <path d="M12 8.5V12l2.8 1.7"></path>
-          </svg>
-          <svg *ngIf="card.icon === 'building'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="4" y="4.5" width="16" height="15" rx="2.5"></rect>
-            <path d="M8 19.5V15M12 19.5V15M16 19.5V15"></path>
-            <path d="M8 9h0M12 9h0M16 9h0M8 12h0M12 12h0M16 12h0"></path>
-          </svg>
-          <svg *ngIf="card.icon === 'users'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 20v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="11" cy="8" r="3"></circle>
-            <path d="M22 20v-1.5a3.5 3.5 0 0 0-3-3.45"></path>
-            <path d="M17 4.8a3 3 0 0 1 0 5.8"></path>
-          </svg>
-        </div>
-      </div>
-      <p class="summary-subtitle">{{ card.subtitle }}</p>
-    </article>
-  </section>
-
-  <section class="panel chart-panel ph-panel-card">
-    <header class="panel-header ph-header-actions">
-      <div>
-        <h3>Headcount Growth Trend</h3>
-        <p>Monthly movement versus hiring target</p>
-      </div>
-    </header>
-
-    <div class="chart-wrap">
-      <div class="chart-axis chart-axis-y">
-        <span>240</span>
-        <span>180</span>
-        <span>120</span>
-        <span>60</span>
-        <span>0</span>
-      </div>
-
-      <div class="chart-area" (mousemove)="onChartHover($event)" (mouseleave)="hideTooltip()">
-        <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="headcountFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stop-color="#3f89de" stop-opacity="0.26" />
-              <stop offset="95%" stop-color="#3f89de" stop-opacity="0.02" />
-            </linearGradient>
-          </defs>
-          <!-- Area fill for actual data -->
-          <path [attr.d]="areaPath" fill="url(#headcountFill)" class="chart-area-fill"></path>
-          <!-- Target line (dashed) -->
-          <path [attr.d]="targetLinePath" class="target-line"></path>
-          <!-- Actual line (solid) -->
-          <path [attr.d]="actualLinePath" class="actual-line"></path>
-          <!-- Hover indicator line -->
-          <line *ngIf="showTooltip" [attr.x1]="hoverLineX" [attr.y1]="0" [attr.x2]="hoverLineX" [attr.y2]="220" class="hover-line"></line>
-        </svg>
-
-        <div class="chart-tooltip" *ngIf="showTooltip" [style.left.px]="tooltipX" [style.top.px]="tooltipY">
-          <p class="tooltip-title">{{ tooltipMonth }}</p>
-          <p class="tooltip-data"><span class="tooltip-label">Headcount:</span> <span class="tooltip-value">{{ tooltipValue }} employees</span></p>
-          <p class="tooltip-data"><span class="tooltip-label">Target:</span> <span class="tooltip-value">{{ tooltipTarget }} employees</span></p>
-        </div>
-
-        <div class="chart-months">
-          <span *ngFor="let month of months">{{ month }}</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel table-panel ph-panel-card">
-    <header class="panel-header table-header ph-full-card ph-attendance-panel">
-      <div>
-        <h3>Attendance Log</h3>
-        <p>Real-time employee check-in/out records</p>
-      </div>
-
-      <div class="table-actions ph-attendance-toolbar">
-        <button class="ph-date-pill" type="button">{{ attendanceDateLabel }}</button>
-        <button class="icon-button ph-date-icon-btn" type="button" aria-label="Calendar" (click)="openAttendanceDatePicker()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="4" y="5" width="16" height="15" rx="3"></rect>
-            <path d="M8 3.8v3.4M16 3.8v3.4M4 9.5h16"></path>
-          </svg>
-        </button>
-        <input
-          #attendanceDateInput
-          class="ph-date-input-hidden"
-          type="date"
-          [value]="selectedAttendanceDate"
-          (change)="onAttendanceDateChange($any($event.target).value)" />
-        <button class="ph-btn ghost export-button" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 4v9"></path>
-            <path d="M8.5 9.5 12 13l3.5-3.5"></path>
-            <path d="M5 19h14"></path>
-          </svg>
-          Export
+        <button class="add-schedule-btn">
+          Add Schedule <span class="arrow-icon">→</span>
         </button>
       </div>
-    </header>
 
-    <div class="table-wrap ph-attendance-table-wrap">
-      <table class="ph-attendance-table">
-        <thead>
-          <tr>
-            <th>Employee</th>
-            <th>Department</th>
-            <th>Check-In</th>
-            <th>Check-Out</th>
-            <th>Hours</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of attendanceRows" class="ph-attendance-row">
-            <td>
-              <div class="ph-attendance-employee">
-                <span class="ph-attendance-avatar">{{ row.initials }}</span>
-                <div>
-                  <strong>{{ row.name }}</strong>
-                  <small>{{ row.employeeCode }}</small>
-                </div>
-              </div>
-            </td>
-            <td>{{ row.department }}</td>
-            <td>{{ row.checkIn }}</td>
-            <td>{{ row.checkOut || '' }}</td>
-            <td>{{ row.hours || '' }}</td>
-            <td>
-              <span class="ph-attendance-status" [attr.data-tone]="getStatusTone(row.status)">{{ getStatusLabel(row.status) }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="events-list">
+        <div class="event-item">
+          <div class="time-column">09:00 AM</div>
+          <div class="icon-column">
+            <div class="icon-wrapper blue-bg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="details-column">
+            <h3>Daily Standup - Platform Squad</h3>
+            <p>15 min - Arjun, Priya, Ravi, Sneha</p>
+          </div>
+          <div class="tag-column">
+            <span class="event-tag standup-tag">Standup</span>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="time-column">02:00 PM</div>
+          <div class="icon-column">
+            <div class="icon-wrapper orange-bg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="details-column">
+            <h3>Risk Review - Orbit Dynamics</h3>
+            <p>45 min - Kavya, Rohan, Nisha K.</p>
+          </div>
+          <div class="tag-column">
+            <span class="event-tag risk-tag">Risk Review</span>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="time-column">03:30 PM</div>
+          <div class="icon-column">
+            <div class="icon-wrapper teal-bg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          </div>
+          <div class="details-column">
+            <h3>1:1 with Sneha Patel</h3>
+            <p>30 min - Sneha</p>
+          </div>
+          <div class="tag-column">
+            <span class="event-tag one-on-one-tag">1:1</span>
+          </div>
+        </div>
+
+        <div class="event-item">
+          <div class="time-column">04:30 PM</div>
+          <div class="icon-column">
+            <div class="icon-wrapper purple-bg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="details-column">
+            <h3>Q1 Board Report - Prep</h3>
+            <p>1 hr</p>
+          </div>
+          <div class="tag-column">
+            <span class="event-tag deepwork-tag">Deep Work</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="dashboard-section card-wrapper-panel">
+    <div class="section-title">
+      <lucide-icon [name]="'layout-grid'" class="section-icon"></lucide-icon>
+      Overview
+    </div>
+    <div class="overview-grid">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper green-light">
+          <lucide-icon [name]="'users'"></lucide-icon>
+        </div>
+        <div class="stat-details">
+          <span class="stat-label">TOTAL WORKFORCE</span>
+          <h2 class="stat-value">8</h2>
+          <span class="stat-subtext">All squads</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper green-light">
+          <lucide-icon [name]="'user'"></lucide-icon>
+        </div>
+        <div class="stat-details">
+          <span class="stat-label">EMPLOYEES PRESENT TODAY</span>
+          <h2 class="stat-value">231</h2>
+          <span class="stat-subtext blue-highlight">93.5% attendance</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper orange-light">
+          <lucide-icon [name]="'calendar'"></lucide-icon>
+        </div>
+        <div class="stat-details">
+          <span class="stat-label">ON LEAVE</span>
+          <h2 class="stat-value">16</h2>
+          <span class="stat-subtext">Out of office</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper blue-light">
+          <lucide-icon [name]="'briefcase'"></lucide-icon>
+        </div>
+        <div class="stat-details">
+          <span class="stat-label">ACTIVE PROJECTS</span>
+          <h2 class="stat-value">6</h2>
+          <span class="stat-subtext">2 on track</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrapper teal-light">
+          <lucide-icon [name]="'zap'"></lucide-icon>
+        </div>
+        <div class="stat-details">
+          <span class="stat-label">ACTIVE SPRINTS</span>
+          <h2 class="stat-value">2</h2>
+          <span class="stat-subtext">2 in progress</span>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="panel watchlist-panel ph-panel-card ph-full-card">
-    <header class="panel-header">
-      <div>
-        <h3>Repeated Late and Absence Watchlist</h3>
-        <p>Requires manager action</p>
+  <section class="dashboard-section card-wrapper-panel">
+    <div class="section-title">
+      <lucide-icon [name]="'folder'" class="section-icon"></lucide-icon>
+      Projects
+    </div>
+    <div class="two-column-layout">
+      <div class="chart-panel">
+        <h3 class="panel-heading">All Projects Progress</h3>
+        <div class="bar-chart-container">
+          <div class="y-axis"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
+          <div class="bars-wrapper">
+            <div class="bar-col"><div class="bar bar-teal" style="height: 68%;"></div><span class="bar-label">Enterprise</span></div>
+            <div class="bar-col"><div class="bar bar-teal" style="height: 38%;"></div><span class="bar-label">AI</span></div>
+            <div class="bar-col"><div class="bar bar-teal" style="height: 86%;"></div><span class="bar-label">Multi-Tenant</span></div>
+            <div class="bar-col"><div class="bar bar-coral" style="height: 24%;"></div><span class="bar-label">Mobile</span></div>
+            <div class="bar-col"><div class="bar bar-teal" style="height: 60%;"></div><span class="bar-label">Patient</span></div>
+            <div class="bar-col"><div class="bar bar-teal" style="height: 50%;"></div><span class="bar-label">Trade</span></div>
+          </div>
+        </div>
       </div>
-    </header>
 
-    <ul class="ph-alert-list" role="list">
-      <li *ngFor="let item of repeatedLateOrAbsent" class="medium">
-        <span>{{ item.name }} - {{ item.issue }}</span>
-        <small>{{ item.department }}</small>
-      </li>
-    </ul>
+      <div class="list-panel">
+        <div class="panel-header-inline">
+          <h3 class="panel-heading">Project Overview</h3>
+          <a href="#" class="view-all-link">View all →</a>
+        </div>
+        <div class="project-list">
+          <div class="project-row">
+            <div>
+              <h4 class="project-name">Enterprise CRM Overhaul</h4>
+              <span class="project-client">TechNova Solutions</span>
+              <div class="status-indicator"><span class="dot dot-green"></span> Completion status</div>
+            </div>
+            <span class="date-badge badge-green">May 15, 2026</span>
+          </div>
+          <div class="project-row">
+            <div>
+              <h4 class="project-name">AI Analytics Dashboard</h4>
+              <span class="project-client">Orbit Dynamics</span>
+              <div class="status-indicator"><span class="dot dot-orange"></span> Completion status</div>
+            </div>
+            <span class="date-badge badge-orange">Apr 30, 2026</span>
+          </div>
+          <div class="project-row">
+            <div>
+              <h4 class="project-name">Multi-Tenant Auth System</h4>
+              <span class="project-client">CloudStack Inc.</span>
+              <div class="status-indicator"><span class="dot dot-green"></span> Completion status</div>
+            </div>
+            <span class="date-badge badge-green">Apr 10, 2026</span>
+          </div>
+          <div class="project-row">
+            <div>
+              <h4 class="project-name">Mobile Commerce App</h4>
+              <span class="project-client">RetailPro Group</span>
+              <div class="status-indicator"><span class="dot dot-coral"></span> Completion status</div>
+            </div>
+            <span class="date-badge badge-coral">Apr 20, 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
-</div>
 
-<div *ngIf="!isWorkforceHealthRoute" style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9;">
-  <p style="color: #64748b; font-size: 16px;">Dashboard</p>
+  <section class="dashboard-section card-wrapper-panel">
+    <div class="section-title">
+      <lucide-icon [name]="'more-horizontal'" class="section-icon"></lucide-icon>
+      Sprint
+    </div>
+    <div class="sprint-container">
+      <div class="sprint-card">
+        <div class="sprint-meta">
+          <div>
+            <span class="sprint-category">TRAVEL APP</span>
+            <h4 class="sprint-title">Sprint 31</h4>
+            <p class="sprint-desc">Post-Booking Flow</p>
+          </div>
+          <span class="status-pill pill-green">ON TRACK</span>
+        </div>
+        <div class="sprint-progress-wrapper">
+          <span class="days-left">0 days left - 5/6</span>
+          <div class="progress-bar-container"><div class="progress-fill fill-green" style="width: 84%;"></div></div>
+          <div class="progress-labels"><span class="progress-percentage">84%</span><span class="progress-state">Complete</span></div>
+        </div>
+      </div>
+
+      <div class="sprint-card">
+        <div class="sprint-meta">
+          <div>
+            <span class="sprint-category">HOSPITAL CRM</span>
+            <h4 class="sprint-title">Sprint 24</h4>
+            <p class="sprint-desc">Enterprise SSO</p>
+          </div>
+          <span class="status-pill pill-green">ON TRACK</span>
+        </div>
+        <div class="sprint-progress-wrapper">
+          <span class="days-left">0 days left - 6/8</span>
+          <div class="progress-bar-container"><div class="progress-fill fill-green" style="width: 74%;"></div></div>
+          <div class="progress-labels"><span class="progress-percentage">74%</span><span class="progress-state">Complete</span></div>
+        </div>
+      </div>
+
+      <div class="sprint-card">
+        <div class="sprint-meta">
+          <div>
+            <span class="sprint-category">BANKING PORTAL</span>
+            <h4 class="sprint-title">Sprint 18</h4>
+            <p class="sprint-desc">Maker-Checker Flow</p>
+          </div>
+          <span class="status-pill pill-green">ON TRACK</span>
+        </div>
+        <div class="sprint-progress-wrapper">
+          <span class="days-left">0 days left - 5/9</span>
+          <div class="progress-bar-container"><div class="progress-fill fill-green" style="width: 57%;"></div></div>
+          <div class="progress-labels"><span class="progress-percentage">57%</span><span class="progress-state">Complete</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-section card-wrapper-panel">
+    <div class="section-title">
+      <lucide-icon [name]="'layout-grid'" class="section-icon"></lucide-icon>
+      Organization
+    </div>
+    <div class="two-column-layout">
+      <div class="chart-panel">
+        <div class="panel-header-inline">
+          <div>
+            <h3 class="panel-heading">Headcount Growth Trend</h3>
+            <span class="panel-subheading">Monthly employee count across all departments</span>
+          </div>
+          <div class="filter-badge-row">
+            <span class="legend-dot"><span class="dot dot-green"></span> Total</span>
+            <span class="filter-pill">6 Months</span>
+          </div>
+        </div>
+        <div class="trend-chart-placeholder">
+          <div class="y-axis-trend"><span>260</span><span>245</span><span>230</span><span>215</span><span>200</span></div>
+          <div class="trend-canvas-mock">
+            <svg viewBox="0 0 500 120" class="trend-svg">
+              <path d="M 10 90 L 100 70 L 190 62 L 280 48 L 370 38 L 460 22" fill="none" stroke="#00bfa5" stroke-width="2.5"/>
+              <circle cx="10" cy="90" r="4" fill="#fff" stroke="#00bfa5" stroke-width="2"/>
+              <circle cx="100" cy="70" r="4" fill="#fff" stroke="#00bfa5" stroke-width="2"/>
+              <circle cx="190" cy="62" r="4" fill="#fff" stroke="#00bfa5" stroke-width="2"/>
+              <circle cx="280" cy="48" r="4" fill="#fff" stroke="#00bfa5" stroke-width="2"/>
+              <circle cx="370" cy="38" r="4" fill="#fff" stroke="#00bfa5" stroke-width="2"/>
+              <circle cx="460" cy="22" r="4" fill="#fff" stroke="#00bfa5" stroke-width="2"/>
+            </svg>
+            <div class="x-axis-trend"><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <h3 class="panel-heading">Role-wise Distribution</h3>
+        <span class="panel-subheading">247 total across 8 teams</span>
+        <div class="distribution-metrics">
+          <div class="dist-row"><span class="dist-label">Developer</span><div class="dist-bar-track"><div class="dist-fill fill-blue" style="width: 72%;"></div></div><span class="dist-count">72</span></div>
+          <div class="dist-row"><span class="dist-label">Manager</span><div class="dist-bar-track"><div class="dist-fill fill-teal" style="width: 58%;"></div></div><span class="dist-count">58</span></div>
+          <div class="dist-row"><span class="dist-label">Tester</span><div class="dist-bar-track"><div class="dist-fill fill-orange" style="width: 26%;"></div></div><span class="dist-count">26</span></div>
+          <div class="dist-row"><span class="dist-label">HR</span><div class="dist-bar-track"><div class="dist-fill fill-slate" style="width: 20%;"></div></div><span class="dist-count">20</span></div>
+          <div class="dist-row"><span class="dist-label">Scrum Master</span><div class="dist-bar-track"><div class="dist-fill fill-green" style="width: 14%;"></div></div><span class="dist-count">14</span></div>
+          <div class="dist-row"><span class="dist-label">Others</span><div class="dist-bar-track"><div class="dist-fill fill-light-slate" style="width: 12%;"></div></div><span class="dist-count">12</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="three-column-grid">
+      <div class="info-card-block">
+        <div class="card-block-header">
+          <span class="card-block-title">
+            <lucide-icon [name]="'calendar'" class="inline-icon"></lucide-icon>
+            Holidays in June 2026
+          </span>
+        </div>
+        <div class="holiday-empty-state">
+          <div class="status-indicator"><span class="dot dot-green"></span> <strong>No holidays this month</strong></div>
+          <span class="sub-info-pill">Info</span>
+        </div>
+        <p class="caption-under">Calendar updated</p>
+      </div>
+
+      <div class="info-card-block">
+        <div class="card-block-header">
+          <span class="card-block-title">
+            <lucide-icon [name]="'heart'" class="inline-icon"></lucide-icon>
+            Birthdays
+          </span>
+        </div>
+        <div class="celebration-list">
+          <div class="celebration-item"><div><h5>Priya Sharma</h5><p>April 10</p></div><span class="celebration-tag tag-blue">Birthday</span></div>
+          <div class="celebration-item"><div><h5>Sneha Patel</h5><p>April 15</p></div><span class="celebration-tag tag-blue">Birthday</span></div>
+          <div class="celebration-item"><div><h5>Anika Desai</h5><p>April 22</p></div><span class="celebration-tag tag-blue">Birthday</span></div>
+        </div>
+      </div>
+
+      <div class="info-card-block">
+        <div class="card-block-header">
+          <span class="card-block-title">
+            <lucide-icon [name]="'gift'" class="inline-icon"></lucide-icon>
+            Anniversaries
+          </span>
+        </div>
+        <div class="celebration-list">
+          <div class="celebration-item"><div><h5>Arjun Kumar</h5><p>April 12</p></div><span class="celebration-tag tag-purple">Work Anniversary (3 years)</span></div>
+          <div class="celebration-item"><div><h5>Rohan Verma</h5><p>April 18</p></div><span class="celebration-tag tag-purple">Work Anniversary (2 years)</span></div>
+          <div class="celebration-item"><div><h5>Kabir Shah</h5><p>April 24</p></div><span class="celebration-tag tag-purple">Work Anniversary (4 years)</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </div>

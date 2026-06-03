@@ -6,9 +6,23 @@ import { UserService, UserProfile } from '../../core/services/user.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import keycloak from '../../keycloak.service';
+interface Device {
+  name: string;
+  type: string;
+  location: string;
+  lastActive: string;
+  status: string;
+}
+
+interface ConnectedApp {
+  name: string;
+  description: string;
+  icon: string;
+  status: "connected" | "disconnected";
+}
 
 @Component({
-  selector: 'app-settings',
+  selector: "app-settings",
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule],
   templateUrl: './settings.component.html',
@@ -92,12 +106,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+  toggleSecurity(key: string): void {
+    if (key === "twoFactorAuth") {
+      this.security.twoFactorAuth = !this.security.twoFactorAuth;
+    } else if (key === "loginAlerts") {
+      this.security.loginAlerts = !this.security.loginAlerts;
     if (!this.profile.lastName || !this.profile.lastName.trim()) {
       this.saveError = 'Last name is required';
       this.cdr.detectChanges();
       return;
     }
 
+  connectApp(appName: string): void {
+    console.log("Connect to:", appName);
+  }
+
+  disconnectApp(appName: string): void {
+    console.log("Disconnect from:", appName);
+  }
+
+  deactivateAccount(): void {
+    if (
+      confirm(
+        "Are you sure you want to deactivate your account? This action cannot be undone.",
+      )
+    ) {
+      console.log("Account deactivation initiated");
     if (!this.profile.email || !this.profile.email.trim()) {
       this.saveError = 'Email is required';
       this.cdr.detectChanges();
@@ -189,6 +223,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  removeDevice(deviceName: string): void {
+    if (confirm(`Remove ${deviceName}?`)) {
+      this.devices = this.devices.filter((d) => d.name !== deviceName);
   changePassword(): void {
     const kc = keycloak as any;
     

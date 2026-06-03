@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectsService, Project, ProjectStats } from '../../../services/projects.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 
 interface SprintRoadmapDot {
@@ -15,7 +15,7 @@ interface SprintRoadmapDot {
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, MatIcon, FormsModule],
+  imports: [CommonModule, MatIconModule, FormsModule],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css']
 })

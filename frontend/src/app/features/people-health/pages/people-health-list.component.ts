@@ -3,12 +3,12 @@ import { PeopleHealthService, WorkforceHealthSummary, HeadcountTrend, WatchlistE
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
-import { MatIcon } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-people-health-list',
   standalone: true,
-  imports: [CommonModule, MatIcon],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './people-health-list.component.html',
   styleUrls: ['./people-health-list.component.css']
 })

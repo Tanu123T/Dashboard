@@ -1,5 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { PeopleHealthService, WorkforceHealthSummary } from '../people-health/services/people-health.service';
 import { LucideAngularModule } from 'lucide-angular';
 import {
   Sparkles,
@@ -15,6 +19,35 @@ import {
   Heart,
   Gift
 } from 'lucide-angular';
+
+type AttendanceStatus = 'present' | 'late' | 'leave';
+
+interface AttendanceSnapshot {
+  present: number | null;
+  absent: number | null;
+  leave: number | null;
+  late: number | null;
+  onBreak: number | null;
+  remoteActive: number | null;
+}
+
+interface AttendanceRow {
+  id: string;
+  name: string;
+  initials: string;
+  employeeCode: string;
+  department: string;
+  checkIn: string;
+  checkOut: string;
+  hours: string;
+  status: AttendanceStatus;
+}
+
+interface RepeatedLateOrAbsentItem {
+  name: string;
+  department: string;
+  issue: string;
+}
 
 @Component({
   selector: 'app-ceo-dashboard',
@@ -453,7 +486,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showTooltip = true;
   }
 
-  ngOnInit(): void {
-    // Pure, performant design frame template loader initialized successfully
+  private hideTooltip(): void {
+    this.showTooltip = false;
+    this.tooltipMonth = '';
+    this.tooltipValue = 0;
+    this.tooltipTarget = 0;
+    this.hoverLineX = 0;
   }
 }

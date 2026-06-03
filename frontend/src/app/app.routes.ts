@@ -19,7 +19,7 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.CeoDashboardComponent)
+          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
         path: 'projects',
@@ -50,7 +50,7 @@ export const routes: Routes = [
       {
         path: 'workforce-health',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.CeoDashboardComponent)
+          import('./features/people-health/pages/people-health-list.component').then(m => m.PeopleHealthListComponent)
       },
       {
         path: 'db',

@@ -1,0 +1,73 @@
+{
+  "summary" : {
+    "totalProjects" : 4,
+    "complete" : 0,
+    "inProgress" : 3,
+    "delayed" : 0
+  },
+  "projects" : [ {
+    "id" : 1,
+    "name" : "Demo project",
+    "client" : "Vishwaguru Infotech Pvt Ltd",
+    "status" : "On track",
+    "progress" : 0.0,
+    "lead" : "OpenProject Admin",
+    "startDate" : null,
+    "dueDate" : null,
+    "description" : "This is a short summary of the goals of this demo project.",
+    "techStack" : [ ],
+    "team" : [ ],
+    "totalPlannedSprints" : null,
+    "completedSprints" : 0,
+    "activeSprints" : 1,
+    "sprintTimeline" : null
+  }, {
+    "id" : 2,
+    "name" : "Scrum project",
+    "client" : "Vishwaguru Infotech Pvt Ltd",
+    "status" : "On track",
+    "progress" : 0.0,
+    "lead" : "OpenProject Admin",
+    "startDate" : null,
+    "dueDate" : null,
+    "description" : "This is a short summary of the goals of this demo Scrum project.",
+    "techStack" : [ ],
+    "team" : [ ],
+    "totalPlannedSprints" : null,
+    "completedSprints" : 0,
+    "activeSprints" : 0,
+    "sprintTimeline" : null
+  }, {
+    "id" : 3,
+    "name" : "VG Cares Global",
+    "client" : "Vishwaguru Infotech Pvt Ltd",
+    "status" : "On track",
+    "progress" : 0.0,
+    "lead" : "Tanmay Pawar",
+    "startDate" : null,
+    "dueDate" : null,
+    "description" : "**VG Cares Global** is a healthcare and medical tourism platform developed to connect patients with accredited hospitals, specialist doctors, and wellness centers across the world. The platform provides services such as teleconsultation, treatment planning, hospital coordination, travel assistance, and post-treatment support, helping patients access affordable and quality healthcare regardless of their location.\n\n<br>",
+    "techStack" : [ ],
+    "team" : [ ],
+    "totalPlannedSprints" : null,
+    "completedSprints" : 0,
+    "activeSprints" : 0,
+    "sprintTimeline" : null
+  }, {
+    "id" : 4,
+    "name" : "VGPay",
+    "client" : "Vishwaguru Infotech Pvt Ltd",
+    "status" : "Not set",
+    "progress" : 0.0,
+    "lead" : "N/A",
+    "startDate" : null,
+    "dueDate" : null,
+    "description" : "**VGPay** is a digital payment and financial services platform that enables secure online transactions, mobile recharges, bill payments, money transfers, and other payment-related services. The platform provides a fast, reliable, and user-friendly solution for individuals, retailers, and businesses to manage digital payments efficiently.",
+    "techStack" : [ ],
+    "team" : [ ],
+    "totalPlannedSprints" : null,
+    "completedSprints" : 0,
+    "activeSprints" : 0,
+    "sprintTimeline" : null
+  } ]
+}

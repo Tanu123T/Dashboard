@@ -1,11 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface Member {
-  id: string;
-  name: string;
-  role: string;
-}
+import { Router } from '@angular/router';
+import { EmployeeService, Member } from '../../../../core/services/employee.service';
 
 interface Hierarchy {
   ceo: { name: string; role: string };
@@ -22,21 +18,49 @@ interface Hierarchy {
 })
 export class OrgHierarchyComponent implements OnInit {
   isFullView = false;
+  lastUpdated = '';
+  activeTab = 'org-hierarchy'; // Set default active tab
   hierarchy: Hierarchy = {
     ceo: { name: 'Rajendra Gangarde', role: 'Chief Executive Officer' },
     tierTwo: [],
     tierThree: []
   };
-  members: Member[] = [
-    { id: '1', name: 'Ravindra Kulkarni', role: 'HR Manager' },
-    { id: '2', name: 'Deepak Desai', role: 'Project Manager' },
-    { id: '3', name: 'Employee 1', role: 'Staff' },
-    { id: '4', name: 'Employee 2', role: 'Staff' },
-    { id: '5', name: 'Employee 3', role: 'Staff' }
-  ];
+  members: Member[] = [];
+
+  constructor(private employeeService: EmployeeService, private router: Router) {}
 
   ngOnInit() {
-    this.buildHierarchy();
+    this.loadEmployees();
+    this.setLastUpdated();
+  }
+
+  /**
+   * Load employees from service
+   * When API is integrated, this will automatically fetch from the backend
+   */
+  private loadEmployees() {
+    this.employeeService.getEmployees().subscribe(
+      (employees: Member[]) => {
+        this.members = employees;
+        this.buildHierarchy();
+      },
+      (error: unknown) => {
+        console.error('Error loading employees:', error);
+      }
+    );
+  }
+
+  private setLastUpdated() {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    };
+    this.lastUpdated = now.toLocaleDateString('en-US', options);
   }
 
   private sortByName(a: Member, b: Member): number {
@@ -54,7 +78,12 @@ export class OrgHierarchyComponent implements OnInit {
           role.includes('lead')
         );
       })
-      .sort((a, b) => this.sortByName(a, b));
+      .sort((a, b) => {
+        // HR Manager should come first (higher priority)
+        if (a.role.toLowerCase().includes('hr')) return -1;
+        if (b.role.toLowerCase().includes('hr')) return 1;
+        return this.sortByName(a, b);
+      });
 
     const tierTwoIds = new Set(tierTwo.map((member) => member.id));
     const tierThree = this.members
@@ -70,6 +99,23 @@ export class OrgHierarchyComponent implements OnInit {
 
   toggleView() {
     this.isFullView = !this.isFullView;
+  }
+
+  navigateToTab(tabName: string) {
+    switch(tabName) {
+      case 'workforce':
+        this.router.navigate(['/dashboard/workforce-health']);
+        break;
+      case 'employee-hub':
+        this.router.navigate(['/dashboard/employee-hub']);
+        break;
+      case 'work-calendar':
+        this.router.navigate(['/dashboard/work-calendar']);
+        break;
+      case 'org-hierarchy':
+        this.router.navigate(['/dashboard/org-hierarchy']);
+        break;
+    }
   }
 
   handleOrgChartWheel(event: WheelEvent) {

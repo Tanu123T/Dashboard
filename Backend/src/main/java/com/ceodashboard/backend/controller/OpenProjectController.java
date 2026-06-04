@@ -19,6 +19,8 @@ import java.util.Map;
 @RequestMapping("/sync")
 public class OpenProjectController {
 
+    private static final Integer DEFAULT_ORG_ID = 1;
+
     @Autowired
     private OpenProjectService service;
 
@@ -50,9 +52,9 @@ public class OpenProjectController {
         service.syncProjects();
         System.out.println("[1/2] Project sync complete\n");
         
-        // Then sync sprints for each project
-        List<Project> projects = projectRepository.findAll();
-        System.out.println("[2/2] Found " + projects.size() + " projects in database. Starting sprint sync...");
+        // Then sync sprints for each org-scoped project
+        List<Project> projects = projectRepository.findAllByOrgIdOrderByNameAsc(DEFAULT_ORG_ID);
+        System.out.println("[2/2] Found " + projects.size() + " org-scoped projects in database. Starting sprint sync...");
         
         int successCount = 0;
         for (Project project : projects) {
@@ -99,9 +101,9 @@ public class OpenProjectController {
         sb.append("\n\n===== DIAGNOSTIC REPORT =====");
         sb.append("\n\n1. PROJECTS IN DATABASE:");
         
-        List<Project> projects = projectRepository.findAll();
+        List<Project> projects = projectRepository.findAllByOrgIdOrderByNameAsc(DEFAULT_ORG_ID);
         if (projects.isEmpty()) {
-            sb.append("\n   No projects found in database!");
+            sb.append("\n   No projects found in database for org 1!");
         } else {
             for (Project p : projects) {
                 sb.append("\n   - Project ").append(p.getId()).append(": ").append(p.getName());
@@ -132,5 +134,5 @@ public class OpenProjectController {
     }
 
     private long sprintCountByProject(Long projectId) {
-        return sprintRepository.countByProjectId(projectId);
+        return sprintRepository.countByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID);
     }}

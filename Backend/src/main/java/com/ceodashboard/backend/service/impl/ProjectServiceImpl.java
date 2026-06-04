@@ -3,8 +3,17 @@ package com.ceodashboard.backend.service.impl;
 import com.ceodashboard.backend.dto.ProjectDTO;
 import com.ceodashboard.backend.dto.ProjectSummaryDTO;
 import com.ceodashboard.backend.dto.ProjectsPageResponseDTO;
+import com.ceodashboard.backend.dto.SprintDTO;
+import com.ceodashboard.backend.entity.Organization;
 import com.ceodashboard.backend.entity.Project;
+import com.ceodashboard.backend.entity.ProjectSchedule;
+import com.ceodashboard.backend.entity.Sprint;
+import com.ceodashboard.backend.entity.TeamMember;
+import com.ceodashboard.backend.repository.OrganizationRepository;
 import com.ceodashboard.backend.repository.ProjectRepository;
+import com.ceodashboard.backend.repository.ProjectScheduleRepository;
+import com.ceodashboard.backend.repository.SprintRepository;
+import com.ceodashboard.backend.repository.TeamMemberRepository;
 import com.ceodashboard.backend.service.ProjectService;
 
 import org.springframework.stereotype.Service;
@@ -12,32 +21,51 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
-    private final ProjectRepository projectRepository;
+    private static final Integer DEFAULT_ORG_ID = 1;
 
-    public ProjectServiceImpl(ProjectRepository projectRepository) {
+    private final ProjectRepository projectRepository;
+    private final ProjectScheduleRepository projectScheduleRepository;
+    private final TeamMemberRepository teamMemberRepository;
+    private final SprintRepository sprintRepository;
+    private final OrganizationRepository organizationRepository;
+
+    public ProjectServiceImpl(
+            ProjectRepository projectRepository,
+            ProjectScheduleRepository projectScheduleRepository,
+            TeamMemberRepository teamMemberRepository,
+            SprintRepository sprintRepository,
+            OrganizationRepository organizationRepository) {
         this.projectRepository = projectRepository;
+        this.projectScheduleRepository = projectScheduleRepository;
+        this.teamMemberRepository = teamMemberRepository;
+        this.sprintRepository = sprintRepository;
+        this.organizationRepository = organizationRepository;
     }
 
     @Override
     public ProjectsPageResponseDTO getProjectsPageData() {
-        List<Project> projects = projectRepository.findAllByOrderByNameAsc();
-        
+        List<Project> projects = projectRepository.findAllByOrgIdOrderByNameAsc(DEFAULT_ORG_ID);
+
         ProjectSummaryDTO summary = ProjectSummaryDTO.builder()
-                .totalProjects(projectRepository.count())
-                .complete(projectRepository.countByStatus("Finished"))
-                .inProgress(projectRepository.countByStatus("On track") + projectRepository.countByStatus("Not started"))
-                .delayed(projectRepository.countByStatus("At risk") + projectRepository.countByStatus("Off track"))
+                .totalProjects(projectRepository.countByOrgId(DEFAULT_ORG_ID))
+                .complete(projectRepository.countByOrgIdAndStatus(DEFAULT_ORG_ID, "Finished"))
+                .inProgress(projectRepository.countByOrgIdAndStatus(DEFAULT_ORG_ID, "On track")
+                        + projectRepository.countByOrgIdAndStatus(DEFAULT_ORG_ID, "Not started"))
+                .delayed(projectRepository.countByOrgIdAndStatus(DEFAULT_ORG_ID, "At risk")
+                        + projectRepository.countByOrgIdAndStatus(DEFAULT_ORG_ID, "Off track"))
                 .build();
 
-        List<ProjectDTO> projectItems = new ArrayList<>();
-        for (Project p : projects) {
-            projectItems.add(mapToListDTO(p));
-        }
+        List<ProjectDTO> projectItems = projects.stream()
+                .map(this::mapToListDTO)
+                .collect(Collectors.toList());
 
         return ProjectsPageResponseDTO.builder()
                 .summary(summary)
@@ -47,81 +75,82 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectDTO getProjectDetail(Long projectId) {
-        Project project = projectRepository.findById(projectId)
+        Project project = projectRepository.findByIdAndOrgId(projectId, DEFAULT_ORG_ID)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
 
         return mapToDetailDTO(project);
     }
 
-    // For list view - includes essential fields for projects page
     private ProjectDTO mapToListDTO(Project p) {
+        ProjectSchedule schedule = getSchedule(p.getId());
+
         return ProjectDTO.builder()
                 .id(p.getId())
                 .name(p.getName())
-                .client(p.getClientName())
+                .client(resolveOrganizationName(p.getOrgId()))
                 .status(p.getStatus())
                 .progress(p.getProgress())
                 .lead(p.getLead())
-                .dueDate(p.getDueDate())
+                .dueDate(schedule != null ? schedule.getProjectDeadline() : null)
                 .description(p.getDescription())
-                .team(splitCsv(p.getTeamCsv()))
-                .totalPlannedSprints(p.getTotalPlannedSprints())
-                .completedSprints(p.getCompletedSprints())
-                .activeSprints(p.getActiveSprints())
-                // Null fields not needed in list: techStack, sprintTimeline
+                .techStack(Collections.emptyList())
+                .team(getProjectTeamNames(p.getId()))
+                .totalPlannedSprints(schedule != null ? schedule.getTotalNoOfSprints() : null)
+                .completedSprints((int) sprintRepository.countByProjectIdAndOrgIdAndStatus(p.getId(), DEFAULT_ORG_ID, "COMPLETED"))
+                .activeSprints((int) sprintRepository.countByProjectIdAndOrgIdAndStatus(p.getId(), DEFAULT_ORG_ID, "ACTIVE"))
                 .build();
     }
 
-    // For detail view - includes all fields
     private ProjectDTO mapToDetailDTO(Project p) {
+        ProjectSchedule schedule = getSchedule(p.getId());
+        List<Sprint> projectSprints = sprintRepository.findByProjectIdAndOrgIdOrderByStartDateDesc(p.getId(), DEFAULT_ORG_ID);
+
         return ProjectDTO.builder()
                 .id(p.getId())
                 .name(p.getName())
-                .client(p.getClientName())
+                .client(resolveOrganizationName(p.getOrgId()))
                 .status(p.getStatus())
                 .progress(p.getProgress())
                 .lead(p.getLead())
-                .startDate(p.getStartDate())
-                .dueDate(p.getDueDate())
+                .startDate(schedule != null ? schedule.getProjectStartDate() : null)
+                .dueDate(schedule != null ? schedule.getProjectDeadline() : null)
                 .description(p.getDescription())
-                .techStack(splitCsv(p.getTechStackCsv()))
-                .team(splitCsv(p.getTeamCsv()))
-                .totalPlannedSprints(p.getTotalPlannedSprints())
-                .completedSprints(p.getCompletedSprints())
-                .activeSprints(p.getActiveSprints())
-                .sprintTimeline(buildSprintTimeline(p.getSprintNamesCsv(), p.getSprintStatesCsv()))
+                .techStack(Collections.emptyList())
+                .team(getProjectTeamNames(p.getId()))
+                .totalPlannedSprints(schedule != null ? schedule.getTotalNoOfSprints() : null)
+                .completedSprints((int) sprintRepository.countByProjectIdAndOrgIdAndStatus(p.getId(), DEFAULT_ORG_ID, "COMPLETED"))
+                .activeSprints((int) sprintRepository.countByProjectIdAndOrgIdAndStatus(p.getId(), DEFAULT_ORG_ID, "ACTIVE"))
+                .sprintTimeline(buildSprintTimeline(projectSprints))
                 .build();
     }
 
-    private List<String> splitCsv(String csv) {
-        if (csv == null || csv.isBlank()) {
-            return List.of();
-        }
-
-        String[] raw = csv.split(",");
-        List<String> values = new ArrayList<>();
-        for (String value : raw) {
-            String cleaned = value.trim();
-            if (!cleaned.isEmpty()) {
-                values.add(cleaned);
-            }
-        }
-        return values;
+    private ProjectSchedule getSchedule(Long projectId) {
+        return projectScheduleRepository.findByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID)
+                .orElse(null);
     }
 
-    private List<com.ceodashboard.backend.dto.SprintDTO> buildSprintTimeline(String sprintNamesCsv, String sprintStatesCsv) {
-        List<String> names = splitCsv(sprintNamesCsv);
-        List<String> states = splitCsv(sprintStatesCsv);
-
-        List<com.ceodashboard.backend.dto.SprintDTO> timeline = new ArrayList<>();
-        int size = Math.min(names.size(), states.size());
-        for (int i = 0; i < size; i++) {
-            timeline.add(com.ceodashboard.backend.dto.SprintDTO.builder()
-                    .name(names.get(i))
-                    .status(states.get(i))
-                    .build());
+    private String resolveOrganizationName(Integer orgId) {
+        if (orgId == null) {
+            return "Unknown Organization";
         }
+        return organizationRepository.findById(orgId)
+                .map(Organization::getOrgName)
+                .orElse("Organization " + orgId);
+    }
 
-        return timeline;
+    private List<String> getProjectTeamNames(Long projectId) {
+        return teamMemberRepository.findByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID).stream()
+                .map(TeamMember::getName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private List<SprintDTO> buildSprintTimeline(List<Sprint> sprints) {
+        return sprints.stream()
+                .map(s -> SprintDTO.builder()
+                        .name(s.getName())
+                        .status(s.getStatus())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

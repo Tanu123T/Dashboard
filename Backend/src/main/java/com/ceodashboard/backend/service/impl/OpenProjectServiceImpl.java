@@ -34,6 +34,8 @@ public class OpenProjectServiceImpl implements OpenProjectService {
 
     private static final Logger log = LoggerFactory.getLogger(OpenProjectServiceImpl.class);
 
+    private static final Integer DEFAULT_ORG_ID = 1;
+
     @Autowired
     private ProjectRepository projectRepository;
 
@@ -52,33 +54,46 @@ public class OpenProjectServiceImpl implements OpenProjectService {
     @Value("${openproject.auth-header:}")
     private String authHeader;
 
+    @Value("${openproject.api-token:}")
+    private String apiToken;
+
     private RestTemplate restTemplate = new RestTemplate();
 
     private String normalizeAuthHeader(String configuredHeader) {
-        if (configuredHeader == null || configuredHeader.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OPENPROJECT_AUTH_HEADER is not configured");
+        String configuredValue = configuredHeader;
+        if (configuredValue == null || configuredValue.isBlank()) {
+            configuredValue = apiToken;
         }
 
-        String header = configuredHeader.trim();
+        if (configuredValue == null || configuredValue.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OpenProject authentication is not configured. Set openproject.auth-header or openproject.api-token.");
+        }
+
+        String header = configuredValue.trim();
         if (header.startsWith("\"") && header.endsWith("\"") && header.length() > 1) {
             header = header.substring(1, header.length() - 1).trim();
         }
 
         // Convenience: accept raw OpenProject API key and convert it to Basic auth.
+        if (header.startsWith("Basic ")) {
+            return header;
+        }
+
+        if (header.startsWith("apikey:")) {
+            String encoded = Base64.getEncoder().encodeToString(header.getBytes(StandardCharsets.UTF_8));
+            return "Basic " + encoded;
+        }
+
         if (header.startsWith("opapi-")) {
             String basicPayload = "apikey:" + header;
             String encoded = Base64.getEncoder().encodeToString(basicPayload.getBytes(StandardCharsets.UTF_8));
             return "Basic " + encoded;
         }
 
-        if (header.startsWith("Basic ")) {
-            return header;
-        }
-
-        throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "OPENPROJECT_AUTH_HEADER must be either 'opapi-...' or 'Basic <base64(apikey:opapi-...)>'"
-        );
+        // Accept a raw token string without prefix and convert it into OpenProject API key form.
+        String basicPayload = "apikey:opapi-" + header;
+        String encoded = Base64.getEncoder().encodeToString(basicPayload.getBytes(StandardCharsets.UTF_8));
+        return "Basic " + encoded;
     }
 
     @Override
@@ -388,11 +403,12 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             }
 
             // STEP 5: SAVE TO DB
-            Project project = new Project();
+            Project project = projectRepository.findById(projectId).orElseGet(Project::new);
             project.setId(projectId);
+            project.setOrgId(DEFAULT_ORG_ID);
             project.setName(projectName);
             project.setClientName(clientName);
-            project.setProgress(avgProgress);
+            project.setProgress((float) avgProgress);
             project.setStatus(status);
             project.setLead(lead);
             project.setStartDate(startDate);
@@ -407,6 +423,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             project.setSprintStatesCsv(String.join(",", sprintSnapshot.states()));
 
             projectRepository.save(project);
+            syncProjectTeamMembers(projectId, tasks);
             successCount++;
             log.info("Successfully synced project {} ({})", projectId, projectName);
             log.info("Project {} stored data: status='{}', progress={}, lead='{}', description='{}', teamSize={}", 
@@ -551,6 +568,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             // Fetch all project tasks first (used for version mapping and no-version fallback)
             List<Map<String, Object>> allProjectTasks = fetchAllProjectTasks(projectId);
             log.info("Fetched {} total tasks for project {}", allProjectTasks.size(), projectId);
+            syncProjectTeamMembers(projectId, allProjectTasks);
 
             // Fetch versions (sprints) for the project
             List<Map<String, Object>> versions = fetchVersionsForProject(projectId);
@@ -591,8 +609,9 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                 SprintStats stats = calculateSprintStats(tasks);
 
                 // Save or update sprint
-                Sprint sprint = new Sprint();
+                Sprint sprint = sprintRepository.findById(sprintId).orElseGet(Sprint::new);
                 sprint.setId(sprintId);
+                sprint.setOrgId(DEFAULT_ORG_ID);
                 sprint.setProjectId(projectId);
                 sprint.setName(sprintName);
                 sprint.setGoal(description);
@@ -600,7 +619,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                 sprint.setStartDate(startDate);
                 sprint.setEndDate(endDate);
                 sprint.setScrumMaster(stats.scrumMaster);
-                sprint.setProgress(calculateProgress(tasks));
+                sprint.setProgress((float) calculateProgress(tasks));
                 sprint.setTotalTasks(stats.total);
                 sprint.setCompletedTasks(stats.completed);
                 sprint.setInProgressTasks(stats.inProgress);
@@ -614,10 +633,8 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                         sprint.getProgress(), stats.scrumMaster);
 
                 // Sync tasks for this sprint
-                syncSprintTasks(sprintId, tasks);
+                syncSprintTasks(projectId, sprintId, tasks);
 
-                // Sync team members
-                syncTeamMembers(sprintId, tasks);
                 sprintCount++;
             }
             
@@ -632,8 +649,9 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         Long fallbackSprintId = -(projectId * 1_000_000L + 1L);
         SprintStats stats = calculateSprintStats(allProjectTasks);
 
-        Sprint sprint = new Sprint();
+        Sprint sprint = sprintRepository.findById(fallbackSprintId).orElseGet(Sprint::new);
         sprint.setId(fallbackSprintId);
+        sprint.setOrgId(DEFAULT_ORG_ID);
         sprint.setProjectId(projectId);
         sprint.setName("Backlog");
         sprint.setGoal("Auto-created from unversioned work packages");
@@ -641,7 +659,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         sprint.setStartDate(null);
         sprint.setEndDate(null);
         sprint.setScrumMaster(stats.scrumMaster);
-        sprint.setProgress(calculateProgress(allProjectTasks));
+        sprint.setProgress((float) calculateProgress(allProjectTasks));
         sprint.setTotalTasks(stats.total);
         sprint.setCompletedTasks(stats.completed);
         sprint.setInProgressTasks(stats.inProgress);
@@ -653,8 +671,8 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         sprint.setActualHours(stats.actualHours);
 
         sprintRepository.save(sprint);
-        syncSprintTasks(fallbackSprintId, allProjectTasks);
-        syncTeamMembers(fallbackSprintId, allProjectTasks);
+        syncSprintTasks(projectId, fallbackSprintId, allProjectTasks);
+        syncProjectTeamMembers(projectId, allProjectTasks);
 
         log.info("Created fallback backlog sprint {} for project {} with {} tasks", fallbackSprintId, projectId, allProjectTasks.size());
     }
@@ -734,7 +752,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         }
     }
 
-    private void syncSprintTasks(Long sprintId, List<Map<String, Object>> tasks) {
+    private void syncSprintTasks(Long projectId, Long sprintId, List<Map<String, Object>> tasks) {
         // Remove old sprint-task associations to avoid stale rows from previous sync runs.
         sprintTaskRepository.deleteBySprintId(sprintId);
         for (Map<String, Object> task : tasks) {
@@ -755,8 +773,10 @@ public class OpenProjectServiceImpl implements OpenProjectService {
                     assignee = (String) ((Map<?, ?>) links.get("assignee")).get("title");
                 }
 
-                SprintTask sprintTask = new SprintTask();
+                SprintTask sprintTask = sprintTaskRepository.findById(taskId).orElseGet(SprintTask::new);
                 sprintTask.setId(taskId);
+                sprintTask.setOrgId(DEFAULT_ORG_ID);
+                sprintTask.setProjectId(projectId);
                 sprintTask.setSprintId(sprintId);
                 sprintTask.setTitle(title);
                 sprintTask.setStatus(status != null ? status : "New");
@@ -774,10 +794,10 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         }
     }
 
-    private void syncTeamMembers(Long sprintId, List<Map<String, Object>> tasks) {
-        log.info("Syncing team members for sprint {} with {} tasks", sprintId, tasks.size());
-        // Replace full member snapshot per sprint on each sync.
-        teamMemberRepository.deleteBySprintId(sprintId);
+    private void syncProjectTeamMembers(Long projectId, List<Map<String, Object>> tasks) {
+        log.info("Syncing team members for project {} with {} tasks", projectId, tasks.size());
+        // Replace full member snapshot per project on each sync.
+        teamMemberRepository.deleteByProjectId(projectId);
         
         // Group tasks by assignee
         Map<String, List<Map<String, Object>>> tasksByAssignee = new HashMap<>();
@@ -797,7 +817,7 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             tasksByAssignee.computeIfAbsent(assignee, k -> new ArrayList<>()).add(task);
         }
         
-        log.info("Found {} unique assignees for sprint {}", tasksByAssignee.size(), sprintId);
+        log.info("Found {} unique assignees for project {}", tasksByAssignee.size(), projectId);
 
         // Create team member records
         int memberIndex = 0;
@@ -829,9 +849,8 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             }
 
             TeamMember member = new TeamMember();
-            member.setId(sprintId * 1000 + memberIndex++); // Generate unique ID
-            member.setSprintId(sprintId);
-            member.setName(name);
+            member.setOrgId(DEFAULT_ORG_ID);
+            member.setProjectId(projectId);
             member.setRole("Team Member"); // Can be enhanced with role lookup
             member.setAssignedTasks(total);
             member.setCompletedTasks(completed);
@@ -840,13 +859,19 @@ public class OpenProjectServiceImpl implements OpenProjectService {
             member.setEstimatedHours(estimatedHours);
             member.setActualHours(actualHours);
 
+            String[] nameParts = splitMemberName(name);
+            member.setMemberFirstName(nameParts[0]);
+            member.setMemberLastName(nameParts[1]);
+            member.setName(name);
+
             teamMemberRepository.save(member);
+            memberIndex++;
             log.info("Saved team member: {} (role: {}, tasks: {}/{}/{}, hours: {}/{})", 
                     name, member.getRole(), completed, inProgress, todo,
                     estimatedHours, actualHours);
         }
         
-        log.info("Total team members saved for sprint {}: {}", sprintId, memberIndex);
+        log.info("Total team members saved for project {}: {}", projectId, memberIndex);
     }
 
     private SprintStats calculateSprintStats(List<Map<String, Object>> tasks) {
@@ -941,6 +966,18 @@ public class OpenProjectServiceImpl implements OpenProjectService {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    private String[] splitMemberName(String rawName) {
+        if (rawName == null || rawName.isBlank()) {
+            return new String[]{"", ""};
+        }
+        String normalized = rawName.trim();
+        String[] parts = normalized.split("\\s+", 2);
+        if (parts.length == 1) {
+            return new String[]{parts[0], ""};
+        }
+        return new String[]{parts[0], parts[1]};
     }
 
     private boolean isCompletedStatus(String status) {

@@ -1,4 +1,287 @@
 <div class="people-health-container">
-  <h1>People Health</h1>
-  <!-- People Health content -->
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">People Health</h1>
+      <p class="page-subtitle">Real-time workforce health metrics and analytics</p>
+    </div>
+    <button class="reload-btn" (click)="reloadData()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon> Reload
+    </button>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading workforce health data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <p class="error-message">{{ error }}</p>
+    <button class="retry-btn" (click)="reloadData()">Retry</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && workforceHealthSummary" class="content">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'overview'"
+        (click)="switchTab('overview')">
+        <mat-icon>dashboard</mat-icon> Overview
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'attendance'"
+        (click)="switchTab('attendance')">
+        <mat-icon>event_note</mat-icon> Attendance
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'watchlist'"
+        (click)="switchTab('watchlist')">
+        <mat-icon>warning</mat-icon> Watchlist
+      </button>
+    </div>
+
+    <!-- Overview Tab -->
+    <section *ngIf="activeTab === 'overview'" class="tab-content">
+      <h2 class="section-title">Workforce Summary</h2>
+      
+      <!-- Summary Cards Grid -->
+      <div class="summary-grid">
+        <!-- Present Today -->
+        <div class="summary-card">
+          <div class="card-header">
+            <mat-icon class="card-icon present">check_circle</mat-icon>
+            <h3 class="card-title">Present Today</h3>
+          </div>
+          <div class="card-content">
+            <p class="metric-value">{{ formatValue(workforceHealthSummary.presentToday) }}</p>
+            <p class="metric-label">Employees</p>
+          </div>
+        </div>
+
+        <!-- Present in Office -->
+        <div class="summary-card">
+          <div class="card-header">
+            <mat-icon class="card-icon office">location_on</mat-icon>
+            <h3 class="card-title">Present in Office</h3>
+          </div>
+          <div class="card-content">
+            <p class="metric-value">{{ formatValue(workforceHealthSummary.presentInOffice) }}</p>
+            <p class="metric-label">On-site</p>
+          </div>
+        </div>
+
+        <!-- On Break -->
+        <div class="summary-card">
+          <div class="card-header">
+            <mat-icon class="card-icon break">coffee</mat-icon>
+            <h3 class="card-title">On Break</h3>
+          </div>
+          <div class="card-content">
+            <p class="metric-value">{{ formatValue(workforceHealthSummary.onBreak) }}</p>
+            <p class="metric-label">Currently</p>
+          </div>
+        </div>
+
+        <!-- On Leave -->
+        <div class="summary-card">
+          <div class="card-header">
+            <mat-icon class="card-icon leave">beach_access</mat-icon>
+            <h3 class="card-title">On Leave</h3>
+          </div>
+          <div class="card-content">
+            <p class="metric-value">{{ formatValue(workforceHealthSummary.onLeave) }}</p>
+            <p class="metric-label">Today</p>
+          </div>
+        </div>
+
+        <!-- Late Arrivals -->
+        <div class="summary-card">
+          <div class="card-header">
+            <mat-icon class="card-icon late">schedule</mat-icon>
+            <h3 class="card-title">Late Arrivals</h3>
+          </div>
+          <div class="card-content">
+            <p class="metric-value">{{ formatValue(workforceHealthSummary.lateArrivals) }}</p>
+            <p class="metric-label">This week</p>
+          </div>
+        </div>
+
+        <!-- Attendance Consistency -->
+        <div class="summary-card">
+          <div class="card-header">
+            <mat-icon class="card-icon consistency">trending_up</mat-icon>
+            <h3 class="card-title">Attendance Consistency</h3>
+          </div>
+          <div class="card-content">
+            <p class="metric-value">{{ formatPercentage(workforceHealthSummary.attendanceConsistency) }}</p>
+            <p class="metric-label">Monthly average</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Headcount Trend Chart -->
+      <div class="trend-section" *ngIf="trendLoading || (headcountTrend && headcountTrend.length > 0)">
+        <h2 class="section-title">Headcount Trend</h2>
+        
+        <!-- Loading State -->
+        <div *ngIf="trendLoading" class="loading-state">
+          <div class="spinner-small"></div>
+          <p>Loading headcount trend...</p>
+        </div>
+
+        <!-- Chart -->
+        <div *ngIf="!trendLoading && headcountTrend.length > 0" class="trend-chart-container">
+          <svg viewBox="0 0 600 300" class="chart-svg">
+            <!-- Grid background -->
+            <defs>
+              <pattern id="grid" width="50" height="30" patternUnits="userSpaceOnUse">
+                <path d="M 50 0 L 0 0 0 30" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="600" height="300" fill="url(#grid)" />
+            
+            <!-- X axis -->
+            <line x1="40" y1="250" x2="580" y2="250" stroke="#d0d0d0" stroke-width="2" />
+            
+            <!-- Y axis -->
+            <line x1="40" y1="50" x2="40" y2="250" stroke="#d0d0d0" stroke-width="2" />
+            
+            <!-- Chart line path -->
+            <path 
+              [attr.d]="'M' + generateChartPath()" 
+              fill="none" 
+              stroke="#3b82f6" 
+              stroke-width="3" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" />
+            
+            <!-- Data points (circles) -->
+            <ng-container *ngFor="let trend of headcountTrend; let i = index">
+              <ng-container *ngIf="headcountTrend.length > 0">
+                <circle 
+                  [attr.cx]="40 + (i / (headcountTrend.length - 1 || 1)) * 540" 
+                  [attr.cy]="250 - ((trend.headcount - getMinHeadcount()) / (getMaxHeadcount() - getMinHeadcount() || 1)) * 200" 
+                  r="4" 
+                  fill="#3b82f6" />
+              </ng-container>
+            </ng-container>
+
+            <!-- X axis labels -->
+            <text *ngFor="let trend of headcountTrend | slice:0:5; let i = index" 
+              [attr.x]="40 + (i / 4) * 540" 
+              y="275" 
+              text-anchor="middle" 
+              font-size="12" 
+              fill="#666">
+              {{ trend.date | slice:5:10 }}
+            </text>
+
+            <!-- Y axis labels -->
+            <text x="30" y="55" text-anchor="end" font-size="12" fill="#666">
+              {{ getMaxHeadcount() }}
+            </text>
+            <text x="30" y="250" text-anchor="end" font-size="12" fill="#666">
+              {{ getMinHeadcount() }}
+            </text>
+          </svg>
+          
+          <div class="chart-legend">
+            <span class="legend-item">
+              <span class="legend-dot" style="background-color: #3b82f6;"></span>
+              Headcount Count
+            </span>
+          </div>
+        </div>
+
+        <!-- No Data State -->
+        <div *ngIf="!trendLoading && headcountTrend.length === 0" class="placeholder">
+          <mat-icon>show_chart</mat-icon>
+          <p>No headcount trend data available</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Attendance Tab -->
+    <section *ngIf="activeTab === 'attendance'" class="tab-content">
+      <h2 class="section-title">Attendance Log</h2>
+      
+      <!-- Loading State for Attendance -->
+      <div *ngIf="attendanceLoading" class="loading-state">
+        <div class="spinner-small"></div>
+        <p>Loading attendance data...</p>
+      </div>
+
+      <!-- Attendance Table -->
+      <div *ngIf="!attendanceLoading && attendanceLog && attendanceLog.length > 0" class="attendance-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>Department</th>
+              <th>Check-in Time</th>
+              <th>Check-out Time</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of attendanceLog" [ngClass]="entry.status?.toLowerCase()">
+              <td>{{ entry.employeeName || '-' }}</td>
+              <td>{{ entry.department || '-' }}</td>
+              <td>{{ entry.checkInTime || '-' }}</td>
+              <td>{{ entry.checkOutTime || '-' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="entry.status?.toLowerCase()">
+                  {{ entry.status || '-' }}
+                </span>
+              </td>
+              <td>{{ entry.date || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- No Data State -->
+      <div *ngIf="!attendanceLoading && (!attendanceLog || attendanceLog.length === 0)" class="placeholder">
+        <mat-icon>event_note</mat-icon>
+        <p>No attendance log data available</p>
+      </div>
+    </section>
+
+    <!-- Watchlist Tab -->
+    <section *ngIf="activeTab === 'watchlist'" class="tab-content">
+      <h2 class="section-title">Workforce Watchlist</h2>
+      <div *ngIf="watchlist && watchlist.length > 0" class="watchlist-container">
+        <div *ngFor="let entry of watchlist" class="watchlist-item">
+          <div class="watchlist-header">
+            <span class="employee-name">{{ entry.employeeName || '-' }}</span>
+            <span class="severity-badge" [ngClass]="entry.severity?.toLowerCase()">
+              {{ entry.severity || '-' }}
+            </span>
+          </div>
+          <div class="watchlist-details">
+            <p class="detail">
+              <strong>Reason:</strong> {{ entry.reason || '-' }}
+            </p>
+            <p class="detail">
+              <strong>Department:</strong> {{ entry.department || '-' }}
+            </p>
+            <p class="detail">
+              <strong>Date:</strong> {{ entry.date || '-' }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="!watchlist || watchlist.length === 0" class="placeholder">
+        <mat-icon>check_circle</mat-icon>
+        <p>No watchlist entries at this time</p>
+      </div>
+    </section>
+  </div>
 </div>

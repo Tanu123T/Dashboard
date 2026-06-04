@@ -3,12 +3,120 @@
   padding: 20px 0;
 }
 
+/* Hero Header Panel */
+.org-header-card {
+  background: #ffffff;
+  color: #333333;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-radius: 12px;
+  margin: 16px;
+  margin-bottom: 12px;
+  border-bottom: none;
+  gap: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.org-header-card .hero-copy {
+  flex: 0 1 auto;
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.org-header-card .hero-copy .eyebrow {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: capitalize;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.org-header-card .hero-copy h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.org-header-card .hero-copy .subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.org-header-card .last-updated-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #e8f4f8;
+  border: 1px solid #bae6fd;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.org-header-card .last-updated-badge svg {
+  width: 16px;
+  height: 16px;
+  color: #0369a1;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 12px;
+  padding: 0 16px;
+  margin: 12px 16px;
+  flex-wrap: wrap;
+  background-color: transparent;
+  align-items: center;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  background: #ffffff;
+  border: 1.5px solid #d1dce5;
+  border-radius: 24px;
+  color: #7b92b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #5f87c9;
+  border-color: #5f87c9;
+  background: #ffffff;
+}
+
+.tab-btn.active {
+  color: #ffffff;
+  background: #17a2b8;
+  border-color: #17a2b8;
+}
+
 .org-card {
   background: #ffffff;
   border-radius: 16px;
   border: 1px solid #e7edf3;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 24px;
+  margin: 12px 16px 16px 16px;
 }
 
 .org-header {
@@ -255,22 +363,24 @@
 }
 
 .org-root {
-  background: linear-gradient(135deg, #5fa2ff 0%, #2fd0ae 100%);
-  border: none;
-  box-shadow: 0 4px 16px rgba(95, 162, 255, 0.25);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .org-root h6 {
-  color: #ffffff;
+  color: #1a365d;
 }
 
 .org-root p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #7b92b8;
 }
 
 .org-root:hover {
-  background: linear-gradient(135deg, #4a8ae6 0%, #1fb89a 100%);
-  box-shadow: 0 6px 20px rgba(95, 162, 255, 0.35);
+  border-color: #5fa2ff;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f1ff 100%);
+  box-shadow: 0 4px 12px rgba(95, 162, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .org-scroll-wrap.org-full-view .org-node {
@@ -310,6 +420,16 @@
   }
 
   .org-header p {
+    font-size: 12px;
+  }
+
+  .tab-navigation {
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    padding: 10px 16px;
     font-size: 12px;
   }
 

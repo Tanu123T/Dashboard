@@ -29,4 +29,7 @@ public interface TimesheetClient {
         @RequestParam("fromDate") String fromDate,
         @RequestParam("toDate") String toDate
     );
+
+    @GetMapping("/api/time-sheets")
+    List<TimesheetDTO> getAllTimesheets(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 }

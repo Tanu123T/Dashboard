@@ -21,7 +21,7 @@ public interface WorkingHoursClient {
     WorkingHoursDTO getWorkingHoursById(@PathVariable("id") Long id);
 
     @GetMapping("/api/working-hours")
-    List<WorkingHoursDTO> getAllWorkingHours(@RequestParam("companyId") Integer companyId);
+    List<WorkingHoursDTO> getAllWorkingHours(@RequestParam("companyId.equals") Integer companyId);
 
     @GetMapping("/api/working-hours/branch/{branchId}")
     List<WorkingHoursDTO> getWorkingHoursByBranch(@PathVariable("branchId") Long branchId);

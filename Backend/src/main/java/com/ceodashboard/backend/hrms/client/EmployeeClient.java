@@ -20,20 +20,20 @@ public interface EmployeeClient {
     @GetMapping("/api/employees/{empId}")
     EmployeeDTO getEmployeeById(@PathVariable("empId") String empId);
 
-    @GetMapping("/api/employees")
-    List<EmployeeDTO> getAllEmployees(@RequestParam(value = "companyId", required = false) Integer companyId);
+    @GetMapping("/api/employees?size=2000")
+    List<EmployeeDTO> getAllEmployees(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 
     @GetMapping("/api/employees/search")
     List<EmployeeDTO> searchEmployees(
         @RequestParam(value = "query", required = false) String query,
-        @RequestParam(value = "companyId", required = false) Integer companyId
+        @RequestParam(value = "companyId.equals", required = false) Integer companyId
     );
 
     @GetMapping("/api/employees/{empId}/profile")
     EmployeeDTO getEmployeeProfile(@PathVariable("empId") String empId);
 
-    @GetMapping("/api/employees")
-    List<EmployeeDTO> getEmployeesByCompany(@RequestParam("companyId") Integer companyId);
+    @GetMapping("/api/employees?size=2000")
+    List<EmployeeDTO> getEmployeesByCompany(@RequestParam("companyId.equals") Integer companyId);
 
     @GetMapping("/api/employees/{empId}/reporting-manager")
     EmployeeDTO getReportingManager(@PathVariable("empId") String empId);

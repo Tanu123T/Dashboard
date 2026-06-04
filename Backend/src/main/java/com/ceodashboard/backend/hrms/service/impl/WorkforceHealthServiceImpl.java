@@ -160,7 +160,8 @@ public class WorkforceHealthServiceImpl implements WorkforceHealthService {
             return employees.stream()
                 .map(emp -> {
                     try {
-                        List<AttendanceDTO> attendance = attendanceClient.getAttendanceByEmployeeId(emp.getEmpUniqueId());
+                        String empId = emp.getId() != null ? emp.getId().toString() : emp.getEmpUniqueId();
+                        List<AttendanceDTO> attendance = attendanceClient.getAttendanceByEmployeeId(empId);
                         // Simple at-risk calculation: less than 70% attendance
                         long presentDays = attendance.stream()
                             .filter(a -> "PRESENT".equalsIgnoreCase(a.getStatus()))
@@ -169,7 +170,7 @@ public class WorkforceHealthServiceImpl implements WorkforceHealthService {
 
                         if (attendanceRate < 0.7) {
                             return WorkforceHealthWatchlistResponse.builder()
-                                .employeeId(parseEmpId(emp.getEmpUniqueId()))
+                                .employeeId(emp.getId() != null ? emp.getId() : parseEmpId(emp.getEmpUniqueId()))
                                 .status("AT_RISK")
                                 .attendanceDate(null)
                                 .riskLevel("HIGH")
@@ -200,8 +201,9 @@ public class WorkforceHealthServiceImpl implements WorkforceHealthService {
             double totalConsistency = 0.0;
             for (EmployeeDTO employee : employees) {
                 try {
+                    String empId = employee.getId() != null ? employee.getId().toString() : employee.getEmpUniqueId();
                     List<AttendanceDTO> recentAttendance = attendanceClient
-                        .getAttendanceByEmployeeId(employee.getEmpUniqueId())
+                        .getAttendanceByEmployeeId(empId)
                         .stream()
                         .filter(a -> a.getDate() != null &&
                             a.getDate().isAfter(LocalDate.now().minusDays(30)))

@@ -24,5 +24,5 @@ public interface EducationClient {
     List<EducationDTO> getEducationByEmployeeId(@PathVariable("empId") String empId);
 
     @GetMapping("/api/educations")
-    List<EducationDTO> getAllEducations(@RequestParam(value = "companyId", required = false) Integer companyId);
+    List<EducationDTO> getAllEducations(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 }

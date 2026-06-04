@@ -21,11 +21,11 @@ public interface HolidayClient {
     HolidayDTO getHolidayById(@PathVariable("id") Long id);
 
     @GetMapping("/api/holidays")
-    List<HolidayDTO> getAllHolidays(@RequestParam("companyId") Integer companyId);
+    List<HolidayDTO> getAllHolidays(@RequestParam("companyId.equals") Integer companyId);
 
     @GetMapping("/api/holidays/year/{year}")
     List<HolidayDTO> getHolidaysByYear(
         @PathVariable("year") Integer year,
-        @RequestParam("companyId") Integer companyId
+        @RequestParam("companyId.equals") Integer companyId
     );
 }

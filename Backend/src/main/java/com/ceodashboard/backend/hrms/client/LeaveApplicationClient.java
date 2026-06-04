@@ -37,4 +37,7 @@ public interface LeaveApplicationClient {
         @PathVariable("id") Long id,
         @RequestBody LeaveApplicationDTO leaveApplicationDTO
     );
+
+    @GetMapping("/api/leave-applications")
+    List<LeaveApplicationDTO> getAllLeaveApplications(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 }

@@ -24,5 +24,5 @@ public interface AddressClient {
     List<AddressDTO> getAddressesByEmployeeId(@PathVariable("empId") String empId);
 
     @GetMapping("/api/addresses")
-    List<AddressDTO> getAllAddresses(@RequestParam(value = "companyId", required = false) Integer companyId);
+    List<AddressDTO> getAllAddresses(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 }

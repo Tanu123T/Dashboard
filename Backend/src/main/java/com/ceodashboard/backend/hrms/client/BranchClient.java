@@ -21,7 +21,7 @@ public interface BranchClient {
     BranchDTO getBranchById(@PathVariable("id") Long id);
 
     @GetMapping("/api/branches")
-    List<BranchDTO> getAllBranches(@RequestParam(value = "companyId", required = false) Integer companyId);
+    List<BranchDTO> getAllBranches(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 
     @GetMapping("/api/branches/region/{regionId}")
     List<BranchDTO> getBranchesByRegion(@PathVariable("regionId") Long regionId);

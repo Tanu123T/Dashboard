@@ -28,4 +28,7 @@ public interface EmployeeLeaveAccountClient {
         @PathVariable("empId") String empId,
         @PathVariable("leaveTypeId") Long leaveTypeId
     );
+
+    @GetMapping("/api/employee-leave-accounts")
+    List<EmployeeLeaveAccountDTO> getAllLeaveAccounts(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 }

@@ -87,7 +87,7 @@ export class EmployeeHubComponent implements OnInit, OnDestroy {
    * silently fall back to the original /employees endpoint.
    */
   private loadEmployees() {
-    return this.employeeService.getEmployeeHubList(0, 200).pipe(
+    return this.employeeService.getEmployeeHubList(0, 1000).pipe(
       map((response) => {
         const items = response?.data?.content ?? [];
         if (items.length === 0 && (response?.data?.totalElements ?? 0) === 0) {
@@ -98,7 +98,7 @@ export class EmployeeHubComponent implements OnInit, OnDestroy {
       }),
       catchError(() =>
         // New endpoint failed (404, 500, network) — fall back silently
-        this.employeeService.getEmployees(0, 200).pipe(
+        this.employeeService.getEmployees(0, 1000).pipe(
           map((resp) => this.mapProfileDTOs(resp?.data?.content ?? [])),
           catchError((err) => {
             console.error("Both employee endpoints failed", err);
@@ -111,7 +111,7 @@ export class EmployeeHubComponent implements OnInit, OnDestroy {
       // If hub-list returned null (empty), also fall back
       switchMap((result) => {
         if (result === null) {
-          return this.employeeService.getEmployees(0, 200).pipe(
+          return this.employeeService.getEmployees(0, 1000).pipe(
             map((resp) => this.mapProfileDTOs(resp?.data?.content ?? [])),
             catchError((err) => {
               console.error("Fallback employees endpoint also failed", err);

@@ -32,7 +32,7 @@ public interface AttendanceClient {
     );
 
     @GetMapping("/api/attendances")
-    List<AttendanceDTO> getAttendanceByCompanyId(@RequestParam("companyId") Integer companyId);
+    List<AttendanceDTO> getAttendanceByCompanyId(@RequestParam("companyId.equals") Integer companyId);
 
     @GetMapping("/api/attendances/employee/{empId}/status/{status}")
     List<AttendanceDTO> getAttendanceByEmployeeIdAndStatus(

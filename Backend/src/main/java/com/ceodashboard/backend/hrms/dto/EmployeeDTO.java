@@ -13,6 +13,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeDTO {
+    @JsonProperty("id")
+    private Long id;
+
     @JsonProperty("empUniqueId")
     private String empUniqueId;
 
@@ -61,11 +64,27 @@ public class EmployeeDTO {
     @JsonProperty("experienceYears")
     private Double experienceYears;
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DepartmentInfo {
+        private Long id;
+        private String name;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DesignationInfo {
+        private Long id;
+        private String name;
+    }
+
     @JsonProperty("department")
-    private String department;
+    private DepartmentInfo department;
 
     @JsonProperty("designation")
-    private String designation;
+    private DesignationInfo designation;
 
     @JsonProperty("mobileNo")
     private String mobileNo;

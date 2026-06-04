@@ -21,5 +21,5 @@ public interface RegionClient {
     RegionDTO getRegionById(@PathVariable("id") Long id);
 
     @GetMapping("/api/regions")
-    List<RegionDTO> getAllRegions(@RequestParam(value = "companyId", required = false) Integer companyId);
+    List<RegionDTO> getAllRegions(@RequestParam(value = "companyId.equals", required = false) Integer companyId);
 }

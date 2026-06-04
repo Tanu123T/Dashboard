@@ -2,17 +2,28 @@ package com.ceodashboard.backend.hrms.controller;
 
 import com.ceodashboard.backend.hrms.dto.ApiResponse;
 import com.ceodashboard.backend.hrms.dto.EmployeeProfileDTO;
+import com.ceodashboard.backend.hrms.entity.Attendance;
+import com.ceodashboard.backend.hrms.entity.AppraisalReview;
 import com.ceodashboard.backend.hrms.entity.Employee;
+import com.ceodashboard.backend.hrms.entity.EmployeeLeaveAccount;
+import com.ceodashboard.backend.hrms.entity.TechvgUser;
+import com.ceodashboard.backend.hrms.repository.AppraisalEvaluationRepository;
+import com.ceodashboard.backend.hrms.repository.AppraisalReviewRepository;
+import com.ceodashboard.backend.hrms.repository.AttendanceRepository;
+import com.ceodashboard.backend.hrms.repository.ContactRepository;
+import com.ceodashboard.backend.hrms.repository.EducationRepository;
+import com.ceodashboard.backend.hrms.repository.EmployeeLeaveAccountRepository;
 import com.ceodashboard.backend.hrms.repository.EmployeeRepository;
+import com.ceodashboard.backend.hrms.repository.PerformanceReviewRepository;
+import com.ceodashboard.backend.hrms.repository.TechvgUserRepository;
+import com.ceodashboard.backend.hrms.repository.WorkExperienceRepository;
 import com.ceodashboard.backend.hrms.service.EmployeeService;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -21,22 +32,43 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/hrms/employees")
+@ConditionalOnProperty(prefix = "hrms.db", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class EmployeeController {
 
     private final EmployeeService    employeeService;
     private final EmployeeRepository employeeRepository;
-    private final JdbcTemplate       jdbcTemplate;
-
-    /** Active HRMS company — applied to every JDBC query in this controller. */
-    @Value("${hrms.company.id:1}")
-    private long companyId;
+    private final AttendanceRepository attendanceRepository;
+    private final ContactRepository contactRepository;
+    private final EmployeeLeaveAccountRepository leaveAccountRepository;
+    private final AppraisalEvaluationRepository appraisalEvaluationRepository;
+    private final AppraisalReviewRepository appraisalReviewRepository;
+    private final PerformanceReviewRepository performanceReviewRepository;
+    private final EducationRepository educationRepository;
+    private final WorkExperienceRepository workExperienceRepository;
+    private final TechvgUserRepository techvgUserRepository;
 
     public EmployeeController(EmployeeService employeeService,
                               EmployeeRepository employeeRepository,
-                              @Qualifier("hrmsJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        this.employeeService    = employeeService;
-        this.employeeRepository = employeeRepository;
-        this.jdbcTemplate       = jdbcTemplate;
+                              AttendanceRepository attendanceRepository,
+                              ContactRepository contactRepository,
+                              EmployeeLeaveAccountRepository leaveAccountRepository,
+                              AppraisalEvaluationRepository appraisalEvaluationRepository,
+                              AppraisalReviewRepository appraisalReviewRepository,
+                              PerformanceReviewRepository performanceReviewRepository,
+                              EducationRepository educationRepository,
+                              WorkExperienceRepository workExperienceRepository,
+                              TechvgUserRepository techvgUserRepository) {
+        this.employeeService               = employeeService;
+        this.employeeRepository            = employeeRepository;
+        this.attendanceRepository          = attendanceRepository;
+        this.contactRepository             = contactRepository;
+        this.leaveAccountRepository        = leaveAccountRepository;
+        this.appraisalEvaluationRepository = appraisalEvaluationRepository;
+        this.appraisalReviewRepository     = appraisalReviewRepository;
+        this.performanceReviewRepository   = performanceReviewRepository;
+        this.educationRepository           = educationRepository;
+        this.workExperienceRepository      = workExperienceRepository;
+        this.techvgUserRepository          = techvgUserRepository;
     }
 
     @GetMapping
@@ -59,67 +91,93 @@ public class EmployeeController {
 
             Long empId = employee.getId();
 
-            // ── Attendance (last 30 days, company-filtered) ─────────────────
-            Integer totalDays   = safe("SELECT COUNT(*) FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 30 DAY)", Integer.class, empId, companyId);
-            Integer presentDays = safe("SELECT COUNT(*) FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 30 DAY) AND has_checked_in=1", Integer.class, empId, companyId);
-            if (totalDays   == null) totalDays   = 0;
-            if (presentDays == null) presentDays = 0;
+            LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+            LocalDate ninetyDaysAgo = LocalDate.now().minusDays(90);
+            List<Attendance> recentAttendance = attendanceRepository
+                    .findByEmployeeIdAndDateRange(empId, thirtyDaysAgo, LocalDate.now());
+
+            int totalDays = recentAttendance.size();
+            int presentDays = (int) recentAttendance.stream()
+                    .filter(att -> Boolean.TRUE.equals(att.getHasCheckedIn()))
+                    .count();
             int attendanceRate = totalDays == 0 ? 0 : (int) Math.round(presentDays * 100.0 / totalDays);
 
-            Integer absentDays  = safe("SELECT COUNT(*) FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 30 DAY) AND status='ABSENT'", Integer.class, empId, companyId);
-            Integer leaveDays   = safe("SELECT COUNT(*) FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 30 DAY) AND status IN('LEAVE','ON_LEAVE')", Integer.class, empId, companyId);
-            Integer lateArriv   = safe("SELECT COUNT(*) FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 30 DAY) AND has_checked_in=1 AND hours IS NOT NULL AND hours<>'' AND TIME_TO_SEC(hours)>TIME_TO_SEC('09:30:00')", Integer.class, empId, companyId);
-            Double  avgHours    = safe("SELECT AVG(TIME_TO_SEC(hours))/3600 FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 30 DAY) AND hours IS NOT NULL AND hours<>''", Double.class, empId, companyId);
-            String  availStatus = safe("SELECT status FROM attendance WHERE employee_id=? AND company_id=? ORDER BY date DESC LIMIT 1", String.class, empId, companyId);
-            Integer checkedIn   = safe("SELECT has_checked_in FROM attendance WHERE employee_id=? AND company_id=? ORDER BY date DESC LIMIT 1", Integer.class, empId, companyId);
+            int absentDays = (int) attendanceRepository
+                    .countByEmployeeIdAndAttendanceDateBetweenAndStatus(empId, "ABSENT", thirtyDaysAgo, LocalDate.now());
+            int leaveDays = (int) attendanceRepository
+                    .countByEmployeeIdAndAttendanceDateBetweenAndStatusIn(empId, List.of("LEAVE", "ON_LEAVE"), thirtyDaysAgo, LocalDate.now());
+            int lateArriv = (int) recentAttendance.stream()
+                    .filter(att -> Boolean.TRUE.equals(att.getHasCheckedIn()))
+                    .filter(att -> isAfterNineThirty(att.getWorkHours()))
+                    .count();
+            Double avgHours = calculateAverageWorkHours(recentAttendance);
 
-            // ── Contacts ─────────────────────────────────────────────────────
-            String phone = safe("SELECT contact FROM contacts WHERE ref_table_id=? AND company_id=? ORDER BY id DESC LIMIT 1", String.class, empId, companyId);
+            Optional<Attendance> latestAttendance = attendanceRepository
+                    .findFirstByEmployeeIdOrderByAttendanceDateDesc(empId);
+            String availStatus = latestAttendance.map(Attendance::getStatus).orElse(null);
+            String checkedIn = latestAttendance.map(Attendance::getHasCheckedIn)
+                    .map(v -> v ? "Checked In" : "Not Checked In")
+                    .orElse(null);
 
-            // ── Branch / Region ───────────────────────────────────────────────
-            Map<String, Object> branchRow = employee.getBranchId() == null ? Map.of()
-                : safeRow("SELECT b.branch_name, r.region_name FROM branch b LEFT JOIN region r ON b.region_id=r.id WHERE b.id=? AND b.company_id=?", employee.getBranchId(), companyId);
-            String branchName = str(branchRow.get("branch_name"));
-            String regionName = str(branchRow.get("region_name"));
-            String location   = branchName != null ? branchName : (employee.getBranchId() != null ? "Branch " + employee.getBranchId() : null);
+            String phone = contactRepository.findFirstByRefTableIdOrderByIdDesc(empId)
+                    .map(c -> c.getContact()).orElse(null);
 
-            // ── Leave ─────────────────────────────────────────────────────────
-            Double leaveBalance    = safe("SELECT balance FROM employee_leave_account WHERE employee_id=? AND company_id=? ORDER BY id DESC LIMIT 1", Double.class, empId, companyId);
-            Double creditedLeaves  = safe("SELECT credited_leaves FROM employee_leave_account WHERE employee_id=? AND company_id=? ORDER BY id DESC LIMIT 1", Double.class, empId, companyId);
+            String branchName = employee.getBranch() != null ? employee.getBranch().getBranchName() : null;
+            String regionName = employee.getBranch() != null && employee.getBranch().getRegion() != null
+                    ? employee.getBranch().getRegion().getRegionName() : null;
+            String location = branchName != null ? branchName : (employee.getBranch() != null ? "Branch " + employee.getBranch().getId() : null);
 
-            // ── Performance ───────────────────────────────────────────────────
-            Double perfScore   = safe("SELECT AVG(CAST(scored_points AS DECIMAL(10,2))) FROM appraisal_evaluation WHERE employee_id=? AND company_id=?", Double.class, empId, companyId);
-            Double prodScore   = safe("SELECT ROUND(COUNT(CASE WHEN status='PRESENT' THEN 1 END)*100.0/NULLIF(COUNT(*),0),2) FROM attendance WHERE employee_id=? AND company_id=? AND DATE(date)>=DATE_SUB(CURDATE(),INTERVAL 90 DAY)", Double.class, empId, companyId);
-            String apprRating  = safe("SELECT appraisal_status FROM appraisal_review WHERE employee_id=? AND company_id=? ORDER BY id DESC LIMIT 1", String.class, empId, companyId);
+            Optional<EmployeeLeaveAccount> leaveAccount = leaveAccountRepository.findFirstByEmployeeIdOrderByIdDesc(empId);
+            Double leaveBalance = leaveAccount.map(EmployeeLeaveAccount::getBalance).orElse(0.0);
+            Double creditedLeaves = leaveAccount.map(EmployeeLeaveAccount::getCreditedLeaves).orElse(0.0);
 
-            // ── Profile image ─────────────────────────────────────────────────
-            Map<String, Object> userRow = safeRow("SELECT image_url, last_modified_date, activated, created_date FROM techvg_user WHERE employee_id=? AND company_id=? LIMIT 1", empId, companyId);
-            String profileImage     = str(userRow.get("image_url"));
-            String lastLogin        = str(userRow.get("last_modified_date"));
-            String accountStatus    = userRow.containsKey("activated") ? String.valueOf(userRow.get("activated")) : null;
-            String accountCreatedAt = str(userRow.get("created_date"));
+            Double perfScore = appraisalEvaluationRepository.findAverageScoreByEmployeeId(empId);
+            perfScore = perfScore == null ? 0.0 : perfScore;
 
-            // ── Performance trends ────────────────────────────────────────────
-            List<Map<String, Object>> perfRows = safeList(
-                "SELECT DATE_FORMAT(pr.appraisal_date,'%b %Y') AS month, AVG(COALESCE(pr.target_achived,0)) AS avg_value " +
-                "FROM performance_review pr INNER JOIN appraisal_review ar ON ar.id=pr.appraisal_review_id " +
-                "WHERE ar.employee_id=? AND ar.company_id=? " +
-                "GROUP BY DATE_FORMAT(pr.appraisal_date,'%Y-%m') ORDER BY MIN(pr.appraisal_date) DESC LIMIT 6",
-                empId, companyId);
+            long productivityPresent = attendanceRepository
+                    .countByEmployeeIdAndAttendanceDateBetweenAndStatus(empId, "PRESENT", ninetyDaysAgo, LocalDate.now());
+            long productivityTotal = attendanceRepository
+                    .countByEmployeeIdAndAttendanceDateBetween(empId, ninetyDaysAgo, LocalDate.now());
+            Double prodScore = productivityTotal == 0 ? 0.0
+                    : Math.round((productivityPresent * 100.0 / productivityTotal) * 100.0) / 100.0;
 
-            // ── Education ─────────────────────────────────────────────────────
-            List<Map<String, Object>> educations = safeList(
-                "SELECT id, education_type, institution, DATE_FORMAT(start_year,'%Y') AS start_year, " +
-                "DATE_FORMAT(end_date,'%Y') AS end_date, grade, description " +
-                "FROM education WHERE employee_id=? AND company_id=? ORDER BY start_year DESC LIMIT 6",
-                empId, companyId);
+            String apprRating = appraisalReviewRepository.findFirstByEmployeeIdOrderByIdDesc(empId)
+                    .map(AppraisalReview::getAppraisalStatus)
+                    .orElse(null);
 
-            // ── Work experience ───────────────────────────────────────────────
-            List<Map<String, Object>> experiences = safeList(
-                "SELECT id, company_name, job_title AS title, DATE_FORMAT(start_date,'%Y-%m-%d') AS start_date, " +
-                "DATE_FORMAT(end_date,'%Y-%m-%d') AS end_date, job_desc AS description " +
-                "FROM work_experience WHERE employee_id=? AND company_id=? ORDER BY start_date DESC LIMIT 6",
-                empId, companyId);
+            Optional<TechvgUser> techUser = techvgUserRepository.findFirstByEmployeeIdOrderByIdDesc(empId);
+            String profileImage = techUser.map(TechvgUser::getImageUrl).orElse(null);
+            String lastLogin = techUser.map(TechvgUser::getLastModifiedDate).map(Object::toString).orElse(null);
+            String accountStatus = techUser.map(TechvgUser::getActivated).map(String::valueOf).orElse(null);
+            String accountCreatedAt = techUser.map(TechvgUser::getCreatedDate).map(Object::toString).orElse(null);
+
+            List<Map<String, Object>> perfRows = performanceReviewRepository.findPerformanceTrendsByEmployeeId(empId)
+                    .stream()
+                    .map(trend -> of("month", trend.getMonth(), "score", trend.getScore()))
+                    .collect(Collectors.toList());
+
+            List<Map<String, Object>> educations = educationRepository.findByEmployeeIdOrderByStartYearDesc(empId)
+                    .stream()
+                    .map(edu -> of(
+                            "id", edu.getId(),
+                            "educationType", edu.getEducationType(),
+                            "institution", edu.getInstitution(),
+                            "startYear", edu.getStartYear() != null ? edu.getStartYear().toString() : null,
+                            "endDate", edu.getEndDate() != null ? edu.getEndDate().toString() : null,
+                            "grade", edu.getGrade(),
+                            "description", edu.getDescription()))
+                    .collect(Collectors.toList());
+
+            List<Map<String, Object>> experiences = workExperienceRepository.findByEmployeeIdOrderByStartDateDesc(empId)
+                    .stream()
+                    .map(exp -> of(
+                            "id", exp.getId(),
+                            "companyName", exp.getCompanyName(),
+                            "title", exp.getJobTitle(),
+                            "startDate", exp.getStartDate() != null ? exp.getStartDate().toString() : null,
+                            "endDate", exp.getEndDate() != null ? exp.getEndDate().toString() : null,
+                            "description", exp.getJobDesc()))
+                    .collect(Collectors.toList());
 
             // ── Build response ────────────────────────────────────────────────
             String fn = ((employee.getFirstName() == null ? "" : employee.getFirstName()) +
@@ -145,20 +203,22 @@ public class EmployeeController {
             empPayload.put("lastLoginTime",         lastLogin);
             empPayload.put("accountStatus",         accountStatus);
 
-            List<Map<String, Object>> workPayload = new ArrayList<>();
-            for (Map<String, Object> exp : experiences) {
-                workPayload.add(of("title", exp.get("title"), "companyName", exp.get("company_name"),
-                                   "startDate", exp.get("start_date"), "endDate", exp.get("end_date"),
-                                   "description", exp.get("description")));
-            }
+            List<Map<String, Object>> workPayload = experiences.stream()
+                    .map(exp -> of(
+                            "title", exp.get("title"),
+                            "companyName", exp.get("companyName"),
+                            "startDate", exp.get("startDate"),
+                            "endDate", exp.get("endDate"),
+                            "description", exp.get("description")))
+                    .collect(Collectors.toList());
 
             Map<String, Object> resp = new LinkedHashMap<>();
             resp.put("employee",         empPayload);
             resp.put("attendance",       of("totalDays", totalDays, "presentDays", presentDays,
-                                            "absentDays", absentDays != null ? absentDays : Math.max(0, totalDays - presentDays),
+                                            "absentDays", absentDays,
                                             "leaveDays", leaveDays, "lateArrivals", lateArriv,
                                             "averageWorkHours", avgHours, "availabilityStatus", availStatus,
-                                            "currentActivity", checkedIn == null ? null : (checkedIn == 1 ? "Checked In" : "Not Checked In"),
+                                            "currentActivity", checkedIn,
                                             "attendanceRate", attendanceRate));
             resp.put("performanceTrends", perfRows);
             resp.put("education",         educations);
@@ -187,19 +247,46 @@ public class EmployeeController {
         }
     }
 
-    private <T> T safe(String sql, Class<T> type, Object... args) {
-        try { return jdbcTemplate.queryForObject(sql, type, args); }
-        catch (Exception ex) { return null; }
+    private boolean isAfterNineThirty(String workHours) {
+        if (workHours == null || workHours.isBlank()) return false;
+        try {
+            String normalized = workHours.trim();
+            String[] segments = normalized.split(":");
+            if (segments.length < 2) return false;
+            int hours = Integer.parseInt(segments[0]);
+            int minutes = Integer.parseInt(segments[1]);
+            return hours > 9 || (hours == 9 && minutes > 30);
+        } catch (NumberFormatException ex) {
+            return false;
+        }
     }
 
-    private List<Map<String, Object>> safeList(String sql, Object... args) {
-        try { return jdbcTemplate.queryForList(sql, args); }
-        catch (Exception ex) { return List.of(); }
+    private Double calculateAverageWorkHours(List<Attendance> attendanceList) {
+        List<Long> seconds = attendanceList.stream()
+                .map(Attendance::getWorkHours)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .map(this::timeStringToSeconds)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (seconds.isEmpty()) return null;
+        double averageSeconds = seconds.stream().mapToLong(Long::longValue).average().orElse(0.0);
+        return Math.round((averageSeconds / 3600.0) * 100.0) / 100.0;
     }
 
-    private Map<String, Object> safeRow(String sql, Object... args) {
-        try { return jdbcTemplate.queryForMap(sql, args); }
-        catch (Exception ex) { return new LinkedHashMap<>(); }
+    private Long timeStringToSeconds(String timeString) {
+        try {
+            String[] splits = timeString.split(":");
+            if (splits.length < 2) return null;
+            int hours = Integer.parseInt(splits[0]);
+            int minutes = Integer.parseInt(splits[1]);
+            int seconds = splits.length == 3 ? Integer.parseInt(splits[2]) : 0;
+            return (long) hours * 3600 + minutes * 60 + seconds;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     private String str(Object v) { return v == null ? null : String.valueOf(v); }

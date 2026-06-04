@@ -1,0 +1,20 @@
+{
+  "summary" : {
+    "totalPlannedSprints" : 1,
+    "completedSprints" : 0,
+    "activeSprints" : 1,
+    "averageCompletion" : 0.0,
+    "teamSize" : 1
+  },
+  "team" : [ ],
+  "sprints" : [ {
+    "id" : -1000001,
+    "name" : "Backlog",
+    "projectName" : "Demo project",
+    "status" : "ACTIVE",
+    "progress" : 0,
+    "startDate" : null,
+    "endDate" : null,
+    "taskSummary" : "0/12"
+  } ]
+}

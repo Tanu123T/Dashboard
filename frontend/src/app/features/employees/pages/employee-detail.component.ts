@@ -1,9 +1,24 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { EmployeeFeatureService } from '../services/employee-feature.service';
-import { Subject, of } from 'rxjs';
-import { takeUntil, catchError, finalize } from 'rxjs/operators';
+import { Component, OnInit, OnDestroy } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { ActivatedRoute, RouterModule } from "@angular/router";
+import { EmployeeFeatureService } from "../services/employee-feature.service";
+import { Subject, of } from "rxjs";
+import { takeUntil, catchError, finalize } from "rxjs/operators";
+import {
+  EmployeeDashboardResponse,
+  ProfileHeaderDTO,
+  PersonalInfoDTO,
+  AttendanceAnalyticsDTO,
+  PerformanceTrendDTO,
+  SkillDTO,
+  EmployeeProjectDTO,
+  EducationDTO,
+  AchievementDTO,
+  CertificationDTO,
+  WorkExperienceDTO,
+} from "../models/employee.model";
+
+// ── View-model interfaces (what the HTML template binds to) ──────────────────
 
 interface PersonalInfo {
   email: string;
@@ -21,7 +36,7 @@ interface PerformanceTrend {
 
 interface Project {
   name: string;
-  status: 'In Progress' | 'Completed' | 'On Hold';
+  status: "In Progress" | "Completed" | "On Hold";
   stages: string[];
   progress?: number;
 }
@@ -78,11 +93,11 @@ interface EmployeeDetail {
 }
 
 @Component({
-  selector: 'app-employee-detail',
+  selector: "app-employee-detail",
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './employee-detail.component.html',
-  styleUrls: ['./employee-detail.component.css']
+  templateUrl: "./employee-detail.component.html",
+  styleUrls: ["./employee-detail.component.css"],
 })
 export class EmployeeDetailComponent implements OnInit, OnDestroy {
   employee: EmployeeDetail | null = null;
@@ -91,24 +106,24 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   private colorPalette = [
-    'linear-gradient(135deg, #6f7ef7 0%, #5b6df0 45%, #7c8cff 100%)',
-    'linear-gradient(135deg, #f7a34c 0%, #f89f35 45%, #fbb74f 100%)',
-    'linear-gradient(135deg, #5aa7ff 0%, #4c8ef6 45%, #67d3d8 100%)',
-    'linear-gradient(135deg, #7a6ee8 0%, #6d82f2 45%, #6bb1e5 100%)',
-    'linear-gradient(135deg, #2ea79a 0%, #4ea7e1 45%, #73c7cf 100%)',
-    'linear-gradient(135deg, #4a9df2 0%, #42b6da 45%, #4fd0c5 100%)'
+    "linear-gradient(135deg, #6f7ef7 0%, #5b6df0 45%, #7c8cff 100%)",
+    "linear-gradient(135deg, #f7a34c 0%, #f89f35 45%, #fbb74f 100%)",
+    "linear-gradient(135deg, #5aa7ff 0%, #4c8ef6 45%, #67d3d8 100%)",
+    "linear-gradient(135deg, #7a6ee8 0%, #6d82f2 45%, #6bb1e5 100%)",
+    "linear-gradient(135deg, #2ea79a 0%, #4ea7e1 45%, #73c7cf 100%)",
+    "linear-gradient(135deg, #4a9df2 0%, #42b6da 45%, #4fd0c5 100%)",
   ];
 
   constructor(
     private route: ActivatedRoute,
-    private employeeService: EmployeeFeatureService
+    private employeeService: EmployeeFeatureService,
   ) {}
 
   ngOnInit() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      const employeeId = params['id'];
+    this.route.params.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const employeeId = params["id"];
       if (employeeId) {
-        this.loadEmployeeDetail(employeeId);
+        this.loadEmployeeDashboard(employeeId);
       }
     });
   }
@@ -118,197 +133,267 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadEmployeeDetail(employeeId: string) {
+  // ── Main loader ─────────────────────────────────────────────────────────────
+
+  currentEmployeeId: string = "";
+
+  loadEmployeeDashboard(employeeId: string) {
     this.loading = true;
     this.error = null;
-    this.employeeService.getEmployeeFull(employeeId).pipe(
-      takeUntil(this.destroy$),
-      catchError(err => {
-        console.error('Failed to load enriched employee details', err);
-        this.error = 'Failed to load employee profile.';
-        return of(null);
-      }),
-      finalize(() => this.loading = false)
-    ).subscribe((response: any) => {
-      if (response && response.data) {
-        const payload = response.data;
-        const emp = payload.employee || {};
-        const edu = payload.education || [];
-        const work = payload.workExperience || [];
-        const perf = payload.performanceTrends || [];
-        const projects = payload.projects || [];
-        const attendance = payload.attendance || { totalDays: 0, presentDays: 0, absentDays: 0, attendanceRate: 0 };
-        const derivedSkills = Array.isArray(payload.skills) ? payload.skills : [];
-        const achievements = Array.isArray(payload.achievements) ? payload.achievements : [];
+    this.currentEmployeeId = employeeId;
 
-        const fullName = this.resolveFullName(emp, employeeId);
-        const department = emp.department || 'General';
-        const designation = emp.designation || 'Staff';
-        const location = emp.location || (emp.branchId ? `Branch ${emp.branchId}` : department);
+    this.employeeService
+      .getEmployeeDashboard(employeeId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          const status = err?.status ?? 0;
+          const detail =
+            err?.error?.message || err?.error?.error || err?.message || "";
+          if (status === 404) {
+            this.error = `Employee #${employeeId} not found in HRMS. Please ensure the backend is running with the latest code.`;
+          } else if (status === 0) {
+            this.error =
+              "Cannot reach the backend server. Please make sure it is running on http://localhost:8081";
+          } else {
+            this.error = `Server error (${status})${detail ? ": " + detail : ""}. Check the backend logs.`;
+          }
+          console.error(
+            `Dashboard API error [${status}] for employee ${employeeId}:`,
+            err,
+          );
+          return of(null);
+        }),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe((response: any) => {
+        if (!response?.data) return;
+
+        const d: EmployeeDashboardResponse = response.data;
+
+        const header = d.profileHeader || ({} as ProfileHeaderDTO);
+        const info = d.personalInfo || ({} as PersonalInfoDTO);
+        const attend = d.attendanceAnalytics || ({} as AttendanceAnalyticsDTO);
+        const perf = d.performanceTrends || [];
+        const skills = d.skills || [];
+        const projects = d.projects || [];
+        const edu = d.education || [];
+        const achieve = d.achievements || [];
+        const certs = d.certifications || [];
+        const workExp = d.workExperience || [];
+
+        const fullName = header.fullName || "Unknown";
+        const dept = header.department || "General";
+        const desig = header.designation || "Staff";
+        const empIdNum = Number(header.employeeId) || 0;
 
         this.employee = {
-          id: String(emp.id || employeeId),
+          id: String(header.employeeId || employeeId),
           name: fullName,
-          title: `${designation} | ${department}`,
-          department: department,
-          email: emp.officialEmail || 'N/A',
-          phone: 'N/A',
-          photo: emp.profileImage || undefined,
+          title: `${desig} | ${dept}`,
+          department: dept,
+          email: header.officialEmail || "N/A",
+          phone: info.phoneNumber || "N/A",
+          photo: header.profileImage || undefined,
           initials: this.getInitials(fullName),
-          color: this.colorPalette[(emp.id || 0) % this.colorPalette.length],
+          color: this.colorPalette[empIdNum % this.colorPalette.length],
+
           personalInfo: {
-            email: emp.officialEmail || 'N/A',
-            phone: 'N/A',
-            department: department,
-            location: location,
-            joinDate: this.formatDate(emp.employmentDate),
-            manager: emp.reportingManagerName || 'N/A'
+            email: info.officialEmail || header.officialEmail || "N/A",
+            phone: info.phoneNumber || "N/A",
+            department: dept,
+            location:
+              [info.branch, info.region].filter(Boolean).join(", ") || dept,
+            joinDate: this.formatDate(info.joinDate),
+            manager: info.reportingManagerName || "N/A",
           },
+
           attendance: {
-            totalDays: Number(attendance.totalDays || 0),
-            presentDays: Number(attendance.presentDays || 0),
-            absentDays: Number(attendance.absentDays || Math.max(0, Number(attendance.totalDays || 0) - Number(attendance.presentDays || 0))),
-            attendanceRate: Number(attendance.attendanceRate || 0)
+            totalDays: Number(attend.totalDays || 0),
+            presentDays: Number(attend.presentDays || 0),
+            absentDays: Number(attend.absentDays || 0),
+            attendanceRate: Number(attend.attendancePercentage || 0),
           },
-          performanceTrends: perf.map((p: any) => ({ month: p.month, value: Math.round(Number(p.avg_value ?? p.avgValue ?? p.value) || 0) })),
-          skills: this.mergeSkills(derivedSkills, projects),
-          projects: projects.map((p: any) => ({
-            name: p.name || 'Unnamed Project',
-            status: this.resolveProjectStatus(p.status),
-            stages: this.resolveTechStack(p.techStack || p.tech_stack || p.tech_stack_csv),
-            progress: Number(p.progress || 0)
+
+          // PerformanceTrendDTO has { month: string, score: number }
+          performanceTrends: perf.map((p: PerformanceTrendDTO) => ({
+            month: p.month,
+            value: Number(p.score || 0),
           })),
-          workExperience: work.map((w: any) => ({
-            title: w.title || w.job_title || 'Role',
-            company: w.companyName || w.company_name || w.company || '',
-            duration: this.formatRange(w.startDate || w.start_date, w.endDate || w.end_date),
-            description: w.description || '',
-            years: ''
+
+          // SkillDTO has { id, skillName, skillLevel } — render as string badges
+          skills: skills
+            .map((s: SkillDTO) => s.skillName)
+            .filter((name: string) => !!name),
+
+          // EmployeeProjectDTO has { id, projectName, projectStatus, technologies[] }
+          projects: projects.map((p: EmployeeProjectDTO) => ({
+            name: p.projectName || "Unnamed Project",
+            status: this.resolveProjectStatus(p.projectStatus),
+            stages: Array.isArray(p.technologies) ? p.technologies : [],
+            progress: 0,
           })),
-          education: edu.map((e: any) => ({
-            degree: e.description || 'Education',
-            institution: e.institution || '',
-            field: e.grade || '',
-            year: this.formatRange(e.start_year || e.startYear, e.end_date || e.endDate)
+
+          // WorkExperienceDTO has { companyName, jobTitle, startDate, endDate, description, status }
+          workExperience: workExp.map((w: WorkExperienceDTO) => ({
+            title: w.jobTitle || "Role",
+            company: w.companyName || "",
+            duration: this.formatRange(w.startDate, w.endDate),
+            description: w.description || "",
+            years: "",
           })),
-          achievements: achievements.map((a: any) => ({
-            title: a.title || a.name || '',
-            date: a.date || a.period || ''
+
+          // EducationDTO has { educationType, subject, institution, startYear, endDate, grade }
+          education: edu.map((e: EducationDTO) => ({
+            degree: this.buildDegreeLabel(e),
+            institution: e.institution || "",
+            field: e.subject || e.grade || "",
+            year: this.formatYearRange(e.startYear, e.endDate),
           })),
-          detailItems: this.normalizeDetailItems(payload.detailItems || [])
+
+          // Merge achievements + certifications into a single flat list
+          achievements: [
+            ...achieve.map((a: AchievementDTO) => ({
+              title: a.title || "",
+              date: this.formatDate(a.achievementDate) || "",
+            })),
+            ...certs.map((c: CertificationDTO) => ({
+              title: [c.certificationName, c.issuingOrganization]
+                .filter(Boolean)
+                .join(" — "),
+              date: this.formatDate(c.certificationDate) || "",
+            })),
+          ],
+
+          detailItems: this.buildDetailItems(header, info, attend),
         };
-      }
-    });
+      });
   }
 
+  // ── Chart helpers ────────────────────────────────────────────────────────────
+
   getInitials(fullName: string): string {
-    const names = fullName.split(' ').filter(n => n.length > 0);
-    if (names.length === 0) return '??';
+    const names = fullName.split(" ").filter((n) => n.length > 0);
+    if (names.length === 0) return "??";
     if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
     return (names[0][0] + names[names.length - 1][0]).toUpperCase();
   }
 
   getAttendanceLabel(rate: number): string {
-    if (rate >= 90) return 'Excellent';
-    if (rate >= 80) return 'Good';
-    if (rate >= 70) return 'Average';
-    return 'Needs Improvement';
+    if (rate >= 90) return "Excellent";
+    if (rate >= 80) return "Good";
+    if (rate >= 70) return "Average";
+    return "Needs Improvement";
   }
 
   getActiveProjectsCount(): number {
     if (!this.employee) return 0;
-    return this.employee.projects.filter(p => p.status === 'In Progress').length;
+    return this.employee.projects.filter((p) => p.status === "In Progress")
+      .length;
   }
 
   getPerformancePath(): string {
-    const employee = this.employee;
-    if (!employee || !employee.performanceTrends.length) {
-      return 'M 0 160 L 80 140 L 160 122 L 240 110 L 320 102 L 400 96 L 480 92';
+    const emp = this.employee;
+    if (!emp || !emp.performanceTrends.length) {
+      return "M 24 160 L 104 140 L 184 122 L 264 110 L 344 102 L 424 96 L 480 92";
     }
-
-    const points = employee.performanceTrends.map((point, index) => ({
-      x: 24 + (index * 430 / Math.max(1, employee.performanceTrends.length - 1)),
-      y: 170 - Math.min(140, Math.max(10, point.value * 1.1))
+    const len = emp.performanceTrends.length;
+    const points = emp.performanceTrends.map((pt, i) => ({
+      x: 24 + (i * 456) / Math.max(1, len - 1),
+      y: 170 - Math.min(140, Math.max(10, pt.value * 1.4)),
     }));
-
-    return points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(0)} ${point.y.toFixed(0)}`).join(' ');
+    return points
+      .map(
+        (pt, i) =>
+          `${i === 0 ? "M" : "L"} ${pt.x.toFixed(0)} ${pt.y.toFixed(0)}`,
+      )
+      .join(" ");
   }
 
   getPerformanceAreaPath(): string {
     const line = this.getPerformancePath();
-    if (!line.startsWith('M')) {
-      return line;
-    }
-
-    const endX = 24 + (Math.max(0, (this.employee?.performanceTrends.length || 1) - 1) * 430 / Math.max(1, (this.employee?.performanceTrends.length || 1) - 1));
+    const len = this.employee?.performanceTrends.length || 1;
+    const endX = 24 + (Math.max(0, len - 1) * 456) / Math.max(1, len - 1);
     return `${line} L ${endX.toFixed(0)} 190 L 24 190 Z`;
   }
 
-  private resolveFullName(emp: any, fallbackId: string): string {
-    const candidate = [emp.fullName, emp.full_name, emp.firstName, emp.first_name, emp.lastName, emp.last_name]
-      .filter((value: string | undefined | null) => !!value)
-      .join(' ')
-      .trim();
+  // ── Private helpers ──────────────────────────────────────────────────────────
 
-    if (candidate) {
-      return candidate;
-    }
-
-    return emp.employeeCode || emp.employee_code || fallbackId || 'Unknown';
+  private buildDegreeLabel(e: EducationDTO): string {
+    const type = e.educationType || "";
+    const subj = e.subject || "";
+    if (type && subj) return `${type} — ${subj}`;
+    return type || subj || e.description || "Education";
   }
 
-  private resolveTechStack(techStack: any): string[] {
-    if (Array.isArray(techStack)) {
-      return techStack.filter(item => !!item).map((item: any) => String(item));
-    }
-
-    if (typeof techStack === 'string') {
-      return techStack.split(',').map(item => item.trim()).filter(Boolean);
-    }
-
-    return [];
+  private resolveProjectStatus(
+    status: string | null | undefined,
+  ): "In Progress" | "Completed" | "On Hold" {
+    const s = (status || "").toLowerCase();
+    if (s.includes("hold")) return "On Hold";
+    if (s.includes("progress") || s.includes("active")) return "In Progress";
+    if (s.includes("complete") || s.includes("done")) return "Completed";
+    return "In Progress";
   }
 
-  private resolveProjectStatus(status: any): 'In Progress' | 'Completed' | 'On Hold' {
-    const normalized = String(status || '').toLowerCase();
-    if (normalized.includes('hold')) return 'On Hold';
-    if (normalized.includes('progress') || normalized.includes('active')) return 'In Progress';
-    return 'Completed';
+  private formatDate(value: string | null | undefined): string {
+    if (!value) return "N/A";
+    return String(value).includes("T")
+      ? String(value).split("T")[0]
+      : String(value);
   }
 
-  private formatDate(value: any): string {
-    if (!value) return 'N/A';
-    const text = String(value);
-    return text.includes('T') ? text.split('T')[0] : text;
+  private formatRange(
+    start: string | null | undefined,
+    end: string | null | undefined,
+  ): string {
+    const s = this.formatDate(start);
+    const e = end ? this.formatDate(end) : "Present";
+    return `${s} — ${e}`;
   }
 
-  private formatRange(startValue: any, endValue: any): string {
-    const startText = this.formatDate(startValue);
-    const endText = this.formatDate(endValue);
-    return `${startText} - ${endText}`;
+  private formatYearRange(
+    startYear: string | null | undefined,
+    endDate: string | null | undefined,
+  ): string {
+    const s = startYear || "";
+    const e = endDate ? String(endDate).substring(0, 4) : "Present";
+    return s ? `${s} — ${e}` : e;
   }
 
-  private mergeSkills(skills: string[], projects: any[]): string[] {
-    const merged = new Set<string>(skills.map(skill => skill.trim()).filter(Boolean));
-    projects.forEach(project => {
-      this.resolveTechStack(project.techStack || project.tech_stack || project.tech_stack_csv).forEach(skill => merged.add(skill));
-    });
-    return Array.from(merged);
-  }
+  private buildDetailItems(
+    header: ProfileHeaderDTO,
+    info: PersonalInfoDTO,
+    attend: AttendanceAnalyticsDTO,
+  ): DetailItem[] {
+    const rows: Array<{
+      label: string;
+      value: string | null | undefined | number;
+    }> = [
+      { label: "Employee ID", value: header.employeeId },
+      { label: "Official Email", value: header.officialEmail },
+      { label: "Designation", value: header.designation },
+      { label: "Department", value: header.department },
+      { label: "Phone", value: info.phoneNumber },
+      { label: "Branch", value: info.branch },
+      { label: "Region", value: info.region },
+      { label: "Join Date", value: this.formatDate(info.joinDate) },
+      { label: "Total Experience", value: info.totalExperience },
+      { label: "Reporting Manager", value: info.reportingManagerName },
+      { label: "Attendance %", value: `${attend.attendancePercentage ?? 0}%` },
+      { label: "Present Days", value: attend.presentDays },
+      { label: "Absent Days", value: attend.absentDays },
+      { label: "Total Days", value: attend.totalDays },
+    ];
 
-  private normalizeDetailItems(items: any[]): DetailItem[] {
-    if (!Array.isArray(items)) return [];
-
-    return items.map(item => ({
-      label: String(item?.label || ''),
-      value: this.formatDetailValue(item?.value)
-    })).filter(item => item.label.length > 0);
-  }
-
-  private formatDetailValue(value: any): string {
-    if (value === null || value === undefined || value === '') return 'N/A';
-    if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'N/A';
-    return String(value);
+    return rows
+      .filter(
+        (r) =>
+          r.value !== null &&
+          r.value !== undefined &&
+          r.value !== "" &&
+          r.value !== "N/A",
+      )
+      .map((r) => ({ label: r.label, value: String(r.value) }));
   }
 }
-

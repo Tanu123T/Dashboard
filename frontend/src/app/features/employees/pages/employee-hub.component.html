@@ -2,13 +2,19 @@
   <section class="hero-panel eh-header-card">
     <div class="hero-copy">
       <p class="eyebrow">People Health</p>
-      <h1>Workforce readiness, attendance trends, and talent continuity insights.</h1>
+      <h1>
+        Workforce readiness, attendance trends, and talent continuity insights.
+      </h1>
     </div>
   </section>
 
   <nav class="hub-tabs" aria-label="People Health sections">
-    <a class="hub-tab" routerLink="/dashboard/workforce-health">WorkForce Health</a>
-    <a class="hub-tab is-active" routerLink="/dashboard/employee-hub">Employee Hub</a>
+    <a class="hub-tab" routerLink="/dashboard/workforce-health"
+      >WorkForce Health</a
+    >
+    <a class="hub-tab is-active" routerLink="/dashboard/employee-hub"
+      >Employee Hub</a
+    >
     <a class="hub-tab" routerLink="/dashboard/work-calendar">Work Calender</a>
     <a class="hub-tab" routerLink="/dashboard/org-hierarchy">Org Hierarchy</a>
   </nav>
@@ -19,13 +25,23 @@
         <h2 class="members-title">All Members</h2>
         <p class="members-subtitle">{{ getShowCount() }}</p>
       </div>
-      <button type="button" class="view-all-link" (click)="toggleShowAllEmployees()">
+      <button
+        type="button"
+        class="view-all-link"
+        (click)="toggleShowAllEmployees()"
+      >
         {{ getViewAllLabel() }}
       </button>
     </header>
 
     <div class="search-container">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg
+        class="search-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
@@ -34,38 +50,88 @@
         class="search-input"
         placeholder="Search by name, role, department, or location..."
         [(ngModel)]="searchQuery"
-        (input)="onSearchChange()">
+        (input)="onSearchChange()"
+      />
     </div>
 
     <!-- Error Banner -->
-    <div *ngIf="errorMessage" class="error-banner" style="background: #fde8e8; color: #c81e1e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-weight: 500;">
+    <div
+      *ngIf="errorMessage"
+      class="error-banner"
+      style="
+        background: #fde8e8;
+        color: #c81e1e;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: 500;
+      "
+    >
       {{ errorMessage }}
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state" style="text-align: center; padding: 40px; color: #6b7280;">
-      <div class="spinner" style="border: 3px solid #e5e7eb; border-top-color: #4f46e5; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+    <div
+      *ngIf="isLoading"
+      class="loading-state"
+      style="text-align: center; padding: 40px; color: #6b7280"
+    >
+      <div
+        class="spinner"
+        style="
+          border: 3px solid #e5e7eb;
+          border-top-color: #4f46e5;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 12px;
+        "
+      ></div>
       <p>Loading member directory...</p>
     </div>
 
     <div *ngIf="!isLoading && !errorMessage" class="members-grid">
-      <div *ngFor="let emp of filteredEmployees" class="member-card" (click)="viewEmployeeDetail(emp.id)" style="cursor: pointer;">
+      <div
+        *ngFor="let emp of filteredEmployees"
+        class="member-card"
+        (click)="viewEmployeeDetail(emp.id)"
+        style="cursor: pointer"
+      >
         <div class="card-header">
           <div>
-            <div class="member-avatar" [style.background]="emp.color">
-              {{ emp.initials }}
+            <div
+              class="member-avatar"
+              [style.background]="emp.profileImage ? '#f1f5f9' : emp.color"
+            >
+              <img
+                *ngIf="emp.profileImage"
+                [src]="emp.profileImage"
+                [alt]="emp.name"
+                style="
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                  border-radius: 50%;
+                "
+              />
+              <span *ngIf="!emp.profileImage">{{ emp.initials }}</span>
             </div>
           </div>
           <div class="header-info">
             <h3 class="member-name">{{ emp.name }}</h3>
             <p class="member-title">{{ emp.title }}</p>
           </div>
-          <span class="status-badge" [ngClass]="'status-' + emp.status.toLowerCase().replace(' ', '-')">{{ emp.status }}</span>
+          <span class="status-badge" [ngClass]="emp.statusClass">{{
+            emp.statusLabel
+          }}</span>
         </div>
 
         <div class="card-tags">
           <span class="tag">{{ emp.department }}</span>
-          <span class="tag">{{ emp.location }}</span>
+          <span class="tag" *ngIf="emp.location !== emp.department">{{
+            emp.location
+          }}</span>
         </div>
 
         <div class="stability-section">

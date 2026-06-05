@@ -13,9 +13,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableScheduling
 public class HrmsAppConfig {
-    
+
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("employees", "employeeAnalytics");
+        return new ConcurrentMapCacheManager(
+                "employees",
+                "employeeAnalytics",
+                "employeeDashboard"
+        );
     }
 }

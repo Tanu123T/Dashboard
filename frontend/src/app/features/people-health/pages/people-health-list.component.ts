@@ -168,11 +168,4 @@ export class PeopleHealthListComponent implements OnInit, OnDestroy {
   switchTab(tab: string): void {
     this.activeTab = tab;
   }
-
-  /**
-   * Reload data
-   */
-  reloadData(): void {
-    this.loadWorkforceHealthData();
-  }
 }

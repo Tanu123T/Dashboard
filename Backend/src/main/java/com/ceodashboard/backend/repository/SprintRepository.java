@@ -8,13 +8,15 @@ import java.util.List;
 
 @Repository
 public interface SprintRepository extends JpaRepository<Sprint, Long> {
-    List<Sprint> findByProjectId(Long projectId);
-    
-    List<Sprint> findByProjectIdOrderByStartDateDesc(Long projectId);
-    
-    long countByProjectId(Long projectId);
-    
-    long countByProjectIdAndStatus(Long projectId, String status);
-    
-    List<Sprint> findByProjectIdAndStatus(Long projectId, String status);
+    List<Sprint> findByProjectIdAndOrgId(Long projectId, Integer orgId);
+
+    List<Sprint> findByProjectIdAndOrgIdOrderByStartDateDesc(Long projectId, Integer orgId);
+
+    List<Sprint> findByOrgId(Integer orgId);
+
+    long countByProjectIdAndOrgId(Long projectId, Integer orgId);
+
+    long countByProjectIdAndOrgIdAndStatus(Long projectId, Integer orgId, String status);
+
+    List<Sprint> findByProjectIdAndOrgIdAndStatus(Long projectId, Integer orgId, String status);
 }

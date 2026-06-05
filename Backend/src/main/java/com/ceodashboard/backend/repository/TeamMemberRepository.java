@@ -9,11 +9,15 @@ import java.util.Optional;
 
 @Repository
 public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
-    List<TeamMember> findBySprintId(Long sprintId);
-    
-    void deleteBySprintId(Long sprintId);
-    
-    Optional<TeamMember> findBySprintIdAndName(Long sprintId, String name);
-    
-    long countBySprintId(Long sprintId);
+    List<TeamMember> findByProjectIdAndOrgId(Long projectId, Integer orgId);
+
+    void deleteByProjectId(Long projectId);
+
+    Optional<TeamMember> findByProjectIdAndMemberFirstNameAndMemberLastNameAndOrgId(
+            Long projectId,
+            String memberFirstName,
+            String memberLastName,
+            Integer orgId);
+
+    long countByProjectIdAndOrgId(Long projectId, Integer orgId);
 }

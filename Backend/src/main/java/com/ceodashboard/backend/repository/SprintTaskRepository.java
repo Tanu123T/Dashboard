@@ -9,12 +9,14 @@ import java.util.List;
 @Repository
 public interface SprintTaskRepository extends JpaRepository<SprintTask, Long> {
     List<SprintTask> findBySprintId(Long sprintId);
-    
+
     void deleteBySprintId(Long sprintId);
-    
+
     long countBySprintId(Long sprintId);
-    
+
     long countBySprintIdAndStatus(Long sprintId, String status);
-    
+
     List<SprintTask> findBySprintIdAndAssignee(Long sprintId, String assignee);
+
+    List<SprintTask> findBySprintIdAndAssignedMemberId(Long sprintId, Long assignedMemberId);
 }

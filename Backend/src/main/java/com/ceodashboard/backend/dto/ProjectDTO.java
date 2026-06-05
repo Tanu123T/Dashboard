@@ -17,7 +17,7 @@ public class ProjectDTO {
     private String name;
     private String client;
     private String status;
-    private Integer progress;
+    private Float progress;
     private String lead;
     private LocalDate startDate;
     private LocalDate dueDate;

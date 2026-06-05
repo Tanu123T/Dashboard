@@ -87,6 +87,9 @@ public class SecurityConfig {
                 // Allow public GET access for internal DB inspection during development
                 .requestMatchers(HttpMethod.GET, "/internal/db/**").permitAll()
 
+                // Allow public GET access to sync endpoints for manual triggering during development
+                .requestMatchers(HttpMethod.GET, "/sync/**").permitAll()
+
                 // Require ADMIN role for mutating project endpoints
                 .requestMatchers(HttpMethod.POST, "/projects/**").hasRole("admin")
                 .requestMatchers(HttpMethod.PUT, "/projects/**").hasRole("admin")

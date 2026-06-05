@@ -9,6 +9,7 @@ import com.ceodashboard.backend.hrms.service.EmployeeService;
 import com.ceodashboard.backend.hrms.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
  * All queries filtered to company_id = 1 via EmployeeRepository methods.
  */
 @Service
+@ConditionalOnProperty(prefix = "hrms.db", name = "enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(transactionManager = "hrmsTransactionManager", readOnly = true)

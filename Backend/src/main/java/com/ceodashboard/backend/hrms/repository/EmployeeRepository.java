@@ -40,8 +40,11 @@ public interface EmployeeRepository
     @Query("SELECT e FROM Employee e WHERE e.reportingManager.id = :managerId")
     Page<Employee> findByReportingManagerId(@Param("managerId") Long managerId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"department", "designation", "reportingManager"})
+    @EntityGraph(attributePaths = {"department", "designation", "reportingManager","branch","branch.region"})
     Page<Employee> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"department", "designation", "reportingManager","branch","branch.region"})
+    Page<Employee> findAllWithDetails(Pageable pageable);
 
     long countByEmployeeStatus(String employeeStatus);
 }

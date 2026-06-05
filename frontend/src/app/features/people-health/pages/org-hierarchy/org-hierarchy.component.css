@@ -74,6 +74,42 @@
   color: #0369a1;
 }
 
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 12px;
+  padding: 0 16px;
+  margin: 12px 16px;
+  flex-wrap: wrap;
+  background-color: transparent;
+  align-items: center;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  background: #ffffff;
+  border: 1.5px solid #d1dce5;
+  border-radius: 24px;
+  color: #7b92b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #5f87c9;
+  border-color: #5f87c9;
+  background: #ffffff;
+}
+
+.tab-btn.active {
+  color: #ffffff;
+  background: #17a2b8;
+  border-color: #17a2b8;
+}
+
 .org-card {
   background: #ffffff;
   border-radius: 16px;
@@ -384,6 +420,16 @@
   }
 
   .org-header p {
+    font-size: 12px;
+  }
+
+  .tab-navigation {
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    padding: 10px 16px;
     font-size: 12px;
   }
 

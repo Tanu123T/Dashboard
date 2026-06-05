@@ -53,4 +53,47 @@ public class HrmsGlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(500, ex.getClass().getSimpleName() + ": " + ex.getMessage(), "Internal Server Error"));
     }
+
+    @ExceptionHandler(com.ceodashboard.backend.hrms.exception.EmployeeNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmployeeNotFound(com.ceodashboard.backend.hrms.exception.EmployeeNotFoundException ex) {
+        log.warn("Employee not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(404, ex.getMessage(), ex.getErrorCode()));
+    }
+
+    @ExceptionHandler(com.ceodashboard.backend.hrms.exception.UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorized(com.ceodashboard.backend.hrms.exception.UnauthorizedException ex) {
+        log.warn("Unauthorized access: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(401, ex.getMessage(), ex.getErrorCode()));
+    }
+
+    @ExceptionHandler(com.ceodashboard.backend.hrms.exception.ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleForbidden(com.ceodashboard.backend.hrms.exception.ForbiddenException ex) {
+        log.warn("Forbidden access: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(403, ex.getMessage(), ex.getErrorCode()));
+    }
+
+    @ExceptionHandler(com.ceodashboard.backend.hrms.exception.HrmsApiServerException.class)
+    public ResponseEntity<ApiResponse<Object>> handleHrmsServerError(com.ceodashboard.backend.hrms.exception.HrmsApiServerException ex) {
+        log.error("HRMS API server error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(ex.getStatusCode(), ex.getMessage(), ex.getErrorCode()));
+    }
+
+    @ExceptionHandler(com.ceodashboard.backend.hrms.exception.HrmsApiTimeoutException.class)
+    public ResponseEntity<ApiResponse<Object>> handleHrmsTimeout(com.ceodashboard.backend.hrms.exception.HrmsApiTimeoutException ex) {
+        log.error("HRMS API timeout: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+                .body(ApiResponse.error(504, ex.getMessage(), ex.getErrorCode()));
+    }
+
+    @ExceptionHandler(com.ceodashboard.backend.hrms.exception.HrmsApiException.class)
+    public ResponseEntity<ApiResponse<Object>> handleHrmsApiException(com.ceodashboard.backend.hrms.exception.HrmsApiException ex) {
+        log.error("HRMS API error: {}", ex.getMessage());
+        int status = ex.getStatusCode() <= 0 ? 500 : ex.getStatusCode();
+        return ResponseEntity.status(HttpStatus.valueOf(status))
+                .body(ApiResponse.error(status, ex.getMessage(), ex.getErrorCode()));
+    }
 }

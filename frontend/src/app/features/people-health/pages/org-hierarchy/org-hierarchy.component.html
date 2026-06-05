@@ -3,7 +3,7 @@
   <section class="hero-panel org-header-card">
     <div class="hero-copy">
       <p class="eyebrow">People Health</p>
-      <p class="subtitle">Hierarchy view with CEO, leadership, and staff cards</p>
+      <p class="subtitle">Workforce readiness, attendance trends, and talent continuity insights.</p>
     </div>
     <div class="last-updated-badge">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -15,6 +15,22 @@
       <span>Last updated: {{ lastUpdated }}</span>
     </div>
   </section>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button class="tab-btn" [class.active]="activeTab === 'workforce'" (click)="navigateToTab('workforce')">
+      WorkForce Health
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'employee-hub'" (click)="navigateToTab('employee-hub')">
+      Employee Hub
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'work-calendar'" (click)="navigateToTab('work-calendar')">
+      Work Calender
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'org-hierarchy'" (click)="navigateToTab('org-hierarchy')">
+      Org Hierarchy
+    </button>
+  </div>
 
   <div class="org-card">
     <div class="org-header">

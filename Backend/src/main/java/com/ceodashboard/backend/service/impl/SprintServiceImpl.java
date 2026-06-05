@@ -18,22 +18,27 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class SprintServiceImpl implements SprintService {
 
-        private final ProjectRepository projectRepository;
+    private static final Integer DEFAULT_ORG_ID = 1;
+
+    private final ProjectRepository projectRepository;
     private final SprintRepository sprintRepository;
     private final SprintTaskRepository sprintTaskRepository;
     private final TeamMemberRepository teamMemberRepository;
 
-        public SprintServiceImpl(ProjectRepository projectRepository,
-                                                         SprintRepository sprintRepository,
+    public SprintServiceImpl(ProjectRepository projectRepository,
+                             SprintRepository sprintRepository,
                              SprintTaskRepository sprintTaskRepository,
                              TeamMemberRepository teamMemberRepository) {
-                this.projectRepository = projectRepository;
+        this.projectRepository = projectRepository;
         this.sprintRepository = sprintRepository;
         this.sprintTaskRepository = sprintTaskRepository;
         this.teamMemberRepository = teamMemberRepository;
@@ -41,10 +46,10 @@ public class SprintServiceImpl implements SprintService {
 
     @Override
     public SprintDashboardDTO getSprintDashboard(Long projectId) {
-        List<Sprint> sprints = sprintRepository.findByProjectIdOrderByStartDateDesc(projectId);
+        List<Sprint> sprints = sprintRepository.findByProjectIdAndOrgIdOrderByStartDateDesc(projectId, DEFAULT_ORG_ID);
         
         SprintSummaryDTO summary = buildSprintSummary(projectId, sprints);
-        List<TeamMemberDTO> team = buildTeamList(projectId, sprints);
+        List<TeamMemberDTO> team = buildTeamList(projectId);
         List<SprintListItemDTO> sprintItems = sprints.stream()
                 .map(this::mapToListItemDTO)
                 .collect(Collectors.toList());
@@ -59,29 +64,30 @@ public class SprintServiceImpl implements SprintService {
     @Override
     public SprintDTO getSprintDetail(Long sprintId) {
         Sprint sprint = sprintRepository.findById(sprintId)
+                .filter(s -> DEFAULT_ORG_ID.equals(s.getOrgId()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sprint not found"));
 
         List<SprintTask> tasks = sprintTaskRepository.findBySprintId(sprintId);
-        List<TeamMember> members = teamMemberRepository.findBySprintId(sprintId);
+        List<TeamMember> members = teamMemberRepository.findByProjectIdAndOrgId(sprint.getProjectId(), DEFAULT_ORG_ID);
 
         return mapToSprintDTO(sprint, tasks, members);
     }
 
     @Override
     public List<SprintDTO> getSprintsByProject(Long projectId) {
-        List<Sprint> sprints = sprintRepository.findByProjectIdOrderByStartDateDesc(projectId);
-        
+        List<Sprint> sprints = sprintRepository.findByProjectIdAndOrgIdOrderByStartDateDesc(projectId, DEFAULT_ORG_ID);
+
         return sprints.stream().map(sprint -> {
             List<SprintTask> tasks = sprintTaskRepository.findBySprintId(sprint.getId());
-            List<TeamMember> members = teamMemberRepository.findBySprintId(sprint.getId());
+            List<TeamMember> members = teamMemberRepository.findByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID);
             return mapToSprintDTO(sprint, tasks, members);
         }).collect(Collectors.toList());
     }
 
     @Override
     public TeamMemberProfileDTO getTeamMemberProfile(Long projectId, String memberName) {
-        List<Sprint> sprints = sprintRepository.findByProjectId(projectId);
-        
+        List<Sprint> sprints = sprintRepository.findByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID);
+
         int totalStories = 0;
         int bugsResolved = 0;
         double hoursWorked = 0;
@@ -90,34 +96,32 @@ public class SprintServiceImpl implements SprintService {
 
         for (Sprint sprint : sprints) {
             List<SprintTask> memberTasks = sprintTaskRepository.findBySprintIdAndAssignee(sprint.getId(), memberName);
-            
+
             if (!memberTasks.isEmpty()) {
                 int storyPoints = memberTasks.stream()
                         .mapToInt(t -> t.getStoryPoints() != null ? t.getStoryPoints() : 0)
                         .sum();
-                
+
                 int bugs = (int) memberTasks.stream()
-                        .filter(t -> "Bug".equalsIgnoreCase(t.getType()) && 
-                               ("Closed".equalsIgnoreCase(t.getStatus()) || "Completed".equalsIgnoreCase(t.getStatus())))
+                        .filter(t -> "Bug".equalsIgnoreCase(t.getType()) &&
+                                ("Closed".equalsIgnoreCase(t.getStatus()) || "Completed".equalsIgnoreCase(t.getStatus())))
                         .count();
-                
+
                 double hours = memberTasks.stream()
                         .mapToDouble(t -> t.getActualHours() != null ? t.getActualHours() : 0)
                         .sum();
-                
+
                 long completed = memberTasks.stream()
                         .filter(t -> "Closed".equalsIgnoreCase(t.getStatus()) || "Completed".equalsIgnoreCase(t.getStatus()))
                         .count();
-                
+
                 int completionPercentage = memberTasks.isEmpty() ? 0 : (int) ((completed * 100) / memberTasks.size());
 
                 totalStories += storyPoints;
                 bugsResolved += bugs;
                 hoursWorked += hours;
 
-                // Get role from first task's assignee pattern or member record
-                TeamMember member = teamMemberRepository.findBySprintIdAndName(sprint.getId(), memberName)
-                        .orElse(null);
+                TeamMember member = findTeamMemberByName(projectId, memberName);
                 if (member != null && member.getRole() != null) {
                     role = member.getRole();
                 }
@@ -146,42 +150,30 @@ public class SprintServiceImpl implements SprintService {
                 .build();
     }
 
-        @Override
-        public List<SprintDTO> getAllSprints() {
-                List<Sprint> sprints = sprintRepository.findAll();
+    @Override
+    public List<SprintDTO> getAllSprints() {
+        List<Sprint> sprints = sprintRepository.findByOrgId(DEFAULT_ORG_ID);
 
-                // sort by start date desc (nulls last)
-                sprints.sort((a, b) -> {
-                        if (a.getStartDate() == null && b.getStartDate() == null) return 0;
-                        if (a.getStartDate() == null) return 1;
-                        if (b.getStartDate() == null) return -1;
-                        return b.getStartDate().compareTo(a.getStartDate());
-                });
+        sprints.sort(Comparator.comparing(Sprint::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed());
 
-                return sprints.stream().map(sprint -> {
-                        List<SprintTask> tasks = sprintTaskRepository.findBySprintId(sprint.getId());
-                        List<TeamMember> members = teamMemberRepository.findBySprintId(sprint.getId());
-                        return mapToSprintDTO(sprint, tasks, members);
-                }).collect(Collectors.toList());
-        }
+        return sprints.stream().map(sprint -> {
+            List<SprintTask> tasks = sprintTaskRepository.findBySprintId(sprint.getId());
+            List<TeamMember> members = teamMemberRepository.findByProjectIdAndOrgId(sprint.getProjectId(), DEFAULT_ORG_ID);
+            return mapToSprintDTO(sprint, tasks, members);
+        }).collect(Collectors.toList());
+    }
 
     private SprintSummaryDTO buildSprintSummary(Long projectId, List<Sprint> sprints) {
         int total = sprints.size();
-        int completed = (int) sprints.stream().filter(s -> "COMPLETED".equals(s.getStatus())).count();
-        int active = (int) sprints.stream().filter(s -> "ACTIVE".equals(s.getStatus())).count();
-        
+        int completed = (int) sprints.stream().filter(s -> "COMPLETED".equalsIgnoreCase(s.getStatus())).count();
+        int active = (int) sprints.stream().filter(s -> "ACTIVE".equalsIgnoreCase(s.getStatus())).count();
+
         double avgCompletion = sprints.stream()
-                .mapToInt(Sprint::getProgress)
+                .mapToDouble(s -> s.getProgress() != null ? s.getProgress() : 0.0)
                 .average()
                 .orElse(0.0);
 
-        // Count unique team members across all sprints
-        int teamSize = sprints.stream()
-                .flatMap(s -> teamMemberRepository.findBySprintId(s.getId()).stream())
-                .map(TeamMember::getName)
-                .distinct()
-                .mapToInt(name -> 1)
-                .sum();
+        int teamSize = teamMemberRepository.findByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID).size();
 
         return SprintSummaryDTO.builder()
                 .totalPlannedSprints(total)
@@ -192,27 +184,20 @@ public class SprintServiceImpl implements SprintService {
                 .build();
     }
 
-    private List<TeamMemberDTO> buildTeamList(Long projectId, List<Sprint> sprints) {
-        // Get unique team members from all sprints
-        return sprints.stream()
-                .flatMap(s -> teamMemberRepository.findBySprintId(s.getId()).stream())
-                .collect(Collectors.toMap(
-                        TeamMember::getName,
-                        m -> TeamMemberDTO.builder()
-                                .id(m.getId())
-                                .name(m.getName())
-                                .role(m.getRole())
-                                .avatar(m.getName().substring(0, Math.min(2, m.getName().length())).toUpperCase())
-                                .build(),
-                        (existing, replacement) -> existing
-                ))
-                .values()
-                .stream()
+    private List<TeamMemberDTO> buildTeamList(Long projectId) {
+        return teamMemberRepository.findByProjectIdAndOrgId(projectId, DEFAULT_ORG_ID).stream()
+                .filter(Objects::nonNull)
+                .map(m -> TeamMemberDTO.builder()
+                        .id(m.getId())
+                        .name(m.getName())
+                        .role(m.getRole())
+                        .avatar(m.getName() != null ? m.getName().substring(0, Math.min(2, m.getName().length())).toUpperCase() : "")
+                        .build())
                 .collect(Collectors.toList());
     }
 
     private SprintListItemDTO mapToListItemDTO(Sprint sprint) {
-        String taskSummary = String.format("%d/%d", 
+        String taskSummary = String.format("%s/%s", 
                 sprint.getCompletedTasks() != null ? sprint.getCompletedTasks() : 0,
                 sprint.getTotalTasks() != null ? sprint.getTotalTasks() : 0);
 
@@ -221,11 +206,25 @@ public class SprintServiceImpl implements SprintService {
                 .name(sprint.getName())
                 .projectName(resolveProjectName(sprint.getProjectId()))
                 .status(sprint.getStatus())
-                .progress(sprint.getProgress())
+                .progress(sprint.getProgress() != null ? Math.round(sprint.getProgress()) : 0)
                 .startDate(sprint.getStartDate())
                 .endDate(sprint.getEndDate())
                 .taskSummary(taskSummary)
                 .build();
+    }
+
+    private TeamMember findTeamMemberByName(Long projectId, String memberName) {
+        if (memberName == null || memberName.isBlank()) {
+            return null;
+        }
+
+        String[] parts = memberName.trim().split("\\s+", 2);
+        String firstName = parts[0];
+        String lastName = parts.length > 1 ? parts[1] : "";
+
+        return teamMemberRepository.findByProjectIdAndMemberFirstNameAndMemberLastNameAndOrgId(
+                        projectId, firstName, lastName, DEFAULT_ORG_ID)
+                .orElse(null);
     }
 
     private SprintDTO mapToSprintDTO(Sprint sprint, List<SprintTask> tasks, List<TeamMember> members) {
@@ -252,7 +251,7 @@ public class SprintServiceImpl implements SprintService {
                 .endDate(sprint.getEndDate())
                 .scrumMaster(sprint.getScrumMaster())
                 .projectName(resolveProjectName(sprint.getProjectId()))
-                .progress(sprint.getProgress())
+                .progress(sprint.getProgress() != null ? Math.round(sprint.getProgress()) : 0)
                 .daysRemaining(daysRemaining)
                 .totalTasks(sprint.getTotalTasks())
                 .completedTasks(sprint.getCompletedTasks())
@@ -294,23 +293,18 @@ public class SprintServiceImpl implements SprintService {
     }
 
     private MemberWorkDTO mapToMemberWorkDTO(TeamMember member) {
-        int total = member.getAssignedTasks() != null ? member.getAssignedTasks() : 0;
-        double donePct = total > 0 ? (member.getCompletedTasks() * 100.0 / total) : 0;
-        double inProgressPct = total > 0 ? (member.getInProgressTasks() * 100.0 / total) : 0;
-        double todoPct = total > 0 ? (member.getTodoTasks() * 100.0 / total) : 0;
-
         return MemberWorkDTO.builder()
                 .name(member.getName())
                 .role(member.getRole())
-                .totalTasks(total)
-                .completedTasks(member.getCompletedTasks())
-                .inProgressTasks(member.getInProgressTasks())
-                .todoTasks(member.getTodoTasks())
-                .donePercentage(Math.round(donePct * 10.0) / 10.0)
-                .inProgressPercentage(Math.round(inProgressPct * 10.0) / 10.0)
-                .todoPercentage(Math.round(todoPct * 10.0) / 10.0)
-                .estimatedHours(member.getEstimatedHours())
-                .actualHours(member.getActualHours())
+                .totalTasks(null)
+                .completedTasks(null)
+                .inProgressTasks(null)
+                .todoTasks(null)
+                .donePercentage(0.0)
+                .inProgressPercentage(0.0)
+                .todoPercentage(0.0)
+                .estimatedHours(null)
+                .actualHours(null)
                 .build();
     }
 

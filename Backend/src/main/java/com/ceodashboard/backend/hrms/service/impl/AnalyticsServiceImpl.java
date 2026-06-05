@@ -1,89 +1,108 @@
 package com.ceodashboard.backend.hrms.service.impl;
 
+import com.ceodashboard.backend.hrms.client.AttendanceClient;
+import com.ceodashboard.backend.hrms.client.EmployeeLeaveAccountClient;
+import com.ceodashboard.backend.hrms.dto.AttendanceDTO;
 import com.ceodashboard.backend.hrms.dto.EmployeeAnalyticsDTO;
+import com.ceodashboard.backend.hrms.dto.EmployeeLeaveAccountDTO;
 import com.ceodashboard.backend.hrms.service.AnalyticsService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+
 /**
- * Analytics service — all queries filtered by company_id from hrms.company.id.
+ * Analytics service implemented with Feign clients for HRMS API integration.
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AnalyticsServiceImpl implements AnalyticsService {
 
-    private final JdbcTemplate jdbc;
-
-    @Value("${hrms.company.id:1}")
-    private long companyId;
-
-    public AnalyticsServiceImpl(@Qualifier("hrmsJdbcTemplate") JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
+    private final AttendanceClient attendanceClient;
+    private final EmployeeLeaveAccountClient leaveAccountClient;
 
     @Override
     @Cacheable(value = "employeeAnalytics", key = "#employeeId")
     public EmployeeAnalyticsDTO getEmployeeAnalytics(Long employeeId) {
-        log.info("Calculating analytics for employeeId={} companyId={}", employeeId, companyId);
+        log.info("Calculating analytics for employeeId={}", employeeId);
 
-        long presentDays = safeCount(
-            "SELECT COUNT(*) FROM attendance WHERE employee_id = ? AND company_id = ? AND status = 'PRESENT'",
-            employeeId, companyId);
+        try {
+            String empIdStr = employeeId.toString();
+            LocalDate now = LocalDate.now();
+            LocalDate windowStart = now.minusDays(30);
+            LocalDate productivityWindowStart = now.minusDays(90);
 
-        long absentDays = safeCount(
-            "SELECT COUNT(*) FROM attendance WHERE employee_id = ? AND company_id = ? AND status = 'ABSENT'",
-            employeeId, companyId);
+            // Fetch attendance data from HRMS API
+            List<AttendanceDTO> attendanceRecords = attendanceClient.getAttendanceByEmployeeId(empIdStr);
 
-        double attendancePercentage = 0.0;
-        long total = presentDays + absentDays;
-        if (total > 0) attendancePercentage = Math.round((presentDays * 100.0 / total) * 100.0) / 100.0;
+            // Calculate attendance metrics for last 30 days
+            long presentDays = attendanceRecords.stream()
+                .filter(a -> a.getDate() != null &&
+                    a.getDate().isAfter(windowStart) &&
+                    a.getDate().isBefore(now) &&
+                    "PRESENT".equalsIgnoreCase(a.getStatus()))
+                .count();
 
-        double leaveBalance = safeDouble(
-            "SELECT COALESCE(balance, 0) FROM employee_leave_account WHERE employee_id = ? AND company_id = ? ORDER BY id DESC LIMIT 1",
-            employeeId, companyId);
+            long absentDays = attendanceRecords.stream()
+                .filter(a -> a.getDate() != null &&
+                    a.getDate().isAfter(windowStart) &&
+                    a.getDate().isBefore(now) &&
+                    "ABSENT".equalsIgnoreCase(a.getStatus()))
+                .count();
 
-        double performanceScore = safeDouble(
-            "SELECT COALESCE(AVG(CAST(ae.scored_points AS DECIMAL(10,2))), 0) FROM appraisal_evaluation ae WHERE ae.employee_id = ? AND ae.company_id = ?",
-            employeeId, companyId);
+            double attendancePercentage = 0.0;
+            long totalAttendanceDays = presentDays + absentDays;
+            if (totalAttendanceDays > 0) {
+                attendancePercentage = Math.round((presentDays * 100.0 / totalAttendanceDays) * 100.0) / 100.0;
+            }
 
-        double productivityScore = safeDouble(
-            "SELECT ROUND(COUNT(CASE WHEN status='PRESENT' THEN 1 END)*100.0/NULLIF(COUNT(*),0),2) " +
-            "FROM attendance WHERE employee_id = ? AND company_id = ? AND DATE(date) >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)",
-            employeeId, companyId);
+            // Fetch leave balance
+            List<EmployeeLeaveAccountDTO> leaveAccounts = leaveAccountClient.getLeaveAccountsByEmployeeId(empIdStr);
+            double leaveBalance = leaveAccounts.stream()
+                .mapToDouble(account -> account.getBalance() != null ? account.getBalance() : 0.0)
+                .sum();
 
-        return EmployeeAnalyticsDTO.builder()
+            // Calculate productivity score for last 90 days
+            long productivityScore = attendanceRecords.stream()
+                .filter(a -> a.getDate() != null &&
+                    a.getDate().isAfter(productivityWindowStart) &&
+                    a.getDate().isBefore(now) &&
+                    "PRESENT".equalsIgnoreCase(a.getStatus()))
+                .count();
+
+            long totalWindowDays = attendanceRecords.stream()
+                .filter(a -> a.getDate() != null &&
+                    a.getDate().isAfter(productivityWindowStart) &&
+                    a.getDate().isBefore(now))
+                .count();
+
+            double productivityPercentage = totalWindowDays == 0 ? 0.0 :
+                Math.round((productivityScore * 100.0 / totalWindowDays) * 100.0) / 100.0;
+
+            return EmployeeAnalyticsDTO.builder()
                 .employeeId(employeeId)
                 .presentDays(presentDays)
                 .absentDays(absentDays)
                 .attendancePercentage(attendancePercentage)
-                .performanceScore(performanceScore)
-                .productivityScore(productivityScore)
+                .performanceScore(0.0) // Performance score would come from appraisal API
+                .productivityScore(productivityPercentage)
                 .leaveBalance(leaveBalance)
                 .build();
-    }
-
-    private long safeCount(String sql, Object... args) {
-        try {
-            Long r = jdbc.queryForObject(sql, Long.class, args);
-            return r != null ? r : 0L;
-        } catch (DataAccessException ex) {
-            log.warn("safeCount failed: {}", ex.getMessage());
-            return 0L;
-        }
-    }
-
-    private double safeDouble(String sql, Object... args) {
-        try {
-            Double r = jdbc.queryForObject(sql, Double.class, args);
-            return r != null ? r : 0.0;
-        } catch (DataAccessException ex) {
-            log.warn("safeDouble failed: {}", ex.getMessage());
-            return 0.0;
+        } catch (Exception e) {
+            log.error("Error calculating analytics for employeeId: {}", employeeId, e);
+            return EmployeeAnalyticsDTO.builder()
+                .employeeId(employeeId)
+                .presentDays(0)
+                .absentDays(0)
+                .attendancePercentage(0.0)
+                .performanceScore(0.0)
+                .productivityScore(0.0)
+                .leaveBalance(0.0)
+                .build();
         }
     }
 }

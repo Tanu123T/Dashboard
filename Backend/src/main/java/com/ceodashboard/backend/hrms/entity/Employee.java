@@ -60,6 +60,11 @@ public class Employee {
     @Column(name = "branch_id")
     private Long branchId;
 
+    @NotFound(action = NotFoundAction.IGNORE)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id", insertable = false, updatable = false)
+    private Branch branch;
+
     @Column(name = "company_id")
     private Long companyId;
 

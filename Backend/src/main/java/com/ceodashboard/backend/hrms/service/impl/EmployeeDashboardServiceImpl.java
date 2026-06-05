@@ -6,6 +6,7 @@ import com.ceodashboard.backend.hrms.repository.EmployeeDashboardRepository;
 import com.ceodashboard.backend.hrms.service.EmployeeDashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.List;
  * missing table or empty result set never brings down the whole dashboard.
  */
 @Service
+@ConditionalOnProperty(prefix = "hrms.db", name = "enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeDashboardServiceImpl implements EmployeeDashboardService {

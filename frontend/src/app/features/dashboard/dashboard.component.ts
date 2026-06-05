@@ -8,6 +8,7 @@ import {
   Users,
   User,
   Briefcase,
+  FileText,
   Zap,
   Folder,
   MoreHorizontal,
